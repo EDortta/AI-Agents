@@ -1,0 +1,22 @@
+# Cursor Rules for This Repository
+
+Always read before coding:
+- AGENTS.md
+- docs/software-overview.md
+- docs/limits.md
+
+Execution rules:
+- Stay within docs/limits.md boundaries.
+- Keep scope tight; avoid unrelated refactors.
+- State assumptions when requirements are incomplete.
+- Prefer minimal, durable, testable fixes.
+
+Quality and safety:
+- Run impacted checks/tests.
+- Do not expose secrets or sensitive data.
+- Include privacy/compliance review when personal data is involved.
+- If request conflicts with limits, stop and ask for explicit approval.
+
+Issue workflow:
+- Use docs/issues epic-folder structure and templates.
+- Include privacy checklist when applicable.

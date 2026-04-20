@@ -1,0 +1,14 @@
+# Windsurf/Cascade Rules
+
+Context files (required):
+- AGENTS.md
+- docs/software-overview.md
+- docs/limits.md
+
+Rules:
+- Work only within defined limits.
+- Ask for approval if limits are exceeded.
+- Keep changes minimal and traceable.
+- Run impacted tests/checks and report results.
+- Follow docs/issues structure for issue artifacts.
+- Include privacy checklist for personal-data features.
