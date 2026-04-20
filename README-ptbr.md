@@ -1,5 +1,7 @@
 # IA-Agents Universal Kit
 
+![Logo IA-Agents](./docs/icons/logo.png)
+
 English version: [README.md](./README.md)  
 Versión en español: [README-es.md](./README-es.md)
 

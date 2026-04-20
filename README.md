@@ -1,5 +1,7 @@
 # IA-Agents Universal Kit
 
+![IA-Agents Logo](./docs/icons/logo.png)
+
 Portuguese version: [README-ptbr.md](./README-ptbr.md)  
 Spanish version: [README-es.md](./README-es.md)
 
