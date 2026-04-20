@@ -1,9 +1,10 @@
 # Agent Operational Limits
 
 ## Metadata
-- work_id: WK-20260420-ia-agents-kit
-- date: 2026-04-20
+- work_id: WK-YYYYMMDD-<project-slug>
+- date: YYYY-MM-DD
 - owner: <maintainer>
+- limits_ready: no
 
 This file defines hard boundaries for agent execution.
 

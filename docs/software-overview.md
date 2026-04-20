@@ -1,9 +1,10 @@
 # Software Overview
 
 ## Metadata
-- work_id: WK-20260420-ia-agents-kit
-- date: 2026-04-20
+- work_id: WK-YYYYMMDD-<project-slug>
+- date: YYYY-MM-DD
 - owner: <maintainer>
+- project_context_ready: no
 
 This repository provides a universal, reusable agent-governance bundle for software projects.
 

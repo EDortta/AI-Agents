@@ -34,6 +34,24 @@ Regra central:
 
 ## Como usar em outro projeto
 
+Instalação direta pelo GitHub (recomendado):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/main/scripts/install-agents-kit.sh) \
+  --target /caminho/do/seu-projeto
+```
+
+Se você já clonou este repositório:
+
+```bash
+./scripts/install-agents-kit.sh --target /caminho/do/seu-projeto
+```
+
+Importante:
+- o instalador usa um readiness gate e termina com código diferente de zero até que:
+  - `docs/software-overview.md` tenha `project_context_ready: yes`
+  - `docs/limits.md` tenha `limits_ready: yes`
+
 1. Copie (ou use symlink) destes artefatos no projeto alvo:
 - `AGENTS.md`
 - `docs/agents/`
@@ -94,6 +112,7 @@ Modelos disponíveis:
 ## Estrutura
 
 - `AGENTS.md`: contrato universal de execução
+- `scripts/install-agents-kit.sh`: instalador (execução local ou direta via raw do GitHub)
 - `docs/agents/`: contratos por papel (programmer, reviewer, issue automation, security, privacy)
 - `docs/issues/`: estrutura local de issues e templates
 - `handoff.md`: log de handoff para retomada entre sessões
@@ -106,3 +125,4 @@ Modelos disponíveis:
 - EN: `docs/articles/ai-agents-in-vscodium-chat.md`
 - PT-BR: `docs/articles/ai-agents-in-vscodium-chat-ptbr.md`
 - ES: `docs/articles/ai-agents-in-vscodium-chat-es.md`
+- Perspectiva do autor sobre a jornada de programação: [I used to turn off the internet for my developers](https://edortta71.medium.com/i-used-to-turn-off-the-internet-for-my-developers-f0d1747ee78f)

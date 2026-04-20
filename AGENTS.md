@@ -18,11 +18,14 @@ This repository is a universal source kit meant to be reused in other projects.
 
 [MANDATORY] Software/product context is defined in:
 - `docs/software-overview.md`
+[MANDATORY] `docs/software-overview.md` must set `project_context_ready: yes` before implementation starts.
 
 [MANDATORY] Agent operational boundaries (what agents can/cannot do) are defined in:
 - `docs/limits.md`
+[MANDATORY] `docs/limits.md` must set `limits_ready: yes` before implementation starts.
 
 [MANDATORY] Every issue/task/implementation must stay within `docs/limits.md` unless a human explicitly approves a boundary update first.
+[PROHIBITED] Starting implementation when either readiness flag is not set to `yes`.
 
 ### Project profile dispatch rule
 

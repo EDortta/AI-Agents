@@ -34,6 +34,24 @@ Core rule:
 
 ## How to Use in Another Project
 
+Install directly from GitHub (recommended):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/main/scripts/install-agents-kit.sh) \
+  --target /path/to/your-project
+```
+
+If you already cloned this repository:
+
+```bash
+./scripts/install-agents-kit.sh --target /path/to/your-project
+```
+
+Important:
+- the installer uses a readiness gate and exits with non-zero until:
+  - `docs/software-overview.md` has `project_context_ready: yes`
+  - `docs/limits.md` has `limits_ready: yes`
+
 1. Copy (or symlink) these assets into the target project:
 - `AGENTS.md`
 - `docs/agents/`
@@ -94,6 +112,7 @@ Templates available:
 ## Structure
 
 - `AGENTS.md`: universal execution contract
+- `scripts/install-agents-kit.sh`: installer (local run or direct GitHub raw execution)
 - `docs/agents/`: role-level contracts (programmer, reviewer, issue automation, security, privacy)
 - `docs/issues/`: local issue structure and templates
 - `handoff.md`: resumable handoff log between sessions
@@ -106,3 +125,4 @@ Templates available:
 - EN: `docs/articles/ai-agents-in-vscodium-chat.md`
 - PT-BR: `docs/articles/ai-agents-in-vscodium-chat-ptbr.md`
 - ES: `docs/articles/ai-agents-in-vscodium-chat-es.md`
+- Author perspective on the programming path: [I used to turn off the internet for my developers](https://edortta71.medium.com/i-used-to-turn-off-the-internet-for-my-developers-f0d1747ee78f)
