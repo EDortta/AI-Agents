@@ -14,3 +14,8 @@ Project expectations:
 Issue artifacts:
 - Use docs/issues epic-folder structure and templates.
 - Include privacy checklist when personal data is involved.
+- Use `work_id` format `WK-YYYYMMDD-<short-slug>` in planning docs and related commits.
+
+Session close:
+- At each stage end, update `handoff.md` and `docs/napkin-lessons.md`.
+- Follow `docs/workflows/session-close.md`.

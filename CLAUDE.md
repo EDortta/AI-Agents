@@ -20,3 +20,5 @@ Read and follow:
 ## Delivery Expectations
 - Provide implementation summary, changed files, tests, and residual risks.
 - Report what was validated and what was not validated.
+- Use `work_id` format `WK-YYYYMMDD-<short-slug>` in planning docs and related commits.
+- At each stage end, run session-close: update `handoff.md` and `docs/napkin-lessons.md` (`docs/workflows/session-close.md`).

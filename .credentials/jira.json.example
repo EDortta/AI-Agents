@@ -1,0 +1,5 @@
+{
+  "jira_base_url": "https://<tenant>.atlassian.net/jira",
+  "jira_email": "<atlassian-email>",
+  "jira_token": "<jira-api-token>"
+}

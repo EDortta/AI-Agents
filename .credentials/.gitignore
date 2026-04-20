@@ -1,0 +1,10 @@
+# Ignore real secrets
+*.token
+jira.json
+
+# Keep templates and docs tracked
+!*.example
+!README.md
+!README-ptbr.md
+!README-es.md
+!.gitignore

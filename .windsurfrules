@@ -12,3 +12,5 @@ Rules:
 - Run impacted tests/checks and report results.
 - Follow docs/issues structure for issue artifacts.
 - Include privacy checklist for personal-data features.
+- Use `work_id` format `WK-YYYYMMDD-<short-slug>` in planning docs and commit messages.
+- At stage end, update `handoff.md` and `docs/napkin-lessons.md` per `docs/workflows/session-close.md`.

@@ -24,13 +24,6 @@ This repository is a universal source kit meant to be reused in other projects.
 
 [MANDATORY] Every issue/task/implementation must stay within `docs/limits.md` unless a human explicitly approves a boundary update first.
 
-### Local mirrored agent library in this repository
-
-[MANDATORY] Use mirrored copies under:
-- `agents-sources/`
-
-[MANDATORY] Keep mirrored files in sync when source contracts evolve.
-
 ### Project profile dispatch rule
 
 [MANDATORY] Before implementation, identify the target repository and apply:
@@ -265,10 +258,25 @@ When runtime behavior changes, evaluate need for:
 [MANDATORY] Commit only after checks are green, unless objectively impossible and documented.
 [MANDATORY] Commit message must be clear and PR-ready.
 [MANDATORY] If Jira key exists, prefix commit with Jira key.
+[MANDATORY] If a local work identifier exists, include it in commit message (recommended prefix: `[<work_id>]`).
 
 [PROHIBITED] Start issue fix on `main`/`master`.
 [PROHIBITED] Commit implementation before applicable checks without explicit justification.
 [PROHIBITED] Create branch automatically right after issue creation without explicit permission.
+
+### Work identifier and dated planning docs
+
+[MANDATORY] Planning and development guide documents must include:
+- `work_id` in format: `WK-YYYYMMDD-<short-slug>`
+- `date` in format: `YYYY-MM-DD`
+
+[MANDATORY] Use the same `work_id` across:
+- issue planning docs
+- handoff notes
+- related commit messages
+
+[DEFAULT] Commit subject format:
+- `[WK-YYYYMMDD-<short-slug>] <summary>`
 
 ### Local artifacts and tracking
 
@@ -285,6 +293,7 @@ When runtime behavior changes, evaluate need for:
 
 [MANDATORY] Epic folder must contain both `README.md` and `epic.md`.
 [MANDATORY] Task issue files must be stored only under the epic `issues/` subfolder.
+[MANDATORY] Epic and task docs must include `work_id` and `date`.
 [DEFAULT] Bootstrap new epics/tasks from:
 - `docs/issues/templates/README.template.md`
 - `docs/issues/templates/epic.template.md`
@@ -313,6 +322,21 @@ When runtime behavior changes, evaluate need for:
 [MANDATORY] Perform status transitions by renaming files/folders.
 [MANDATORY] Apply `[finished]` only with objective implementation evidence.
 [PROHIBITED] Mark `[finished]` based only on planning/intention text.
+
+### Session-close and handoff protocol
+
+[MANDATORY] At the end of each implementation stage/session, run a session-close routine.
+[MANDATORY] Update `handoff.md` with:
+- current status
+- next steps
+- blockers/risks
+- files changed
+- checks/tests executed
+- active `work_id` and date
+
+[MANDATORY] Record concise lessons learned in `docs/napkin-lessons.md` (short bullet format).
+[DEFAULT] If a project provides automated `session-close`/`dev-workflow` command, use it.
+[MANDATORY] If automation is not available, perform manual updates before ending the session.
 
 ### Migrations
 

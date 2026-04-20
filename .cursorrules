@@ -20,3 +20,9 @@ Quality and safety:
 Issue workflow:
 - Use docs/issues epic-folder structure and templates.
 - Include privacy checklist when applicable.
+- Use `work_id` format `WK-YYYYMMDD-<short-slug>` in planning docs and commit messages.
+
+Session close (mandatory at each stage):
+- Update `handoff.md`.
+- Add short lesson to `docs/napkin-lessons.md`.
+- Follow `docs/workflows/session-close.md`.

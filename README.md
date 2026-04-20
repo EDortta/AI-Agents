@@ -64,6 +64,15 @@ During issue work:
 3. Include privacy checks when personal data is involved:
 - `docs/issues/templates/privacy-checklist.template.md`
 
+Session close at each stage:
+1. Update `handoff.md` with status, next steps, blockers, changed files, and checks.
+2. Add short lessons learned to `docs/napkin-lessons.md`.
+3. Follow `docs/workflows/session-close.md`.
+
+Work identifier convention:
+- Use `work_id` format: `WK-YYYYMMDD-<short-slug>`.
+- Keep same `work_id` in planning docs, handoff entries, and related commit messages.
+
 ## Suggested Minimal Project Setup
 
 When adopting this kit, update first:
@@ -72,11 +81,25 @@ When adopting this kit, update first:
 
 Then run a pilot issue using `docs/issues/templates/task.template.md` to validate the process.
 
+## Credentials Setup
+
+Use:
+- `.credentials/README.md`
+
+Templates available:
+- `.credentials/programmer.token.example`
+- `.credentials/reviewer.token.example`
+- `.credentials/jira.json.example`
+
 ## Structure
 
 - `AGENTS.md`: universal execution contract
 - `docs/agents/`: role-level contracts (programmer, reviewer, issue automation, security, privacy)
 - `docs/issues/`: local issue structure and templates
+- `handoff.md`: resumable handoff log between sessions
+- `docs/napkin-lessons.md`: concise lessons learned log
+- `docs/workflows/session-close.md`: end-of-stage/session close checklist
+- `docs/workflows/dev-workflow-integration.md`: optional automation hook for stage-end session close
 
 ## Articles
 

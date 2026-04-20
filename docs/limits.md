@@ -1,5 +1,10 @@
 # Agent Operational Limits
 
+## Metadata
+- work_id: WK-20260420-ia-agents-kit
+- date: 2026-04-20
+- owner: <maintainer>
+
 This file defines hard boundaries for agent execution.
 
 ## Allowed
@@ -19,6 +24,7 @@ This file defines hard boundaries for agent execution.
 - Never start implementation on `main`/`master`.
 - Create/switch branch only with explicit user permission.
 - Prefer `jkctl.py` for issue/PR automation when available.
+- At each stage end, run session-close workflow (`docs/workflows/session-close.md`), update `handoff.md`, and record lessons in `docs/napkin-lessons.md`.
 
 ## Security and Secrets
 - Never expose secrets/tokens/credentials in logs, code, or issue bodies.

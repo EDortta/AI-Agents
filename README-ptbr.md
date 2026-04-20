@@ -64,6 +64,15 @@ Durante trabalho com issues:
 3. Incluir checagem de privacidade quando houver dados pessoais:
 - `docs/issues/templates/privacy-checklist.template.md`
 
+Fechamento de sessão em cada etapa:
+1. Atualizar `handoff.md` com status, próximos passos, bloqueios, arquivos alterados e checks.
+2. Registrar lições aprendidas curtas em `docs/napkin-lessons.md`.
+3. Seguir `docs/workflows/session-close.md`.
+
+Convenção de identificador de trabalho:
+- Usar `work_id` no formato: `WK-YYYYMMDD-<short-slug>`.
+- Manter o mesmo `work_id` nos docs de planejamento, handoff e mensagens de commit relacionadas.
+
 ## Setup mínimo recomendado no projeto
 
 Ao adotar este kit, atualize primeiro:
@@ -72,11 +81,25 @@ Ao adotar este kit, atualize primeiro:
 
 Depois execute uma issue piloto usando `docs/issues/templates/task.template.md` para validar o processo.
 
+## Setup de Credenciais
+
+Use:
+- `.credentials/README-ptbr.md`
+
+Modelos disponíveis:
+- `.credentials/programmer.token.example`
+- `.credentials/reviewer.token.example`
+- `.credentials/jira.json.example`
+
 ## Estrutura
 
 - `AGENTS.md`: contrato universal de execução
 - `docs/agents/`: contratos por papel (programmer, reviewer, issue automation, security, privacy)
 - `docs/issues/`: estrutura local de issues e templates
+- `handoff.md`: log de handoff para retomada entre sessões
+- `docs/napkin-lessons.md`: log conciso de lições aprendidas
+- `docs/workflows/session-close.md`: checklist de fechamento de etapa/sessão
+- `docs/workflows/dev-workflow-integration.md`: integração opcional de automação no fim de etapa
 
 ## Artigos
 
