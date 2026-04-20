@@ -3,6 +3,8 @@
 Portuguese version: [README-ptbr.md](./README-ptbr.md)  
 Spanish version: [README-es.md](./README-es.md)
 
+If you want to understand how an AI agent can help in your development journey, take a look at [ai-agents-in-vscodium-chat.md](./docs/articles/ai-agents-in-vscodium-chat.md).
+
 ## Purpose
 
 This repository is a reusable starter kit for agent governance in software projects.

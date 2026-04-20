@@ -3,6 +3,8 @@
 English version: [README.md](./README.md)  
 Versión en español: [README-es.md](./README-es.md)
 
+Se você quer entender como um agente de IA pode ajudar na sua jornada de desenvolvimento, leia [ai-agents-in-vscodium-chat-ptbr.md](./docs/articles/ai-agents-in-vscodium-chat-ptbr.md).
+
 ## Propósito
 
 Este repositório é um kit reutilizável para governança de agentes em projetos de software.
