@@ -17,3 +17,6 @@ This path is available in three languages with matching numbering and filenames:
 8. `08-intermediate-team-workflow.md`
 9. `09-senior-workflow-and-automation.md`
 10. `10-antipatterns-and-recovery.md`
+11. `11-issue-management-fundamentals.md`
+12. `12-online-issue-flow-jira-github.md`
+13. `13-offline-issue-flow-local-mode.md`
