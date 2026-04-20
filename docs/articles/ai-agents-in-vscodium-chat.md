@@ -47,8 +47,8 @@ This keeps control with you while still moving fast.
 ## 4. Files You Should Always Reference
 
 In this kit, the programmer should always align with:
-- `docs/software-overview.md`: what the software is and why it exists
-- `docs/limits.md`: hard boundaries (what can/cannot be done)
+- `docs/software-overview.md`: what the software is and why it exists (mandatory file the programmer must edit for each project)
+- `docs/limits.md`: hard boundaries (what can/cannot be done) (mandatory file the programmer must edit for each project)
 - `AGENTS.md`: execution contract and quality/security expectations
 
 Before implementation, ask the agent to confirm these files were read.
@@ -74,7 +74,11 @@ When your feature touches personal data, explicitly ask for:
 - retention/deletion behavior
 - logging safety (no sensitive data leaks)
 
-Use:
+Who should use these files:
+- Programmer: use them as a checklist and include these requirements in the chat prompt.
+- AI agent: follow these files during implementation and review.
+
+Files to reference:
 - `docs/agents/privacy-compliance.md`
 - `docs/agents/security.md`
 

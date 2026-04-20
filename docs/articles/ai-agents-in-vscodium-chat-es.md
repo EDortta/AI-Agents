@@ -47,8 +47,8 @@ Así mantienes control y avanzas rápido.
 ## 4. Archivos que Debes Referenciar Siempre
 
 En este kit, el programador debe alinearse con:
-- `docs/software-overview.md`: qué es el software y por qué existe
-- `docs/limits.md`: límites estrictos (qué se puede/no se puede)
+- `docs/software-overview.md`: qué es el software y por qué existe (archivo obligatorio que el programador debe editar en cada proyecto)
+- `docs/limits.md`: límites estrictos (qué se puede/no se puede) (archivo obligatorio que el programador debe editar en cada proyecto)
 - `AGENTS.md`: contrato de ejecución y expectativas de calidad/seguridad
 
 Antes de implementar, pide confirmación de lectura de esos archivos.
@@ -74,7 +74,11 @@ Si la funcionalidad toca datos personales, pide explícitamente:
 - comportamiento de retención/eliminación
 - seguridad de logs (sin filtraciones sensibles)
 
-Usa:
+Quién debe usar estos archivos:
+- Programador: usarlos como checklist e incluir estos requisitos en el prompt del chat.
+- Agente de IA: seguir estos archivos durante implementación y revisión.
+
+Archivos de referencia:
 - `docs/agents/privacy-compliance.md`
 - `docs/agents/security.md`
 

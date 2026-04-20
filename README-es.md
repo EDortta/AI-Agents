@@ -16,6 +16,20 @@ Incluye:
   - `docs/software-overview.md`
   - `docs/limits.md`
 
+## Pensado Para Qué Agentes/Herramientas de IA
+
+Este kit fue pensado para ser portable entre agentes y asistentes de código conocidos, especialmente:
+- Agentes estilo Codex (usando `AGENTS.md`)
+- Agentes basados en Claude (usando `CLAUDE.md`)
+- GitHub Copilot (usando `.github/copilot-instructions.md`)
+- Cursor (usando `.cursorrules`)
+- Windsurf/Cascade (usando `.windsurfrules`)
+- Asistentes basados en Gemini (usando `GEMINI.md`)
+
+Regla central:
+- `AGENTS.md` es el contrato global.
+- Los archivos específicos por herramienta adaptan ese mismo contrato a cada ecosistema.
+
 ## Cómo usar en otro proyecto
 
 1. Copia (o usa symlink) estos artefactos en el proyecto destino:
@@ -28,6 +42,7 @@ Incluye:
 2. Adapta solo lo específico del proyecto:
 - Completa `docs/software-overview.md` con contexto del producto, arquitectura y objetivos.
 - Completa `docs/limits.md` con límites estrictos (in/out-of-scope, acciones prohibidas, gates de aprobación).
+- Estos dos archivos son obligatorios y deben ser editados por el programador para que el agents-kit reconozca correctamente qué hacer en el proyecto.
 
 3. Mantén el núcleo genérico:
 - Conserva estructura e intención de `AGENTS.md` y los archivos centrales de `docs/agents/`.

@@ -16,6 +16,20 @@ It provides:
   - `docs/software-overview.md`
   - `docs/limits.md`
 
+## Designed For Which AI Agents/Tools
+
+This kit was designed to be portable across well-known coding agents and IDE assistants, especially:
+- Codex-style agents (using `AGENTS.md`)
+- Claude-based agents (using `CLAUDE.md`)
+- GitHub Copilot (using `.github/copilot-instructions.md`)
+- Cursor (using `.cursorrules`)
+- Windsurf/Cascade (using `.windsurfrules`)
+- Gemini-based assistants (using `GEMINI.md`)
+
+Core rule:
+- `AGENTS.md` is the global contract.
+- Tool-specific files adapt that same contract to each ecosystem.
+
 ## How to Use in Another Project
 
 1. Copy (or symlink) these assets into the target project:
@@ -28,6 +42,7 @@ It provides:
 2. Adapt only what is project-specific:
 - Fill `docs/software-overview.md` with product context, architecture, and objectives.
 - Fill `docs/limits.md` with hard boundaries (in/out-of-scope, prohibited actions, approval gates).
+- These two files are mandatory and must be edited by the programmer so the agents-kit can correctly recognize what to do in the project.
 
 3. Keep core contracts generic:
 - Preserve the structure and intent of `AGENTS.md` and core files in `docs/agents/`.
