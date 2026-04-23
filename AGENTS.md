@@ -340,6 +340,63 @@ When runtime behavior changes, evaluate need for:
 [MANDATORY] Record concise lessons learned in `docs/napkin-lessons.md` (short bullet format).
 [DEFAULT] If a project provides automated `session-close`/`dev-workflow` command, use it.
 [MANDATORY] If automation is not available, perform manual updates before ending the session.
+[MANDATORY] Update resume file under `docs/issues/NNN-<epic-slug>-[<status>]/RESUME.md`
+[MANDATORY] Resume file must contain "Next Step (DO THIS FIRST)"
+[PROHIBITED] Ending session without explicit next step
+
+### Session-restore and resume protocol
+
+[MANDATORY] Before starting any work session, restore context using the active `work_id`.
+
+[MANDATORY] Identify the active work by one of:
+- current branch name
+- last updated epic in `docs/issues/`
+- explicit user instruction
+
+[MANDATORY] Load and read, in this exact order:
+1. `docs/issues/<epic>/RESUME.md`
+2. `handoff.md`
+3. current task file under `docs/issues/<epic>/issues/`
+
+[MANDATORY] The first actionable step of the session MUST come from:
+- `Next Step (DO THIS FIRST)` in `RESUME.md`
+
+[PROHIBITED] Starting exploration, refactor, or new implementation before executing or explicitly updating the "Next Step".
+
+[MANDATORY] If `RESUME.md` is missing:
+- create it immediately using last known context from `handoff.md` and issue files
+- define a valid "Next Step (DO THIS FIRST)" before proceeding
+
+[MANDATORY] If "Next Step (DO THIS FIRST)" is unclear, outdated, or invalid:
+- update `RESUME.md` before writing any code
+- keep scope aligned with current issue
+
+[MANDATORY] Resume file must be short and operational:
+- max ~50 lines
+- no historical narrative
+- no duplicated issue description
+- only current state + next action
+
+[MANDATORY] Each session must either:
+- complete the "Next Step", OR
+- replace it with a new valid "Next Step"
+
+[MANDATORY] Keep exactly ONE active "Next Step (DO THIS FIRST)" at any time.
+
+[PROHIBITED] Multiple competing next steps or vague instructions like:
+- "continue work"
+- "refactor module"
+- "improve logic"
+
+[MANDATORY] When switching branches or work_id:
+- close previous session (handoff + resume updated)
+- restore new context before any action
+
+[DEFAULT] Prefer CLI helpers when available (e.g., `jkctl resume <work_id>`).
+
+[MANDATORY] AI agents must treat `RESUME.md` as the single source of truth for:
+- immediate action
+- current implementation focus
 
 ### Migrations
 
@@ -358,6 +415,7 @@ If no persistence change, declare: `No model/migration changes`.
 - This file is American English.
 - Issues/business/task content may be pt-BR.
 - Preserve exact meaning when interpreting pt-BR content.
+- English translation is preferred when the translated term is ambiguous.
 
 ---
 
