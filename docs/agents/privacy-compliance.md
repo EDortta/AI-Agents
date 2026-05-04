@@ -52,9 +52,8 @@ When privacy/compliance constraints conflict with security or delivery constrain
 ## Canonical References
 
 Use `/AGENTS.md` as source of truth, especially:
-- `## 1. Global Contract`
-- `## 3. Quality and Testing`
-- `## 4. Security (Top Priority)`
-- `## 5. Observability and Operations`
+- `## 3. Hard Rules`
+- `## 5. Quality Gates`
+- `## 9. Security Decision`
 
 If this file conflicts with `AGENTS.md`, follow `AGENTS.md`.

@@ -1,12 +1,19 @@
 # Agent Operational Limits
 
 ## Metadata
-- work_id: WK-YYYYMMDD-<project-slug>
-- date: YYYY-MM-DD
+- work_id: WK-20260504-low-token-contract-v2
+- date: 2026-05-04
 - owner: <maintainer>
-- limits_ready: no
+- limits_ready: yes
 
 This file defines hard boundaries for agent execution.
+
+## Install-Time Role
+
+In this source kit, this file defines default reusable boundaries.
+When copied into a target project, the programmer must replace or extend these limits with project-specific boundaries and set `limits_ready: yes` only after they are accurate.
+
+If this file is missing or not ready in a target project, agents must stop implementation and ask the programmer to fill it.
 
 ## Allowed
 - Implement work explicitly requested by the user.
@@ -34,3 +41,4 @@ This file defines hard boundaries for agent execution.
 ## Scope Authority
 - Any request outside these boundaries must be explicitly flagged.
 - Execution outside these boundaries requires explicit human approval first.
+- Edits to this source kit's governance gates/templates require explicit human approval as a boundary update.

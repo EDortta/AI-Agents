@@ -47,6 +47,21 @@ If you already cloned this repository:
 ./scripts/install-agents-kit.sh --target /path/to/your-project
 ```
 
+Upgrade an existing installation without overwriting project-local context/state:
+
+```bash
+./scripts/install-agents-kit.sh --target /path/to/your-project --upgrade
+```
+
+Upgrade mode updates kit-owned files and preserves:
+- `docs/software-overview.md`
+- `docs/limits.md`
+- `handoff.md`
+- `docs/napkin-lessons.md`
+- project issue folders under `docs/issues/`
+- `docs/undercover-issues/`
+- `.credentials/`
+
 Important:
 - the installer uses a readiness gate and exits with non-zero until:
   - `docs/software-overview.md` has `project_context_ready: yes`
