@@ -49,6 +49,79 @@ ARO = Acceptance, Risk, Operations.
 [PROHIBITED] Inventing acceptance criteria that materially change issue intent.
 [DEFAULT] If issue acceptance is incomplete, derive the narrowest reasonable interpretation and declare assumptions explicitly.
 
+### Branch and Work Scope
+
+[MANDATORY] Obtain explicit human permission before creating any new branch.
+[MANDATORY] Create/switch branch before first code change.
+[MANDATORY] Work only on the approved branch.
+[MANDATORY] Default PR base branch is `development` unless explicitly required otherwise.
+[PROHIBITED] Start implementation on `main`/`master`.
+[PROHIBITED] Create a branch automatically right after issue creation without explicit permission.
+
+Branch naming:
+- Jira key: `feature/<JIRA-KEY>/<short-description>`
+- GitHub issue: `feature/gh-<issue-number>/<short-description>`
+- undercover/local tracker: `feature/uc-<NNN>/<short-description>`
+
+### Quality and Test Gates
+
+For impacted modules only, unless shared tooling/contracts changed:
+- lint passes
+- typecheck/compilation passes
+- tests pass
+- no exposed secrets
+
+[MANDATORY] Identify impacted package(s)/service(s) before running checks.
+[MANDATORY] Run checks for impacted modules and direct dependents when relevant.
+[PROHIBITED] Run repository-wide checks by default unless shared tooling/contracts/root config changed.
+
+Tests are mandatory when changing:
+- business logic
+- API contracts
+- authentication/authorization
+- persistence/migrations
+- shared interfaces
+- regression-prone flows
+
+Tests may be N/A only for documentation-only, comments-only, or metadata-only changes with no runtime effect.
+If tests are N/A, provide explicit justification.
+
+For each command executed, report:
+- command
+- impacted module
+- result
+- behavior validated
+
+### Contract and Migration Notes
+
+When changing APIs/events/schemas/shared interfaces, declare:
+- backward compatible: yes/no
+- contract changed: yes/no
+- migration required: yes/no
+- downstream consumers affected: yes/no
+
+For model/persistence changes:
+- use official stack migration tools/workflow
+- do not handcraft migrations when an official generator exists
+- do not manually edit generated migration artifacts without explicit technical justification
+- validate migration apply and rollback/downgrade when supported
+
+If no persistence change, declare: `No model/migration changes`.
+
+### Maintainability Review
+
+Before finalizing, review diffs for:
+- introduced duplication
+- ambiguous naming
+- overly long or poorly cohesive functions
+- redundant or misleading comments
+- out-of-scope cleanup
+
+[MANDATORY] Reuse existing project utilities/patterns before introducing new ones.
+[MANDATORY] Avoid relevant logic duplication; extract reusable units when repeated.
+[PROHIBITED] Clever code that harms readability or maintainability.
+[PROHIBITED] Refactor that changes public contract without explicit contract notes.
+
 ### Issue Workflow (Creation vs. Solving)
 
 [MANDATORY] Prefer `jkctl.py` commands for issue/PR workflow automation whenever `jkctl.py` exists in the target repository.
@@ -87,6 +160,8 @@ Phase 3 - Open PR when implementation is ready:
 - Tests
 - Security impact
 - Risks / Pending items
+- Contract notes
+- Migration notes
 - Related issue
 - PR ready
 

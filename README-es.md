@@ -47,6 +47,21 @@ Si ya clonaste este repositorio:
 ./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto
 ```
 
+Actualiza una instalación existente sin sobrescribir contexto/estado local del proyecto:
+
+```bash
+./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto --upgrade
+```
+
+El modo upgrade actualiza archivos propios del kit y preserva:
+- `docs/software-overview.md`
+- `docs/limits.md`
+- `handoff.md`
+- `docs/napkin-lessons.md`
+- carpetas de issues del proyecto en `docs/issues/`
+- `docs/undercover-issues/`
+- `.credentials/`
+
 Importante:
 - el instalador usa un readiness gate y termina con código distinto de cero hasta que:
   - `docs/software-overview.md` tenga `project_context_ready: yes`

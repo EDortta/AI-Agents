@@ -61,8 +61,8 @@ When personal data handling is involved, apply `./privacy-compliance.md` alongsi
 ## Canonical References
 
 Use `/AGENTS.md` as source of truth, especially:
-- `## 3. Security (Top Priority)`
-- `## 4. Observability and Operations`
-- `## 12. Maintainability and Readability Guard`
+- `## 3. Hard Rules`
+- `## 5. Quality Gates`
+- `## 9. Security Decision`
 
 If this file conflicts with `AGENTS.md`, follow `AGENTS.md`.
