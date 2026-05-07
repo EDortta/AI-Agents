@@ -5,6 +5,30 @@ Most recent entry should be on top.
 
 ---
 
+## [2026-05-07] WK-20260507-personal-touch-1.0.2 - done
+
+- Status: ready-for-review
+- Summary: 1.0.2 — USER.md as first-class personal touch mechanism; `.cursorrules` rewritten self-contained; AI-GovernanceKit relationship defined as companion; all tool adapters updated.
+- Next steps:
+  - Review diff.
+  - Run `./new-tag.sh auto` to tag 1.0.2 if accepted.
+- Blockers/Risks:
+  - No blocker. Main risk: `.cursorrules` §3 session-close format may be too prescriptive; trim if it causes friction in Cursor.
+- Files changed:
+  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `.github/copilot-instructions.md`
+  - `docs/agents/_shared.md`, `docs/agents/communication.md` (new)
+  - `README.md`, `handoff.md`, `docs/napkin-lessons.md`
+  - `AI-GovernanceKit/README.md`
+- Checks/Tests executed:
+  - `bash -n scripts/install-agents-kit.sh` -> pending reviewer run
+  - grep `~/.config/USER.md` across adapters -> pending reviewer run
+- Related commits:
+  - planned: `[WK-20260507-personal-touch-1.0.2] Add USER.md personal touch mechanism and rework Cursor adapter`
+- Suggested restart prompt:
+  - "Continue work_id WK-20260507-personal-touch-1.0.2. Read AGENTS.md, docs/software-overview.md, docs/limits.md and this handoff entry before coding."
+
+---
+
 ## [2026-05-04] WK-20260504-low-token-contract-v2 - review
 
 - Status: ready-for-review

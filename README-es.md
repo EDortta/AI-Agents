@@ -114,6 +114,40 @@ Al adoptar este kit, actualiza primero:
 
 Luego ejecuta una issue piloto usando `docs/issues/templates/task.template.md` para validar el proceso.
 
+## Toque Personal via USER.md
+
+Los agentes pueden adaptar su estilo de comunicación a tu perfil cuando existe un archivo `USER.md` en `~/.config/USER.md`.
+
+Este archivo es:
+- **Global** — vive en el directorio de configuración de tu usuario, no en ningún repositorio de proyecto
+- **Opcional** — el kit funciona sin él; el comportamiento de gobernanza no cambia
+- **Personal** — generado a partir de una evaluación de perfil (DISC, Jung, Spranger, etc.) o escrito manualmente
+
+Cuando está presente, los agentes lo leen al inicio de la sesión para adaptar tono, profundidad, encuadre de decisiones e idioma al usuario.
+
+Convención:
+- Ruta: `~/.config/USER.md`
+- Formato: Markdown, secciones libres que describen preferencias de comunicación, tipo de perfil y trampas a evitar
+- Nunca debe commitearse en ningún repositorio de proyecto
+
+Herramientas como [ConhecerTe](https://conhecerte.com.br) pueden generar un `USER.md` listo a partir de una evaluación de perfil estructurada.
+
+---
+
+## Complementario: AI-GovernanceKit
+
+El [AI-GovernanceKit](https://github.com/EDortta/AI-GovernanceKit) es la capa de ejecución y validación para este policy pack.
+
+- **IA-agents** = policy pack — el "qué y por qué" de la gobernanza (este repositorio)
+- **AI-GovernanceKit** = CLI de runtime — el "cómo" de la ejecución (doctor, automatización de sesión, hooks de CI)
+
+Están diseñados para funcionar juntos, pero sin dependencia formal:
+- Instala IA-agents copiando los archivos en el proyecto destino
+- Instala AI-GovernanceKit como paquete Python (`pip install ai-governancekit`)
+- El comando `doctor` del GovernanceKit valida la estructura de archivos del IA-agents automáticamente
+
+---
+
 ## Setup de Credenciales
 
 Usa:

@@ -5,6 +5,8 @@ Context files (required):
 - docs/software-overview.md
 - docs/limits.md
 
+Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.
+
 Rules:
 - Work only within defined limits.
 - Ask for approval if limits are exceeded.
