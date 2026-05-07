@@ -1,6 +1,6 @@
-# IA-Agents Universal Kit
+# AI-Agents Universal Kit
 
-![Logo IA-Agents](./docs/icons/logo.png)
+![Logo AI-Agents](./docs/icons/logo.png)
 
 English version: [README.md](./README.md)  
 Versión en español: [README-es.md](./README-es.md)
@@ -138,13 +138,13 @@ Ferramentas como o [ConhecerTe](https://conhecerte.com.br) podem gerar um `USER.
 
 O [AI-GovernanceKit](https://github.com/EDortta/AI-GovernanceKit) é a camada de execução e validação para este policy pack.
 
-- **IA-agents** = policy pack — o "o quê e o porquê" da governança (este repositório)
+- **AI-Agents** = policy pack — o "o quê e o porquê" da governança (este repositório)
 - **AI-GovernanceKit** = CLI de runtime — o "como" da execução (doctor, automação de sessão, hooks de CI)
 
 São projetados para trabalhar juntos, mas sem dependência formal:
-- Instale o IA-agents copiando os arquivos no projeto alvo
+- Instale o AI-Agents copiando os arquivos no projeto alvo
 - Instale o AI-GovernanceKit como pacote Python (`pip install ai-governancekit`)
-- O comando `doctor` do GovernanceKit valida a estrutura de arquivos do IA-agents automaticamente
+- O comando `doctor` do GovernanceKit valida a estrutura de arquivos do AI-Agents automaticamente
 
 ---
 

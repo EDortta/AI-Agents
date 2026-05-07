@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Install IA-Agents kit into a target project.
+Install AI-Agents kit into a target project.
 
 Usage:
   # Local source (when running inside this repository)
