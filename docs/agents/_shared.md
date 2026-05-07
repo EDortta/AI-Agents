@@ -20,6 +20,7 @@ Core files:
 - [issue-automation.md](./issue-automation.md) — Jira/GitHub/local issue creation
 - [security.md](./security.md) — runtime security review
 - [privacy-compliance.md](./privacy-compliance.md) — personal data requirements
+- [communication.md](./communication.md) — applying user profile preferences (load only when `~/.config/USER.md` is present)
 - [../workflows/session-restore.md](../workflows/session-restore.md) — active work resume
 - [../workflows/session-close.md](../workflows/session-close.md) — handoff/resume closeout
 

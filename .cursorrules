@@ -1,28 +1,79 @@
 # Cursor Rules for This Repository
 
-Always read before coding:
-- AGENTS.md
-- docs/software-overview.md
-- docs/limits.md
+## 1. Start Gate (always do this first)
 
-Execution rules:
-- Stay within docs/limits.md boundaries.
-- Keep scope tight; avoid unrelated refactors.
-- State assumptions when requirements are incomplete.
-- Prefer minimal, durable, testable fixes.
+Read before any implementation:
+- `AGENTS.md`
+- `docs/software-overview.md` — must have `project_context_ready: yes`
+- `docs/limits.md` — must have `limits_ready: yes`
 
-Quality and safety:
-- Run impacted checks/tests.
-- Do not expose secrets or sensitive data.
-- Include privacy/compliance review when personal data is involved.
-- If request conflicts with limits, stop and ask for explicit approval.
+If either readiness flag is missing or `no`, stop and ask the programmer to fill the file.
 
-Issue workflow:
-- Use docs/issues epic-folder structure and templates.
-- Include privacy checklist when applicable.
-- Use `work_id` format `WK-YYYYMMDD-<short-slug>` in planning docs and commit messages.
+Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile.
 
-Session close (mandatory at each stage):
-- Update `handoff.md`.
-- Add short lesson to `docs/napkin-lessons.md`.
-- Follow `docs/workflows/session-close.md`.
+## 2. Hard Rules
+
+- Security over speed. Correctness over convenience.
+- Keep scope tight to the issue/request. No unrelated refactors.
+- Solve root cause, not symptoms.
+- No silent contract changes (API/schema/interface) — declare them explicitly.
+- Never expose secrets, tokens, credentials, or sensitive data.
+
+## 3. Session Close (required at each stage end)
+
+At each stage end, produce exactly these artifacts — no other summary format:
+
+**`handoff.md` entry** (prepend at top of file):
+```
+## [YYYY-MM-DD] <work_id> - <stage>
+- Status: <in-progress|blocked|ready-for-review|done>
+- Summary: <short status>
+- Next steps: <list>
+- Blockers/Risks: <list or none>
+- Files changed: <list>
+- Checks/Tests executed: <command> -> <result>
+- Related commits: <hash or planned>
+- Suggested restart prompt: "Continue work_id <work_id>. Read AGENTS.md, docs/software-overview.md, docs/limits.md and this handoff entry before coding."
+```
+
+**`docs/napkin-lessons.md` entry** (prepend after header):
+```
+- [YYYY-MM-DD] <work_id> - <specific lesson>
+- Action next time: <concrete behavior to repeat or avoid>
+```
+
+**Active `docs/issues/<epic>/RESUME.md`:**
+- max ~50 lines
+- no historical narrative
+- one `## Next Step (DO THIS FIRST)` — concrete and actionable
+- if no active epic, update `handoff.md` only
+
+## 4. Quality Gates
+
+For impacted modules only (not repository-wide):
+- lint passes
+- typecheck/compilation passes
+- tests pass
+- no exposed secrets
+
+Tests may be N/A only for docs/metadata changes with no runtime effect — justify N/A explicitly.
+
+## 5. Branch Rules
+
+- Never start implementation on `main`/`master`.
+- Obtain explicit human permission before creating a branch.
+- Create/switch branch before first code change.
+- Branch naming:
+  - Jira key: `feature/<JIRA-KEY>/<short-description>`
+  - GitHub issue: `feature/gh-<issue-number>/<short-description>`
+  - local/undercover: `feature/uc-<NNN>/<short-description>`
+- Default PR base is `development` unless explicitly required otherwise.
+
+## 6. Prohibited
+
+- Starting work without reading the 3 required files.
+- Creating branches automatically without explicit permission.
+- Producing session artifacts in any format other than §3 above.
+- Committing secrets, `.env*`, token files, or credentials.
+- Creating empty or placeholder-only issue/PR artifacts.
+- Marking issues solved without objective implementation evidence.

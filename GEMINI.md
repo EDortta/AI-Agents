@@ -5,6 +5,8 @@ Use this repository contract as source of truth:
 - docs/software-overview.md
 - docs/limits.md
 
+Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.
+
 Implementation policy:
 - Keep scope strict and explicit.
 - Prefer simple and maintainable solutions.

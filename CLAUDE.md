@@ -6,6 +6,9 @@ Read and follow:
 - docs/software-overview.md
 - docs/limits.md
 
+## User Profile
+Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.
+
 ## Behavior Contract
 - Solve root cause, not only symptoms.
 - Preserve backward compatibility unless explicitly changed.

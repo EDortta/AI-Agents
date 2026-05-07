@@ -7,7 +7,7 @@ Instruction precedence:
 1. system/runtime instructions
 2. this `AGENTS.md`
 3. target-repository role/workflow docs loaded by this file
-4. local user preferences
+4. local user preferences (`~/.config/USER.md` if present)
 
 ---
 
@@ -34,6 +34,11 @@ If either file is missing or not ready:
 Every task must stay within `docs/limits.md` unless a human explicitly approves a boundary update.
 
 Source-kit exception: when maintaining this reusable kit itself, a human may approve edits to these gates/templates before implementation starts.
+
+Optional user profile:
+- If `~/.config/USER.md` exists, read it to adapt communication style (tone, depth, decision framing) to the user's profile.
+- This satisfies precedence level 4 (local user preferences).
+- Only communication is adapted; governance behavior and quality gates are unchanged.
 
 ---
 

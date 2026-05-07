@@ -8,6 +8,10 @@ Keep each lesson concise and actionable.
 - `Action next time: <specific behavior to repeat/avoid>`
 
 ## Entries
+- `[2026-05-07] WK-20260507-personal-touch-1.0.2 - Cursor ignores chain-loaded files; tool adapters must be self-contained to be effective.`
+- `Action next time: Write .cursorrules to cover start gate, hard rules, session-close format, quality gates, and branch rules — no chain-loading assumption.`
+- `[2026-05-07] WK-20260507-personal-touch-1.0.2 - USER.md is a global user-level file (~/.config/USER.md); never put it in the project repo or the install script.`
+- `Action next time: Document the convention in README and all adapter files; keep it optional so the kit works without it.`
 - `[2026-05-04] WK-20260504-low-token-contract-v2 - Keep root contracts as dispatchers and move detailed behavior to role/workflow docs to reduce repeated context.`
 - `Action next time: Preserve hard gates in AGENTS.md, but push task-specific detail behind explicit load rules.`
 - `[2026-05-04] WK-20260504-low-token-contract-v2 - Upgrade paths must preserve target-local context while replacing managed directories so removed kit files disappear.`

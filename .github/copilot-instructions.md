@@ -5,6 +5,8 @@ Before suggesting or applying changes, align with:
 - docs/software-overview.md
 - docs/limits.md
 
+Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.
+
 Project expectations:
 - Root-cause fixes over patchy symptom fixes.
 - No unrelated refactors.
