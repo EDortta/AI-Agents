@@ -5,6 +5,32 @@ Most recent entry should be on top.
 
 ---
 
+## [2026-05-08] WK-20260508-docs-resume-newbie - done
+
+- Status: done
+- Summary: Added `governancekit resume` to all documentation surfaces in both repos. Rewrote articles 01 (first-day setup) and 09 (senior workflow) in EN/PT-BR/ES with actual install commands and step-by-step guidance for newbies. Added resume CLI section (§05) to GovernanceKit landing page. Added resume glossary entries to concepts.html (AI-Agents) and intro.html (GovernanceKit) in all 3 languages. Also committed previously untracked GovernanceKit package files (__init__.py, __main__.py, pyproject.toml).
+- Next steps:
+  - Continue improvement plan: A2 `governancekit init`, B3 end-to-end CLI tests, C1 PyPI prep, D1-D3 policy depth.
+- Blockers/Risks:
+  - None.
+- Files changed:
+  - `docs/agents/programmer.md` — resume step added to context loading section
+  - `docs/concepts.html` — resume glossary in EN/PT-BR/ES
+  - `docs/articles/en/01-first-day-setup.md` — rewritten with install steps
+  - `docs/articles/en/09-senior-workflow-and-automation.md` — full CLI daily loop guide
+  - `docs/articles/ptbr/01-first-day-setup.md`, `ptbr/09-senior-workflow-and-automation.md`
+  - `docs/articles/es/01-first-day-setup.md`, `es/09-senior-workflow-and-automation.md`
+  - AI-GovernanceKit: `README.md`, `docs/index.html`, `docs/intro.html`, `docs/software-overview.md`
+- Checks/Tests executed:
+  - Both repos pushed to GitHub successfully.
+- Related commits:
+  - AI-Agents 50dd705: Add resume command to docs, rewrite articles 01 and 09 for newbie clarity
+  - AI-GovernanceKit 275784f: Add resume command docs, resume section to landing page, and trilingual glossary entries
+- Suggested restart prompt:
+  - "Run `governancekit resume`. Then read AGENTS.md, docs/software-overview.md, and docs/limits.md. Check the improvement roadmap plan and continue with the next pending item."
+
+---
+
 ## [2026-05-07] WK-20260507-personal-touch-1.0.2 - done
 
 - Status: ready-for-review
