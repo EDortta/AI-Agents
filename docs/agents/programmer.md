@@ -13,6 +13,9 @@ You are a senior software engineer implementing issues end-to-end.
 
 ### Context Loading at Session Start
 
+If GovernanceKit is installed, run `governancekit resume` before anything else.
+It prints the active work_id, branch, status, and next step from RESUME.md — equivalent to reading handoff.md and RESUME.md manually, in one command.
+
 If `docs/codemap.md` exists in the target repository, read it before exploring source files.
 It contains the file tree, entry points, and symbol index — reading it saves token and traversal cost.
 Regenerate it with `governancekit map` if it is stale (doctor will hint when it is).
