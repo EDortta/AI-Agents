@@ -72,6 +72,37 @@
     }
     .nav-links a { color: var(--text-dim); }
     .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    /* ── LANG TABS ────────────────────────────────────────── */
+    .lang-tabs {
+      display: flex;
+      gap: 0.2rem;
+      list-style: none;
+      flex-shrink: 0;
+    }
+    .lang-tabs button {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0.28rem 0.65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .lang-tabs button:hover {
+      color: var(--text);
+      border-color: rgba(88, 166, 255, 0.25);
+    }
+    .lang-tabs button.active {
+      color: var(--accent);
+      border-color: rgba(88, 166, 255, 0.4);
+      background: rgba(88, 166, 255, 0.07);
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -405,8 +436,13 @@
       <li><a href="#features">Features</a></li>
       <li><a href="#install">Install</a></li>
       <li><a href="#compatibility">Compatibility</a></li>
-      <li><a href="https://edortta.github.io/AI-GovernanceKit/intro.html">Concepts</a></li>
+      <li><a href="./concepts.html">Concepts</a></li>
       <li><a href="https://github.com/EDortta/AI-Agents">GitHub</a></li>
+    </ul>
+    <ul class="lang-tabs" role="tablist">
+      <li><button id="tab-en"   onclick="setLang('en')"   aria-selected="true">EN</button></li>
+      <li><button id="tab-ptbr" onclick="setLang('ptbr')" aria-selected="false">PT-BR</button></li>
+      <li><button id="tab-es"   onclick="setLang('es')"   aria-selected="false">ES</button></li>
     </ul>
     <a href="https://github.com/EDortta/AI-Agents" class="btn btn-primary">
       ★ Star on GitHub
@@ -416,14 +452,14 @@
 
 <!-- ── HERO ────────────────────────────────────────────────── -->
 <header class="hero">
-  <div class="hero-badge">Open Source · Policy + Enforcement</div>
-  <h1>Govern your AI agents.<br /><span>Every project. Every IDE.</span></h1>
-  <p>
+  <div class="hero-badge" data-i18n="hero.badge">Open Source · Policy + Enforcement</div>
+  <h1 data-i18n="hero.h1">Govern your AI agents.<br /><span>Every project. Every IDE.</span></h1>
+  <p data-i18n="hero.p">
     A portable governance layer for AI coding agents — policy contracts, role definitions,
     issue workflows, and runtime enforcement that work across all major assistants.
   </p>
   <div class="hero-actions">
-    <a href="#install" class="btn btn-primary">Get Started</a>
+    <a href="#install" class="btn btn-primary" data-i18n="hero.cta1">Get Started</a>
     <a href="https://github.com/EDortta/AI-Agents" class="btn btn-outline">View on GitHub</a>
   </div>
 
@@ -434,7 +470,7 @@
       <span class="dot-green"></span>
     </div>
     <div>
-      <span class="term-comment"># Install AI-Agents governance kit into your project</span>
+      <span class="term-comment" data-i18n="term.c1"># Install AI-Agents governance kit into your project</span>
     </div>
     <div>
       <span class="term-prompt">$</span>
@@ -445,7 +481,7 @@
     </div>
     <br />
     <div>
-      <span class="term-comment"># Install GovernanceKit CLI</span>
+      <span class="term-comment" data-i18n="term.c2"># Install GovernanceKit CLI</span>
     </div>
     <div>
       <span class="term-prompt">$</span>
@@ -453,7 +489,7 @@
     </div>
     <br />
     <div>
-      <span class="term-comment"># Validate your setup</span>
+      <span class="term-comment" data-i18n="term.c3"># Validate your setup</span>
     </div>
     <div>
       <span class="term-prompt">$</span>
@@ -466,20 +502,20 @@
 <section class="products" id="products">
   <div class="container">
     <div style="margin-bottom:40px">
-      <div class="section-label">Two complementary tools</div>
-      <div class="section-title">Policy pack meets runtime enforcement</div>
+      <div class="section-label" data-i18n="prod.label">Two complementary tools</div>
+      <div class="section-title" data-i18n="prod.title">Policy pack meets runtime enforcement</div>
     </div>
     <div class="product-grid">
 
       <div class="product-card">
         <div class="product-icon icon-blue">📋</div>
         <h3>AI-Agents</h3>
-        <p>
+        <p data-i18n="ai.p1">
           The <strong>policy pack</strong> — the "what and why" of governance.
           A reusable starter kit that brings structure, contracts, and discipline
           to every AI agent working in your codebase.
         </p>
-        <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:16px">
+        <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:16px" data-i18n="ai.p2">
           Ships with a universal <code>AGENTS.md</code> contract, role-specific agent contracts
           (programmer, reviewer, security, privacy), issue templates, session-close workflows,
           and a handoff log — everything an AI agent needs to operate predictably.
@@ -490,12 +526,12 @@
       <div class="product-card">
         <div class="product-icon icon-green">⚙️</div>
         <h3><a href="https://github.com/EDortta/AI-GovernanceKit">AI-GovernanceKit</a></h3>
-        <p>
+        <p data-i18n="gk.p1">
           The <strong>runtime CLI</strong> — the "how" of enforcement.
           Validates, automates, and integrates your governance policy into
           daily development and CI pipelines.
         </p>
-        <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:16px">
+        <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:16px" data-i18n="gk.p2">
           Provides a <code>doctor</code> command that validates the AI-Agents file structure,
           session automation hooks, and CI integration points — so governance violations
           are caught before they reach review.
@@ -510,9 +546,9 @@
 <!-- ── FEATURES ─────────────────────────────────────────────── -->
 <section id="features">
   <div class="container">
-    <div class="section-label">Core capabilities</div>
-    <div class="section-title">Everything agents need to behave.</div>
-    <p class="section-sub">
+    <div class="section-label" data-i18n="feat.label">Core capabilities</div>
+    <div class="section-title" data-i18n="feat.title">Everything agents need to behave.</div>
+    <p class="section-sub" data-i18n="feat.sub">
       From a one-line install to enterprise-grade boundaries — built for real teams, real projects.
     </p>
 
@@ -520,56 +556,56 @@
 
       <div class="feature-card">
         <div class="feature-icon">📜</div>
-        <h4>Universal Contract</h4>
-        <p><code>AGENTS.md</code> is the single source of truth for every AI agent in your repo — precedence rules, hard limits, execution loop, and quality gates in one file.</p>
+        <h4 data-i18n="f1.h">Universal Contract</h4>
+        <p data-i18n="f1.p"><code>AGENTS.md</code> is the single source of truth for every AI agent in your repo — precedence rules, hard limits, execution loop, and quality gates in one file.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">🎭</div>
-        <h4>Role-Based Contracts</h4>
-        <p>Separate contracts for programmer, reviewer, security, issue automation, and privacy compliance — agents load only what they need.</p>
+        <h4 data-i18n="f2.h">Role-Based Contracts</h4>
+        <p data-i18n="f2.p">Separate contracts for programmer, reviewer, security, issue automation, and privacy compliance — agents load only what they need.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">🛡️</div>
-        <h4>Hard Scope Limits</h4>
-        <p><code>docs/limits.md</code> defines what agents may never do — prohibited actions, security boundaries, and branch/approval gates that override any other instruction.</p>
+        <h4 data-i18n="f3.h">Hard Scope Limits</h4>
+        <p data-i18n="f3.p"><code>docs/limits.md</code> defines what agents may never do — prohibited actions, security boundaries, and branch/approval gates that override any other instruction.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">🔁</div>
-        <h4>Resumable Sessions</h4>
-        <p>Every session closes with an updated <code>handoff.md</code> and <code>RESUME.md</code> so any agent — or human — can pick up exactly where the last session ended.</p>
+        <h4 data-i18n="f4.h">Resumable Sessions</h4>
+        <p data-i18n="f4.p">Every session closes with an updated <code>handoff.md</code> and <code>RESUME.md</code> so any agent — or human — can pick up exactly where the last session ended.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">📁</div>
-        <h4>Structured Issue Workflow</h4>
-        <p>Epic-based issue folders, ready-to-use templates (task, privacy checklist, retrospective), and a work-ID convention that links planning docs to commits.</p>
+        <h4 data-i18n="f5.h">Structured Issue Workflow</h4>
+        <p data-i18n="f5.p">Epic-based issue folders, ready-to-use templates (task, privacy checklist, retrospective), and a work-ID convention that links planning docs to commits.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">🔒</div>
-        <h4>Security by Default</h4>
-        <p>Every delivery requires a security-impact classification. Agents must document affected surfaces, abuse paths, mitigations, and residual risk before marking work done.</p>
+        <h4 data-i18n="f6.h">Security by Default</h4>
+        <p data-i18n="f6.p">Every delivery requires a security-impact classification. Agents must document affected surfaces, abuse paths, mitigations, and residual risk before marking work done.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">⬆️</div>
-        <h4>Safe Upgrade Path</h4>
-        <p>The <code>--upgrade</code> flag updates kit-owned files while preserving all project-specific context: overviews, limits, handoffs, issues, and credentials.</p>
+        <h4 data-i18n="f7.h">Safe Upgrade Path</h4>
+        <p data-i18n="f7.p">The <code>--upgrade</code> flag updates kit-owned files while preserving all project-specific context: overviews, limits, handoffs, issues, and credentials.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">🩺</div>
-        <h4><a href="https://github.com/EDortta/AI-GovernanceKit">GovernanceKit Doctor</a></h4>
-        <p>Run <code>governancekit doctor</code> to validate the entire AI-Agents structure in seconds — ideal as a pre-commit hook or CI gate.</p>
+        <h4 data-i18n="f8.h"><a href="https://github.com/EDortta/AI-GovernanceKit">GovernanceKit Doctor</a></h4>
+        <p data-i18n="f8.p">Run <code>governancekit doctor</code> to validate the entire AI-Agents structure in seconds — ideal as a pre-commit hook or CI gate.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">🧠</div>
-        <h4>Personal Touch</h4>
-        <p>Agents adapt communication style (tone, depth, language) when <code>~/.config/USER.md</code> is present — governance behavior stays unchanged, delivery becomes personal.</p>
+        <h4 data-i18n="f9.h">Personal Touch</h4>
+        <p data-i18n="f9.p">Agents adapt communication style (tone, depth, language) when <code>~/.config/USER.md</code> is present — governance behavior stays unchanged, delivery becomes personal.</p>
       </div>
 
     </div>
@@ -579,26 +615,26 @@
 <!-- ── HOW IT WORKS ──────────────────────────────────────────── -->
 <section class="how-bg" id="how">
   <div class="container">
-    <div class="section-label">How it works</div>
-    <div class="section-title">Up and running in minutes.</div>
-    <p class="section-sub" style="margin-bottom:48px">Four steps from zero to governed.</p>
+    <div class="section-label" data-i18n="how.label">How it works</div>
+    <div class="section-title" data-i18n="how.title">Up and running in minutes.</div>
+    <p class="section-sub" style="margin-bottom:48px" data-i18n="how.sub">Four steps from zero to governed.</p>
 
     <div class="steps">
       <div class="step">
-        <h4>Install the kit</h4>
-        <p>Run the one-liner installer. It copies all contracts and templates into your project directory.</p>
+        <h4 data-i18n="s1.h">Install the kit</h4>
+        <p data-i18n="s1.p">Run the one-liner installer. It copies all contracts and templates into your project directory.</p>
       </div>
       <div class="step">
-        <h4>Fill two files</h4>
-        <p>Describe your product in <code>docs/software-overview.md</code> and set hard boundaries in <code>docs/limits.md</code>. Mark both as ready.</p>
+        <h4 data-i18n="s2.h">Fill two files</h4>
+        <p data-i18n="s2.p">Describe your product in <code>docs/software-overview.md</code> and set hard boundaries in <code>docs/limits.md</code>. Mark both as ready.</p>
       </div>
       <div class="step">
-        <h4>Validate with doctor</h4>
-        <p>Run <code>governancekit doctor</code> to confirm the structure is complete. Agents will refuse to start if it isn't.</p>
+        <h4 data-i18n="s3.h">Validate with doctor</h4>
+        <p data-i18n="s3.p">Run <code>governancekit doctor</code> to confirm the structure is complete. Agents will refuse to start if it isn't.</p>
       </div>
       <div class="step">
-        <h4>Start your first issue</h4>
-        <p>Use the task template under <code>docs/issues/templates/</code>. Agents follow the execution loop automatically from here.</p>
+        <h4 data-i18n="s4.h">Start your first issue</h4>
+        <p data-i18n="s4.p">Use the task template under <code>docs/issues/templates/</code>. Agents follow the execution loop automatically from here.</p>
       </div>
     </div>
   </div>
@@ -607,9 +643,9 @@
 <!-- ── COMPATIBILITY ─────────────────────────────────────────── -->
 <section id="compatibility">
   <div class="container">
-    <div class="section-label">Broad compatibility</div>
-    <div class="section-title">Works with every major AI assistant.</div>
-    <p class="section-sub">
+    <div class="section-label" data-i18n="compat.label">Broad compatibility</div>
+    <div class="section-title" data-i18n="compat.title">Works with every major AI assistant.</div>
+    <p class="section-sub" data-i18n="compat.sub">
       One policy pack, many adapters. The same governance contract surfaces natively in whichever tool your team uses.
     </p>
 
@@ -627,31 +663,31 @@
 <!-- ── INSTALL ───────────────────────────────────────────────── -->
 <section class="how-bg" id="install">
   <div class="container">
-    <div class="section-label">Installation</div>
-    <div class="section-title">Three commands. Done.</div>
-    <p class="section-sub">No configuration manager needed — plain files you can read and edit.</p>
+    <div class="section-label" data-i18n="inst.label">Installation</div>
+    <div class="section-title" data-i18n="inst.title">Three commands. Done.</div>
+    <p class="section-sub" data-i18n="inst.sub">No configuration manager needed — plain files you can read and edit.</p>
 
     <div class="code-tabs">
-      <div class="code-tab active">Fresh install</div>
-      <div class="code-tab" style="opacity:0.5">Upgrade existing</div>
+      <div class="code-tab active" data-i18n="inst.tab1">Fresh install</div>
+      <div class="code-tab" style="opacity:0.5" data-i18n="inst.tab2">Upgrade existing</div>
     </div>
     <div class="code-block">
-<span class="cm"># 1 — Install AI-Agents policy pack into your project (run from anywhere)</span>
+<span class="cm" data-i18n="inst.c1"># 1 — Install AI-Agents policy pack into your project (run from anywhere)</span>
 <span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/main/scripts/install-agents-kit.sh) \
   --target /path/to/your-project
 
-<span class="cm"># 2 — Install GovernanceKit CLI</span>
+<span class="cm" data-i18n="inst.c2"># 2 — Install GovernanceKit CLI</span>
 <span class="kw">pip</span> install git+https://github.com/EDortta/AI-GovernanceKit.git
 
-<span class="cm"># 3 — Fill the two required context files, then validate</span>
-<span class="cm">#     docs/software-overview.md  →  set project_context_ready: yes</span>
-<span class="cm">#     docs/limits.md             →  set limits_ready: yes</span>
+<span class="cm" data-i18n="inst.c3"># 3 — Fill the two required context files, then validate</span>
+<span class="cm" data-i18n="inst.c4">#     docs/software-overview.md  →  set project_context_ready: yes</span>
+<span class="cm" data-i18n="inst.c5">#     docs/limits.md             →  set limits_ready: yes</span>
 <span class="kw">governancekit</span> doctor
     </div>
 
     <br />
 
-    <p style="color:var(--muted); font-size:0.875rem">
+    <p style="color:var(--muted); font-size:0.875rem" data-i18n="inst.upgrade">
       To upgrade an existing installation without overwriting project context:
     </p>
     <div class="code-block" style="margin-top:10px">
@@ -666,19 +702,19 @@
   <div class="container">
     <div class="personal-block">
       <div>
-        <div class="section-label">Personal Touch</div>
-        <div class="section-title">Governance that knows you.</div>
-        <p style="color:var(--text-dim); font-size:0.95rem; margin-bottom:24px">
+        <div class="section-label" data-i18n="pers.label">Personal Touch</div>
+        <div class="section-title" data-i18n="pers.title">Governance that knows you.</div>
+        <p style="color:var(--text-dim); font-size:0.95rem; margin-bottom:24px" data-i18n="pers.p">
           Drop a <code>~/.config/USER.md</code> in your home config directory.
           Agents read your profile at session start and adapt communication style —
           tone, depth, language, and decision framing — to match how you think.
           Governance rules and quality gates are completely unchanged.
         </p>
         <ul class="badge-list">
-          <li>Global — one file serves all your projects</li>
-          <li>Optional — kit works perfectly without it</li>
-          <li>Never committed to any repository</li>
-          <li>Generate it from <a href="https://conhecerte.com.br">ConhecerTe</a> or write it manually</li>
+          <li data-i18n="pers.li1">Global — one file serves all your projects</li>
+          <li data-i18n="pers.li2">Optional — kit works perfectly without it</li>
+          <li data-i18n="pers.li3">Never committed to any repository</li>
+          <li data-i18n="pers.li4">Generate it from <a href="https://conhecerte.com.br">ConhecerTe</a> or write it manually</li>
         </ul>
       </div>
       <div class="code-block" style="align-self:stretch">
@@ -706,15 +742,15 @@
 <!-- ── CTA ───────────────────────────────────────────────────── -->
 <section class="cta">
   <div class="container">
-    <h2>Your agents. Under control.</h2>
-    <p>
+    <h2 data-i18n="cta.h2">Your agents. Under control.</h2>
+    <p data-i18n="cta.p">
       Give every AI assistant in your team a clear contract, hard limits,<br />
       and a workflow it can follow — starting today.
     </p>
     <div class="cta-actions">
-      <a href="https://github.com/EDortta/AI-Agents" class="btn btn-primary">Get AI-Agents</a>
-      <a href="https://github.com/EDortta/AI-GovernanceKit" class="btn btn-outline">Get GovernanceKit</a>
-      <a href="https://edortta71.medium.com/i-used-to-turn-off-the-internet-for-my-developers-f0d1747ee78f" class="btn btn-outline">Read the story</a>
+      <a href="https://github.com/EDortta/AI-Agents" class="btn btn-primary" data-i18n="cta.btn1">Get AI-Agents</a>
+      <a href="https://github.com/EDortta/AI-GovernanceKit" class="btn btn-outline" data-i18n="cta.btn2">Get GovernanceKit</a>
+      <a href="https://edortta71.medium.com/i-used-to-turn-off-the-internet-for-my-developers-f0d1747ee78f" class="btn btn-outline" data-i18n="cta.btn3">Read the story</a>
     </div>
   </div>
 </section>
@@ -731,6 +767,260 @@
     </div>
   </div>
 </footer>
+
+<script>
+  const LANGS = ['en', 'ptbr', 'es'];
+
+  const T = {
+    en: {
+      'hero.badge':   'Open Source · Policy + Enforcement',
+      'hero.h1':      'Govern your AI agents.<br /><span>Every project. Every IDE.</span>',
+      'hero.p':       'A portable governance layer for AI coding agents — policy contracts, role definitions, issue workflows, and runtime enforcement that work across all major assistants.',
+      'hero.cta1':    'Get Started',
+      'term.c1':      '# Install AI-Agents governance kit into your project',
+      'term.c2':      '# Install GovernanceKit CLI',
+      'term.c3':      '# Validate your setup',
+      'prod.label':   'Two complementary tools',
+      'prod.title':   'Policy pack meets runtime enforcement',
+      'ai.p1':        'The <strong>policy pack</strong> — the "what and why" of governance. A reusable starter kit that brings structure, contracts, and discipline to every AI agent working in your codebase.',
+      'ai.p2':        'Ships with a universal <code>AGENTS.md</code> contract, role-specific agent contracts (programmer, reviewer, security, privacy), issue templates, session-close workflows, and a handoff log — everything an AI agent needs to operate predictably.',
+      'gk.p1':        'The <strong>runtime CLI</strong> — the "how" of enforcement. Validates, automates, and integrates your governance policy into daily development and CI pipelines.',
+      'gk.p2':        'Provides a <code>doctor</code> command that validates the AI-Agents file structure, session automation hooks, and CI integration points — so governance violations are caught before they reach review.',
+      'feat.label':   'Core capabilities',
+      'feat.title':   'Everything agents need to behave.',
+      'feat.sub':     'From a one-line install to enterprise-grade boundaries — built for real teams, real projects.',
+      'f1.h':         'Universal Contract',
+      'f1.p':         '<code>AGENTS.md</code> is the single source of truth for every AI agent in your repo — precedence rules, hard limits, execution loop, and quality gates in one file.',
+      'f2.h':         'Role-Based Contracts',
+      'f2.p':         'Separate contracts for programmer, reviewer, security, issue automation, and privacy compliance — agents load only what they need.',
+      'f3.h':         'Hard Scope Limits',
+      'f3.p':         '<code>docs/limits.md</code> defines what agents may never do — prohibited actions, security boundaries, and branch/approval gates that override any other instruction.',
+      'f4.h':         'Resumable Sessions',
+      'f4.p':         'Every session closes with an updated <code>handoff.md</code> and <code>RESUME.md</code> so any agent — or human — can pick up exactly where the last session ended.',
+      'f5.h':         'Structured Issue Workflow',
+      'f5.p':         'Epic-based issue folders, ready-to-use templates (task, privacy checklist, retrospective), and a work-ID convention that links planning docs to commits.',
+      'f6.h':         'Security by Default',
+      'f6.p':         'Every delivery requires a security-impact classification. Agents must document affected surfaces, abuse paths, mitigations, and residual risk before marking work done.',
+      'f7.h':         'Safe Upgrade Path',
+      'f7.p':         'The <code>--upgrade</code> flag updates kit-owned files while preserving all project-specific context: overviews, limits, handoffs, issues, and credentials.',
+      'f8.h':         '<a href="https://github.com/EDortta/AI-GovernanceKit">GovernanceKit Doctor</a>',
+      'f8.p':         'Run <code>governancekit doctor</code> to validate the entire AI-Agents structure in seconds — ideal as a pre-commit hook or CI gate.',
+      'f9.h':         'Personal Touch',
+      'f9.p':         'Agents adapt communication style (tone, depth, language) when <code>~/.config/USER.md</code> is present — governance behavior stays unchanged, delivery becomes personal.',
+      'how.label':    'How it works',
+      'how.title':    'Up and running in minutes.',
+      'how.sub':      'Four steps from zero to governed.',
+      's1.h':         'Install the kit',
+      's1.p':         'Run the one-liner installer. It copies all contracts and templates into your project directory.',
+      's2.h':         'Fill two files',
+      's2.p':         'Describe your product in <code>docs/software-overview.md</code> and set hard boundaries in <code>docs/limits.md</code>. Mark both as ready.',
+      's3.h':         'Validate with doctor',
+      's3.p':         'Run <code>governancekit doctor</code> to confirm the structure is complete. Agents will refuse to start if it isn\'t.',
+      's4.h':         'Start your first issue',
+      's4.p':         'Use the task template under <code>docs/issues/templates/</code>. Agents follow the execution loop automatically from here.',
+      'compat.label': 'Broad compatibility',
+      'compat.title': 'Works with every major AI assistant.',
+      'compat.sub':   'One policy pack, many adapters. The same governance contract surfaces natively in whichever tool your team uses.',
+      'inst.label':   'Installation',
+      'inst.title':   'Three commands. Done.',
+      'inst.sub':     'No configuration manager needed — plain files you can read and edit.',
+      'inst.tab1':    'Fresh install',
+      'inst.tab2':    'Upgrade existing',
+      'inst.c1':      '# 1 — Install AI-Agents policy pack into your project (run from anywhere)',
+      'inst.c2':      '# 2 — Install GovernanceKit CLI',
+      'inst.c3':      '# 3 — Fill the two required context files, then validate',
+      'inst.c4':      '#     docs/software-overview.md  →  set project_context_ready: yes',
+      'inst.c5':      '#     docs/limits.md             →  set limits_ready: yes',
+      'inst.upgrade': 'To upgrade an existing installation without overwriting project context:',
+      'pers.label':   'Personal Touch',
+      'pers.title':   'Governance that knows you.',
+      'pers.p':       'Drop a <code>~/.config/USER.md</code> in your home config directory. Agents read your profile at session start and adapt communication style — tone, depth, language, and decision framing — to match how you think. Governance rules and quality gates are completely unchanged.',
+      'pers.li1':     'Global — one file serves all your projects',
+      'pers.li2':     'Optional — kit works perfectly without it',
+      'pers.li3':     'Never committed to any repository',
+      'pers.li4':     'Generate it from <a href="https://conhecerte.com.br">ConhecerTe</a> or write it manually',
+      'cta.h2':       'Your agents. Under control.',
+      'cta.p':        'Give every AI assistant in your team a clear contract, hard limits,<br />and a workflow it can follow — starting today.',
+      'cta.btn1':     'Get AI-Agents',
+      'cta.btn2':     'Get GovernanceKit',
+      'cta.btn3':     'Read the story',
+    },
+    ptbr: {
+      'hero.badge':   'Open Source · Política + Execução',
+      'hero.h1':      'Governe seus agentes de IA.<br /><span>Todo projeto. Todo IDE.</span>',
+      'hero.p':       'Uma camada de governança portátil para agentes de IA — contratos de política, definições de papel, fluxos de issues e execução em runtime que funcionam com todos os principais assistentes.',
+      'hero.cta1':    'Começar',
+      'term.c1':      '# Instale o kit de governança AI-Agents no seu projeto',
+      'term.c2':      '# Instale o CLI GovernanceKit',
+      'term.c3':      '# Valide sua configuração',
+      'prod.label':   'Duas ferramentas complementares',
+      'prod.title':   'Policy pack encontra execução em runtime',
+      'ai.p1':        'O <strong>policy pack</strong> — o "o quê e por quê" da governança. Um kit inicial reutilizável que traz estrutura, contratos e disciplina para cada agente de IA que trabalha no seu repositório.',
+      'ai.p2':        'Vem com um contrato universal <code>AGENTS.md</code>, contratos de agente por papel (programador, revisor, segurança, privacidade), templates de issue, fluxos de sessão e um log de handoff — tudo que um agente precisa para operar de forma previsível.',
+      'gk.p1':        'O <strong>CLI de runtime</strong> — o "como" da execução. Valida, automatiza e integra a sua política de governança ao desenvolvimento diário e a pipelines de CI.',
+      'gk.p2':        'Fornece um comando <code>doctor</code> que valida a estrutura de arquivos do AI-Agents, hooks de automação de sessão e pontos de integração com CI — para que violações de governança sejam detectadas antes da revisão.',
+      'feat.label':   'Capacidades principais',
+      'feat.title':   'Tudo que agentes precisam para se comportar.',
+      'feat.sub':     'De uma instalação com um único comando a limites corporativos — feito para times e projetos reais.',
+      'f1.h':         'Contrato Universal',
+      'f1.p':         '<code>AGENTS.md</code> é a fonte única de verdade para cada agente de IA no repositório — regras de precedência, limites rígidos, loop de execução e quality gates em um único arquivo.',
+      'f2.h':         'Contratos por Papel',
+      'f2.p':         'Contratos separados para programador, revisor, segurança, automação de issues e conformidade de privacidade — agentes carregam apenas o que precisam.',
+      'f3.h':         'Limites de Escopo Rígidos',
+      'f3.p':         '<code>docs/limits.md</code> define o que agentes nunca podem fazer — ações proibidas, fronteiras de segurança e gates de branch/aprovação que sobrepõem qualquer outra instrução.',
+      'f4.h':         'Sessões Recuperáveis',
+      'f4.p':         'Cada sessão encerra com <code>handoff.md</code> e <code>RESUME.md</code> atualizados — para que qualquer agente (ou humano) retome exatamente onde a sessão anterior parou.',
+      'f5.h':         'Fluxo Estruturado de Issues',
+      'f5.p':         'Pastas de issues organizadas por épico, templates prontos (tarefa, checklist de privacidade, retrospectiva) e uma convenção de work-ID que liga documentos de planejamento a commits.',
+      'f6.h':         'Segurança por Padrão',
+      'f6.p':         'Toda entrega exige classificação de impacto de segurança. Agentes devem documentar superfícies afetadas, caminhos de abuso, mitigações e riscos residuais antes de marcar o trabalho como concluído.',
+      'f7.h':         'Caminho de Upgrade Seguro',
+      'f7.p':         'A flag <code>--upgrade</code> atualiza os arquivos gerenciados pelo kit preservando todo o contexto específico do projeto: overviews, limites, handoffs, issues e credenciais.',
+      'f8.h':         '<a href="https://github.com/EDortta/AI-GovernanceKit">GovernanceKit Doctor</a>',
+      'f8.p':         'Execute <code>governancekit doctor</code> para validar toda a estrutura do AI-Agents em segundos — ideal como hook de pre-commit ou gate de CI.',
+      'f9.h':         'Toque Pessoal',
+      'f9.p':         'Agentes adaptam o estilo de comunicação (tom, profundidade, idioma) quando <code>~/.config/USER.md</code> está presente — o comportamento de governança permanece inalterado, a entrega se torna pessoal.',
+      'how.label':    'Como funciona',
+      'how.title':    'Em funcionamento em minutos.',
+      'how.sub':      'Quatro etapas do zero ao governado.',
+      's1.h':         'Instale o kit',
+      's1.p':         'Execute o instalador em uma linha. Ele copia todos os contratos e templates para o diretório do seu projeto.',
+      's2.h':         'Preencha dois arquivos',
+      's2.p':         'Descreva seu produto em <code>docs/software-overview.md</code> e defina limites rígidos em <code>docs/limits.md</code>. Marque ambos como prontos.',
+      's3.h':         'Valide com doctor',
+      's3.p':         'Execute <code>governancekit doctor</code> para confirmar que a estrutura está completa. Agentes se recusarão a iniciar se não estiver.',
+      's4.h':         'Inicie seu primeiro issue',
+      's4.p':         'Use o template de tarefa em <code>docs/issues/templates/</code>. Os agentes seguem o loop de execução automaticamente a partir daí.',
+      'compat.label': 'Ampla compatibilidade',
+      'compat.title': 'Funciona com todos os principais assistentes de IA.',
+      'compat.sub':   'Um policy pack, muitos adaptadores. O mesmo contrato de governança aparece nativamente em qualquer ferramenta que o seu time use.',
+      'inst.label':   'Instalação',
+      'inst.title':   'Três comandos. Pronto.',
+      'inst.sub':     'Sem gerenciador de configuração necessário — arquivos simples que você pode ler e editar.',
+      'inst.tab1':    'Instalação limpa',
+      'inst.tab2':    'Atualizar existente',
+      'inst.c1':      '# 1 — Instale o policy pack AI-Agents no seu projeto (execute de qualquer lugar)',
+      'inst.c2':      '# 2 — Instale o CLI GovernanceKit',
+      'inst.c3':      '# 3 — Preencha os dois arquivos de contexto obrigatórios e valide',
+      'inst.c4':      '#     docs/software-overview.md  →  defina project_context_ready: yes',
+      'inst.c5':      '#     docs/limits.md             →  defina limits_ready: yes',
+      'inst.upgrade': 'Para atualizar uma instalação existente sem sobrescrever o contexto do projeto:',
+      'pers.label':   'Toque Pessoal',
+      'pers.title':   'Governança que te conhece.',
+      'pers.p':       'Coloque um <code>~/.config/USER.md</code> no seu diretório de configuração home. Agentes leem seu perfil ao iniciar a sessão e adaptam o estilo de comunicação — tom, profundidade, idioma e enquadramento de decisão — para combinar com a sua forma de pensar. Regras de governança e quality gates permanecem completamente inalterados.',
+      'pers.li1':     'Global — um arquivo serve todos os seus projetos',
+      'pers.li2':     'Opcional — o kit funciona perfeitamente sem ele',
+      'pers.li3':     'Nunca commitado em nenhum repositório',
+      'pers.li4':     'Gere a partir do <a href="https://conhecerte.com.br">ConhecerTe</a> ou escreva manualmente',
+      'cta.h2':       'Seus agentes. Sob controle.',
+      'cta.p':        'Dê a cada assistente de IA do seu time um contrato claro, limites rígidos,<br />e um fluxo de trabalho que ele possa seguir — começando hoje.',
+      'cta.btn1':     'Obter AI-Agents',
+      'cta.btn2':     'Obter GovernanceKit',
+      'cta.btn3':     'Leia a história',
+    },
+    es: {
+      'hero.badge':   'Open Source · Política + Ejecución',
+      'hero.h1':      'Gobierna tus agentes de IA.<br /><span>Todo proyecto. Todo IDE.</span>',
+      'hero.p':       'Una capa de gobernanza portátil para agentes de IA — contratos de política, definiciones de rol, flujos de issues y ejecución en runtime que funcionan con todos los principales asistentes.',
+      'hero.cta1':    'Comenzar',
+      'term.c1':      '# Instala el kit de gobernanza de AI-Agents en tu proyecto',
+      'term.c2':      '# Instala el CLI de GovernanceKit',
+      'term.c3':      '# Valida tu configuración',
+      'prod.label':   'Dos herramientas complementarias',
+      'prod.title':   'Policy pack conoce la ejecución en runtime',
+      'ai.p1':        'El <strong>policy pack</strong> — el "qué y por qué" de la gobernanza. Un kit inicial reutilizable que aporta estructura, contratos y disciplina a cada agente de IA que trabaja en tu repositorio.',
+      'ai.p2':        'Incluye un contrato universal <code>AGENTS.md</code>, contratos de agente por rol (programador, revisor, seguridad, privacidad), plantillas de issue, flujos de sesión y un log de handoff — todo lo que un agente necesita para operar de forma predecible.',
+      'gk.p1':        'El <strong>CLI de runtime</strong> — el "cómo" de la ejecución. Valida, automatiza e integra tu política de gobernanza en el desarrollo diario y en pipelines de CI.',
+      'gk.p2':        'Proporciona un comando <code>doctor</code> que valida la estructura de archivos de AI-Agents, hooks de automatización de sesión y puntos de integración con CI — para que las violaciones de gobernanza se detecten antes de la revisión.',
+      'feat.label':   'Capacidades principales',
+      'feat.title':   'Todo lo que los agentes necesitan para comportarse.',
+      'feat.sub':     'De una instalación con un solo comando a límites de nivel corporativo — construido para equipos y proyectos reales.',
+      'f1.h':         'Contrato Universal',
+      'f1.p':         '<code>AGENTS.md</code> es la fuente única de verdad para cada agente de IA en tu repositorio — reglas de precedencia, límites estrictos, bucle de ejecución y quality gates en un solo archivo.',
+      'f2.h':         'Contratos por Rol',
+      'f2.p':         'Contratos separados para programador, revisor, seguridad, automatización de issues y conformidad de privacidad — los agentes cargan solo lo que necesitan.',
+      'f3.h':         'Límites de Alcance Estrictos',
+      'f3.p':         '<code>docs/limits.md</code> define lo que los agentes nunca pueden hacer — acciones prohibidas, fronteras de seguridad y gates de branch/aprobación que anulan cualquier otra instrucción.',
+      'f4.h':         'Sesiones Recuperables',
+      'f4.p':         'Cada sesión cierra con <code>handoff.md</code> y <code>RESUME.md</code> actualizados — para que cualquier agente (o persona) retome exactamente donde terminó la última sesión.',
+      'f5.h':         'Flujo de Issues Estructurado',
+      'f5.p':         'Carpetas de issues organizadas por épico, plantillas listas (tarea, checklist de privacidad, retrospectiva) y una convención de work-ID que vincula documentos de planificación a commits.',
+      'f6.h':         'Seguridad por Defecto',
+      'f6.p':         'Cada entrega requiere una clasificación de impacto de seguridad. Los agentes deben documentar superficies afectadas, rutas de abuso, mitigaciones y riesgos residuales antes de marcar el trabajo como hecho.',
+      'f7.h':         'Ruta de Actualización Segura',
+      'f7.p':         'La flag <code>--upgrade</code> actualiza los archivos gestionados por el kit preservando todo el contexto específico del proyecto: overviews, límites, handoffs, issues y credenciales.',
+      'f8.h':         '<a href="https://github.com/EDortta/AI-GovernanceKit">GovernanceKit Doctor</a>',
+      'f8.p':         'Ejecuta <code>governancekit doctor</code> para validar toda la estructura de AI-Agents en segundos — ideal como hook de pre-commit o gate de CI.',
+      'f9.h':         'Toque Personal',
+      'f9.p':         'Los agentes adaptan el estilo de comunicación (tono, profundidad, idioma) cuando <code>~/.config/USER.md</code> está presente — el comportamiento de gobernanza no cambia, la entrega se vuelve personal.',
+      'how.label':    'Cómo funciona',
+      'how.title':    'En marcha en minutos.',
+      'how.sub':      'Cuatro pasos del cero al gobernado.',
+      's1.h':         'Instala el kit',
+      's1.p':         'Ejecuta el instalador en una línea. Copia todos los contratos y plantillas en el directorio de tu proyecto.',
+      's2.h':         'Rellena dos archivos',
+      's2.p':         'Describe tu producto en <code>docs/software-overview.md</code> y define límites estrictos en <code>docs/limits.md</code>. Márcalos como listos.',
+      's3.h':         'Valida con doctor',
+      's3.p':         'Ejecuta <code>governancekit doctor</code> para confirmar que la estructura está completa. Los agentes se negarán a iniciar si no lo está.',
+      's4.h':         'Inicia tu primer issue',
+      's4.p':         'Usa la plantilla de tarea en <code>docs/issues/templates/</code>. Los agentes siguen el bucle de ejecución automáticamente desde ese punto.',
+      'compat.label': 'Amplia compatibilidad',
+      'compat.title': 'Funciona con todos los principales asistentes de IA.',
+      'compat.sub':   'Un policy pack, muchos adaptadores. El mismo contrato de gobernanza aparece nativamente en la herramienta que tu equipo use.',
+      'inst.label':   'Instalación',
+      'inst.title':   'Tres comandos. Listo.',
+      'inst.sub':     'Sin gestor de configuración necesario — archivos simples que puedes leer y editar.',
+      'inst.tab1':    'Instalación limpia',
+      'inst.tab2':    'Actualizar existente',
+      'inst.c1':      '# 1 — Instala el policy pack de AI-Agents en tu proyecto (ejecuta desde cualquier lugar)',
+      'inst.c2':      '# 2 — Instala el CLI de GovernanceKit',
+      'inst.c3':      '# 3 — Rellena los dos archivos de contexto requeridos y valida',
+      'inst.c4':      '#     docs/software-overview.md  →  establece project_context_ready: yes',
+      'inst.c5':      '#     docs/limits.md             →  establece limits_ready: yes',
+      'inst.upgrade': 'Para actualizar una instalación existente sin sobrescribir el contexto del proyecto:',
+      'pers.label':   'Toque Personal',
+      'pers.title':   'Gobernanza que te conoce.',
+      'pers.p':       'Coloca un <code>~/.config/USER.md</code> en tu directorio de configuración home. Los agentes leen tu perfil al inicio de la sesión y adaptan el estilo de comunicación — tono, profundidad, idioma y enfoque de decisión — para que coincida con tu forma de pensar. Las reglas de gobernanza y quality gates permanecen completamente sin cambios.',
+      'pers.li1':     'Global — un archivo sirve todos tus proyectos',
+      'pers.li2':     'Opcional — el kit funciona perfectamente sin él',
+      'pers.li3':     'Nunca incluido en ningún repositorio',
+      'pers.li4':     'Genera desde <a href="https://conhecerte.com.br">ConhecerTe</a> o escríbelo manualmente',
+      'cta.h2':       'Tus agentes. Bajo control.',
+      'cta.p':        'Dale a cada asistente de IA de tu equipo un contrato claro, límites estrictos,<br />y un flujo de trabajo que pueda seguir — empezando hoy.',
+      'cta.btn1':     'Obtener AI-Agents',
+      'cta.btn2':     'Obtener GovernanceKit',
+      'cta.btn3':     'Lee la historia',
+    }
+  };
+
+  function setLang(lang) {
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      if (T[lang] && T[lang][key] !== undefined) {
+        el.innerHTML = T[lang][key];
+      }
+    });
+    LANGS.forEach(function(l) {
+      var tab = document.getElementById('tab-' + l);
+      if (tab) {
+        tab.classList.toggle('active', l === lang);
+        tab.setAttribute('aria-selected', l === lang ? 'true' : 'false');
+      }
+    });
+    document.documentElement.lang = lang === 'ptbr' ? 'pt-BR' : lang === 'es' ? 'es' : 'en';
+    try { localStorage.setItem('ai-agents-lang', lang); } catch(e) {}
+  }
+
+  (function init() {
+    var saved;
+    try { saved = localStorage.getItem('ai-agents-lang'); } catch(e) {}
+    if (saved && LANGS.indexOf(saved) !== -1) { setLang(saved); return; }
+    var nav = (navigator.language || '').toLowerCase();
+    if (nav.indexOf('pt') === 0) { setLang('ptbr'); return; }
+    if (nav.indexOf('es') === 0) { setLang('es'); return; }
+    setLang('en');
+  })();
+</script>
 
 </body>
 </html>
