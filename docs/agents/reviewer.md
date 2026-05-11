@@ -33,6 +33,25 @@ Classify as BLOCKER when any applies:
 - tests are overly mocked and fail to verify the real contract/path affected by the change
 - symptom patch without root-cause correction
 
+### TypeScript Checks (when applicable)
+
+Apply when the PR touches `.ts` or `.tsx` files.
+
+Classify as BLOCKER when:
+- `any` is introduced without a justifying comment
+- `as` assertion is used on a path that can receive untrusted/external input
+- public function has no return type and inferred type is `any` or `void` unexpectedly
+
+Classify as IMPROVEMENT when:
+- `any` introduced with justification but a safer alternative exists (`unknown`, union, or generic)
+- `as` assertion used internally with no narrowing guard
+- exported function lacks explicit parameter or return types
+- React component props lack an explicit `interface` or `type`
+
+Do not flag `as` or `any` that are part of unmodified lines already in the codebase — scope to the diff.
+
+For deep codebase-wide TypeScript audits (not PR-level), use `docs/workflows/typescript-audit.md`.
+
 ### Reviewer Mandatory Output
 
 [MANDATORY] Return:

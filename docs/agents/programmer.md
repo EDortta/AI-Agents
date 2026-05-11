@@ -131,6 +131,15 @@ Before finalizing, review diffs for:
 [PROHIBITED] Clever code that harms readability or maintainability.
 [PROHIBITED] Refactor that changes public contract without explicit contract notes.
 
+#### TypeScript / React (when applicable)
+
+Apply when the project uses TypeScript (`.ts`/`.tsx` files present):
+
+[MANDATORY] Every React component prop must have an explicit `interface` or `type`.
+[MANDATORY] Public functions must declare explicit parameter and return types.
+[IMPROVEMENT] Avoid introducing `any` without a justifying comment; prefer `unknown` + narrowing.
+[IMPROVEMENT] Avoid `as` type assertions without a justifying comment; use type guards instead.
+
 ### Issue Workflow (Creation vs. Solving)
 
 [MANDATORY] Prefer `jkctl.py` commands for issue/PR workflow automation whenever `jkctl.py` exists in the target repository.

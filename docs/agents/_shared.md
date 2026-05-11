@@ -23,5 +23,6 @@ Core files:
 - [communication.md](./communication.md) — applying user profile preferences (load only when `~/.config/USER.md` is present)
 - [../workflows/session-restore.md](../workflows/session-restore.md) — active work resume
 - [../workflows/session-close.md](../workflows/session-close.md) — handoff/resume closeout
+- [../workflows/typescript-audit.md](../workflows/typescript-audit.md) — on-demand TypeScript quality audit (whole-codebase, not PR-level)
 
 If any role file conflicts with `AGENTS.md`, follow `AGENTS.md`.
