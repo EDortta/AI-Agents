@@ -137,8 +137,18 @@ Apply when the project uses TypeScript (`.ts`/`.tsx` files present):
 
 [MANDATORY] Every React component prop must have an explicit `interface` or `type`.
 [MANDATORY] Public functions must declare explicit parameter and return types.
+[MANDATORY] Validate all external data (API responses, `JSON.parse`, env vars) with a runtime schema validator (Zod, io-ts, or equivalent) before assigning a TypeScript type to it.
+[PROHIBITED] `@ts-ignore` and `@ts-nocheck` — fix the underlying type issue instead.
+[PROHIBITED] `Function` as a type — write an explicit signature: `(input: string) => boolean`.
 [IMPROVEMENT] Avoid introducing `any` without a justifying comment; prefer `unknown` + narrowing.
-[IMPROVEMENT] Avoid `as` type assertions without a justifying comment; use type guards instead.
+[IMPROVEMENT] Avoid `as` assertions without a justifying comment; use type guards (`typeof`, `instanceof`, discriminant checks) instead.
+[IMPROVEMENT] Prefer union literals over `enum` for fixed value sets: `"loading" | "success" | "error"` compiles away to nothing at runtime; `enum` does not.
+[IMPROVEMENT] Use `as const` for fixed arrays/objects to preserve literal types without runtime overhead.
+[IMPROVEMENT] Model state variants as discriminated unions — add a literal `type` field to each variant — instead of objects with many optional `?` properties.
+[IMPROVEMENT] Constrain generics: `<T extends SomeShape>` rather than bare `<T>`; document what callers are expected to pass.
+[IMPROVEMENT] Add a `never` exhaustive check in every `switch` / if-else chain over a union so unhandled branches fail at compile time, not runtime.
+[IMPROVEMENT] Use `satisfies` (TS 4.9+) to validate an object's shape while preserving its inferred literal types — unlike a direct annotation which widens them.
+[IMPROVEMENT] Use built-in utility types (`Partial<T>`, `Required<T>`, `Omit<T,K>`, `Pick<T,K>`, `Record<K,V>`, `ReadonlyArray<T>`) before re-declaring types manually.
 
 ### Issue Workflow (Creation vs. Solving)
 
