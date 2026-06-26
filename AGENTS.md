@@ -1,5 +1,15 @@
 # AGENTS.md
 
+
+## Prefixo obrigatório nas mensagens ao operador
+
+Toda mensagem de texto enviada diretamente ao operador (`[OPERATOR_NAME]`) **deve começar
+com "`[OPERATOR_NAME]`, "** — incluindo a vírgula e o espaço.
+
+Aplica-se a: respostas no chat, resumos de sessão, perguntas de clarificação.
+Não se aplica a: tool calls, conteúdo de arquivos, corpos de issue/PR.
+
+
 Low-token universal operating contract for repository agents.
 Primary objective: secure, correct, maintainable changes with predictable execution.
 
@@ -12,6 +22,36 @@ Instruction precedence:
 ---
 
 ## 1. Start Gate
+
+### 1a. Placeholders do operador preenchidos (pré-condição absoluta)
+
+Este kit é instalado via `governancekit install-agents`, que preenche
+interativamente os tokens `[PLACEHOLDER]` nos arquivos instalados.
+
+Antes de qualquer outra ação, verifique se ainda existem tokens não preenchidos
+neste arquivo ou em `docs/agents/*.md`:
+
+```
+grep -r '\[OPERATOR_NAME\]\|\[SMTP_ACCOUNT\]\|\[PROJECT_SLUG\]\|\[GITHUB_OWNER\]' \
+     AGENTS.md docs/agents/
+```
+
+Se qualquer token `[PLACEHOLDER]` for encontrado:
+
+1. **Pare imediatamente.** Não execute nenhuma ação — nem leitura de código,
+   nem inspeção, nem branch, nem commit.
+2. Informe ao operador:
+   > "Este kit contém placeholders não preenchidos: `[TOKEN]`. Execute
+   > `governancekit install-agents` (ou preencha manualmente) e reinicie."
+3. Não prossiga até que o operador confirme que os tokens foram substituídos.
+
+Este gate existe por conformidade com a LGPD (Art. 46) e para garantir que
+dados pessoais do operador nunca sejam embutidos literalmente em arquivos
+rastreados. Não há exceção a esta regra.
+
+---
+
+### 1b. Projeto alvo configurado
 
 Before implementation, identify the target repository.
 
@@ -185,3 +225,32 @@ Done means:
 - security impact classified
 - session handoff/resume updated
 - review-ready summary produced
+
+
+---
+
+## Sending Email
+
+When a task requires sending email, credentials and mechanism live in `~/.config/email/` — **local-only, never tracked in any repo**.
+
+| File | Purpose |
+|------|---------|
+| `~/.config/email/credentials.conf` | SMTP account (`[SMTP_ACCOUNT]`) + app password |
+| `~/.config/email/send.py` | CLI/script helper — reads credentials automatically |
+
+```bash
+# Plain text
+python3 ~/.config/email/send.py --to dest@example.com --subject "Assunto" --body "Corpo"
+
+# HTML body
+python3 ~/.config/email/send.py --to dest@example.com --subject "Assunto" --body "<b>ok</b>" --html
+
+# Multiple recipients
+python3 ~/.config/email/send.py --to a@x.com --to b@x.com --subject "Assunto" --body "Corpo"
+
+# Body from stdin
+echo "Corpo" | python3 ~/.config/email/send.py --to dest@example.com --subject "Assunto"
+```
+
+Never hardcode or commit credentials. Always read from `~/.config/email/credentials.conf`.
+

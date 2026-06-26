@@ -5,6 +5,35 @@ Most recent entry should be on top.
 
 ---
 
+## [2026-05-11] WK-20260511-php-delphi-audit-capability - done
+
+- Status: done
+- Summary: Added PHP 8.x and Delphi 11/12 audit capability to the kit. Created `docs/workflows/php-audit.md` (18 categories) and `docs/workflows/delphi-audit.md` (18 categories), both following the same structure as `typescript-audit.md`. Updated `programmer.md` with PHP 8.x Rules and Delphi 11/12 Rules sections (auto-activated by file extension). Updated `reviewer.md` with BLOCKER/IMPROVEMENT items for both languages. Ran first live PHP audit on YeAPF2 (`~/Sync/Y2/`) — score 5.5/10. Top findings: 23/69 files missing `declare(strict_types=1)`, 19 unvalidated `json_decode()` calls, zero tooling baseline (no PHPStan, PHP-CS-Fixer, phpunit configured).
+- Next steps:
+  - Install PHPStan level 5 + PHP-CS-Fixer in YeAPF2 and confirm audit findings programmatically.
+  - Apply Quick Wins to YeAPF2: add `declare(strict_types=1)` to 10 core files, wrap 5 `json_decode()` calls, add `default` to 3 critical `switch` blocks.
+  - Run Delphi audit on a real `.pas` project from the group to calibrate `delphi-audit.md`.
+  - Commit WK-20260511 changes once validated.
+- Blockers/Risks:
+  - YeAPF2 audit findings not yet confirmed by PHPStan — severity classification based on static grep analysis only.
+  - Delphi audit not yet validated against real Delphi code.
+- Files changed:
+  - `docs/workflows/php-audit.md` — new, 218 lines, 18 categories for PHP 8.x
+  - `docs/workflows/delphi-audit.md` — new, 239 lines, 18 categories for Delphi 11/12
+  - `docs/agents/programmer.md` — added PHP 8.x Rules and Delphi 11/12 Rules sections
+  - `docs/agents/reviewer.md` — added PHP Checks and Delphi Checks sections
+- Checks/Tests executed:
+  - PHP audit executed manually on `~/Sync/Y2/src/` (86 files) via grep/read analysis.
+  - File structure verified: all 4 files present and insertion points confirmed via grep.
+  - PHPStan not yet run — pending next session.
+- Related commits:
+  - adada66: Expand TypeScript audit capability with 2025 best practices (prior session)
+  - WK-20260511 changes not yet committed — pending PHPStan validation.
+- Suggested restart prompt:
+  - "Continue work_id WK-20260511-php-delphi-audit-capability. Read AGENTS.md, docs/software-overview.md, docs/limits.md and this handoff entry. Next: install PHPStan in ~/Sync/Y2/ and confirm the audit findings, then commit the 4 changed files in AI-Agents."
+
+---
+
 ## [2026-05-08] WK-20260508-docs-resume-newbie - done
 
 - Status: done

@@ -150,6 +150,42 @@ Apply when the project uses TypeScript (`.ts`/`.tsx` files present):
 [IMPROVEMENT] Use `satisfies` (TS 4.9+) to validate an object's shape while preserving its inferred literal types — unlike a direct annotation which widens them.
 [IMPROVEMENT] Use built-in utility types (`Partial<T>`, `Required<T>`, `Omit<T,K>`, `Pick<T,K>`, `Record<K,V>`, `ReadonlyArray<T>`) before re-declaring types manually.
 
+#### PHP 8.x (when applicable)
+
+Apply when the project uses PHP 8.x (`.php` files present):
+
+[MANDATORY] Every file must start with `declare(strict_types=1)` immediately after `<?php`.
+[MANDATORY] All class properties must have explicit native type declarations.
+[MANDATORY] All public methods must have explicit return types (including `void`, `never`, `self`).
+[MANDATORY] Validate all external data (`$_POST`, `$_GET`, `json_decode`, PDO results, curl responses) with a validation library (Respect\Validation, Symfony Validator, or equivalent) before trusting the value.
+[PROHIBITED] `eval()` — no exceptions.
+[PROHIBITED] Unguarded `extract()` on untrusted arrays.
+[IMPROVEMENT] Prefer `match` over `switch` for discriminant values; `match` is strict, returns a value, and throws on unhandled arms.
+[IMPROVEMENT] Use `readonly` on value-object and DTO properties assigned only in `__construct`.
+[IMPROVEMENT] Use PHP 8.1 backed enums instead of constant-group classes for fixed domain value sets.
+[IMPROVEMENT] Use the nullsafe operator (`?->`) where null is an expected state; throw an exception where null is a bug.
+[IMPROVEMENT] Inject dependencies via constructor; avoid `new ServiceClass()` inside method bodies.
+
+For deep codebase-wide PHP audits (not PR-level), use `docs/workflows/php-audit.md`.
+
+#### Delphi 11/12 (when applicable)
+
+Apply when the project uses Delphi 11/12 (`.pas`/`.dpr` files present):
+
+[MANDATORY] Every `TObject` descendant created with `Create` must be wrapped in `try..finally..Free`.
+[MANDATORY] Every `TCriticalSection`, file handle, or acquired resource must be released in a `finally` block.
+[MANDATORY] Exception handlers must specify a type — `except on E: ESpecificError do`; bare `except` is prohibited.
+[MANDATORY] External data from REST APIs, `TDataSet`, or `TJSONObject` must be nil-checked and shape-validated before assignment to domain types.
+[PROHIBITED] Bare `except` with no exception type — swallows `EAccessViolation`, `EOutOfMemory`, and all other critical failures.
+[PROHIBITED] `as` cast without a preceding `is` guard or RTTI check.
+[IMPROVEMENT] Use strong typedefs (`type TUserId = type Integer;`) for domain identifiers to prevent mix-ups at the call site.
+[IMPROVEMENT] Define an `I`-prefixed interface for every service, repository, and adapter — enables substitution and testing without modifying callers.
+[IMPROVEMENT] Constrain generics: `<T: IInterface>` or `<T: TMyBase>` rather than bare `<T>`.
+[IMPROVEMENT] Use `strict private` instead of `private` in base classes to prevent accidental access from descendants.
+[IMPROVEMENT] Isolate platform-specific calls (`WinAPI`, `ShellAPI`, registry) inside `{$IFDEF MSWINDOWS}` blocks.
+
+For deep codebase-wide Delphi audits (not PR-level), use `docs/workflows/delphi-audit.md`.
+
 ### Issue Workflow (Creation vs. Solving)
 
 [MANDATORY] Prefer `jkctl.py` commands for issue/PR workflow automation whenever `jkctl.py` exists in the target repository.

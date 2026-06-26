@@ -58,6 +58,53 @@ Do not flag `as`, `any`, or missing annotations on unmodified lines already in t
 
 For deep codebase-wide TypeScript audits (not PR-level), use `docs/workflows/typescript-audit.md`.
 
+### PHP Checks (when applicable)
+
+Apply when the PR touches `.php` files.
+
+Classify as BLOCKER when:
+- `declare(strict_types=1)` is missing from any file introduced or modified by the PR
+- External data (`$_POST`, `$_GET`, `json_decode`, PDO row, curl response) is used without a validation step
+- Public method has no return type and the absence is not justified
+- `catch (\Exception $e)` or `catch (\Throwable $e)` swallows the exception without logging or rethrowing
+- `eval()` is introduced for any reason
+
+Classify as IMPROVEMENT when:
+- Class property lacks a native type declaration
+- `mixed` or `object` type hint used without a justifying comment
+- `switch` on a typed discriminant where `match` would enforce exhaustiveness
+- Service/repository dependency instantiated with `new` inside a method body instead of injected
+- `readonly` missing on DTO/value-object properties assigned only in `__construct`
+- PHP 8.1 enum available but constant-group class used instead
+
+Do not flag findings from unmodified lines already in the codebase — scope strictly to the diff.
+
+For deep codebase-wide PHP audits (not PR-level), use `docs/workflows/php-audit.md`.
+
+### Delphi Checks (when applicable)
+
+Apply when the PR touches `.pas` or `.dpr` files.
+
+Classify as BLOCKER when:
+- `TObject` descendant created with `Create` without a `try..finally..Free` pattern
+- Resource (file handle, `TCriticalSection`, database connection) acquired without a `finally`-guarded release
+- Bare `except` with no exception type introduced
+- `as` cast used on a value from external input (REST, `TDataSet`, `TJSONObject`) without a preceding `is` or nil guard
+- Shared mutable field accessed from a worker thread without synchronization (`TCriticalSection`, `TMonitor`, `TInterlocked`)
+- Windows API called unconditionally in a cross-platform (`{$IFDEF ANDROID}` / `{$IFDEF IOS}`) codebase
+
+Classify as IMPROVEMENT when:
+- Service or repository class has no corresponding `I`-prefixed interface
+- Bare `<T>` generic where a constraint (`T: IInterface`, `T: TMyBase`) can be specified
+- Domain identifier typed as raw `Integer`/`String` where a strong typedef would prevent mix-ups
+- User-visible string declared as `const` instead of `resourcestring`
+- `private` used in a base class where `strict private` would prevent descendant access
+- Platform-specific call outside a `{$IFDEF}` guard
+
+Do not flag findings from unmodified lines already in the codebase — scope strictly to the diff.
+
+For deep codebase-wide Delphi audits (not PR-level), use `docs/workflows/delphi-audit.md`.
+
 ### Reviewer Mandatory Output
 
 [MANDATORY] Return:

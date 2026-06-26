@@ -1,0 +1,19 @@
+# Credenciais e tokens de acesso — nunca comitar
+.credentials/programmer.token
+.credentials/reviewer.token
+.credentials/jira.json
+.credentials/*.token
+.credentials/*.json
+!.credentials/*.example
+!.credentials/README*.md
+
+# Arquivos de ambiente
+.env
+.env.*
+!.env.example
+
+# Caches e artefatos locais
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
