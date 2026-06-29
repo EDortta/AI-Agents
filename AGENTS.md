@@ -58,10 +58,12 @@ Before implementation, identify the target repository.
 Required target-project files:
 - `docs/software-overview.md`
 - `docs/limits.md`
+- `docs/required-reading.md` — and every project-specific document it lists
 
 Required readiness flags:
 - `project_context_ready: yes`
 - `limits_ready: yes`
+- `docs/required-reading.md` lists the project docs to read (or `- (none)`)
 
 If either file is missing or not ready:
 1. Stop implementation.
@@ -88,6 +90,13 @@ Always read first:
 - this file
 - `docs/software-overview.md`
 - `docs/limits.md`
+- `docs/required-reading.md` (and every document it lists)
+
+Documentation ownership:
+- `docs/project/` is project-owned — record project-specific docs there.
+- All other `docs/` files plus `AGENTS.md` and per-tool rule files are kit-owned
+  and overwritten by `install-agents --upgrade` / `--docs-only`. Never hand-edit
+  kit-owned files in a target project; put project knowledge in `docs/project/`.
 
 Then load only relevant contracts:
 - coding or issue solving: `docs/agents/programmer.md`

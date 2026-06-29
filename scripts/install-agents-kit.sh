@@ -213,6 +213,8 @@ upgrade_kit() {
   # Preserve project-local files/state.
   echo "preserved project-local: docs/software-overview.md"
   echo "preserved project-local: docs/limits.md"
+  echo "preserved project-local: docs/required-reading.md"
+  echo "preserved project-local: docs/project/"
   echo "preserved project-local: handoff.md"
   echo "preserved project-local: docs/napkin-lessons.md"
   echo "preserved project-local: docs/issues/* except README.md and templates/"
@@ -245,6 +247,13 @@ else
   copy_path "docs"
   copy_path "handoff.md"
   reset_target_readiness_flags
+
+  # Create the project-owned docs folder once; never overwrite it.
+  if [[ ! -e "$TARGET_DIR/docs/project/README.md" ]]; then
+    mkdir -p "$TARGET_DIR/docs/project"
+    printf '# Project Documentation\n\nProject-owned docs live here; the installer never overwrites this folder.\nKit-owned docs (the rest of docs/, AGENTS.md, rule files) are replaced on --upgrade.\nList mandatory pre-issue reading in docs/required-reading.md.\n' \
+      > "$TARGET_DIR/docs/project/README.md"
+  fi
 
   echo "Kit files copied to: $TARGET_DIR"
 fi
