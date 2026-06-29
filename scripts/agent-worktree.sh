@@ -1,0 +1,203 @@
+#!/usr/bin/env bash
+#
+# agent-worktree (awt) — one git worktree per work_id, for parallel agents.
+#
+# Why: when two agents (claude-code, codex, cursor) share one working tree they
+# step on each other — files, branches, builds and service ports collide. A git
+# worktree gives each agent its own directory + branch on the same .git, so they
+# run truly in parallel. This helper standardizes the convention the AI-Agents
+# kit documents in docs/workflows/parallel-worktrees.md.
+#
+# git worktree is native to git, so the isolation works for ANY tool — point
+# Codex at one worktree folder, Cursor at another.
+#
+# Usage:
+#   awt new <work_id> [--branch <b>] [--base <ref>] [--docker]
+#   awt list
+#   awt ports <work_id>
+#   awt rm <work_id> [--force]
+#
+# Defaults: branch=feature/<work_id>, base=development (falls back to main).
+# Conventions: worktrees live at ../<repo>--<work_id>; never touches main/development
+# directly; refuses to overwrite an existing worktree unless --force.
+#
+set -euo pipefail
+
+# --- locate the main repo we are invoked from -------------------------------
+MAIN_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "$MAIN_ROOT" ]]; then
+  echo "awt: not inside a git repository." >&2
+  exit 2
+fi
+REPO_NAME="$(basename "$MAIN_ROOT")"
+PARENT="$(dirname "$MAIN_ROOT")"
+CRED_STORE="${AWT_CRED_STORE:-$HOME/.config/credentials/personal}"
+STATUS_FILE="${AWT_STATUS_FILE:-$HOME/Sync/agent-status.json}"
+
+worktree_path() { echo "$PARENT/${REPO_NAME}--$1"; }
+
+# Deterministic, collision-resistant port offset from the work_id. Same work_id
+# always maps to the same ports, so an agent can reconnect to its services.
+port_offset() {
+  local wid="$1"
+  local h
+  h="$(printf '%s' "$wid" | cksum | cut -d' ' -f1)"
+  echo $(( 100 + (h % 80) * 10 ))   # 100,110,...,890
+}
+
+default_base() {
+  # Prefer development, then main, else current HEAD.
+  for ref in development main; do
+    if git show-ref --verify --quiet "refs/heads/$ref" \
+       || git show-ref --verify --quiet "refs/remotes/origin/$ref"; then
+      echo "$ref"; return
+    fi
+  done
+  git rev-parse --abbrev-ref HEAD
+}
+
+# --- materialize per-worktree .env + credential symlinks --------------------
+materialize_env() {
+  local wt="$1" wid="$2" off="$3"
+  # Mirror the central credential store as symlinks (never copy secrets).
+  if [[ -d "$CRED_STORE" ]]; then
+    mkdir -p "$wt/.credentials"
+    ln -sfn "$CRED_STORE" "$wt/.credentials/store"
+  fi
+  # Seed .env from the repo's example, then append the allocated ports. We keep
+  # provider keys out of the file: apps read them from the linked store/env.
+  local example=""
+  for cand in ".env.example" ".env.sample" ".env.template"; do
+    [[ -f "$wt/$cand" ]] && { example="$wt/$cand"; break; }
+  done
+  {
+    [[ -n "$example" ]] && cat "$example"
+    echo ""
+    echo "# --- awt: per-worktree isolation (work_id=$wid, offset=$off) ---"
+    echo "AWT_WORK_ID=$wid"
+    echo "AWT_PORT_OFFSET=$off"
+    echo "GATEWAY_PORT=$(( 8000 + off ))"
+    echo "DB_PORT=$(( 5432 + off ))"
+    echo "AIHUB_PORT=9400   # singleton daemon — shared across worktrees, not offset"
+  } > "$wt/.env"
+}
+
+cmd_new() {
+  local wid="" branch="" base="" docker=0
+  wid="${1:?usage: awt new <work_id> [--branch b] [--base ref] [--docker]}"; shift || true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --branch) branch="$2"; shift 2;;
+      --base)   base="$2"; shift 2;;
+      --docker) docker=1; shift;;
+      *) echo "awt: unknown flag '$1'" >&2; exit 2;;
+    esac
+  done
+  branch="${branch:-feature/$wid}"
+  base="${base:-$(default_base)}"
+  local wt; wt="$(worktree_path "$wid")"
+  local off; off="$(port_offset "$wid")"
+
+  if [[ -e "$wt" ]]; then
+    echo "awt: worktree already exists: $wt" >&2; exit 5
+  fi
+  if [[ "$branch" == "main" || "$branch" == "master" || "$branch" == "development" ]]; then
+    echo "awt: refusing to use a protected branch ('$branch') for a worktree." >&2; exit 4
+  fi
+
+  echo "awt: creating worktree $wt"
+  echo "     branch=$branch  base=$base  port-offset=$off"
+  git -C "$MAIN_ROOT" worktree add -b "$branch" "$wt" "$base"
+
+  materialize_env "$wt" "$wid" "$off"
+
+  # Per-worktree virtualenv (Python repos only). Set AWT_SKIP_VENV=1 to skip
+  # (e.g. in tests, or when the agent manages its own environment).
+  if [[ "${AWT_SKIP_VENV:-0}" != "1" && ( -f "$wt/pyproject.toml" || -f "$wt/requirements.txt" ) ]]; then
+    echo "awt: creating .venv"
+    ( cd "$wt" && python3 -m venv .venv \
+        && ./.venv/bin/pip -q install -U pip \
+        && { [[ -f pyproject.toml ]] && ./.venv/bin/pip -q install -e ".[dev]" \
+             || ./.venv/bin/pip -q install -r requirements.txt; } ) \
+      || echo "awt: venv setup had issues (continue manually)"
+  fi
+
+  if [[ "$docker" == "1" ]]; then
+    cmd_docker_up "$wid" "$wt" "$off"
+  fi
+
+  echo "awt: ready → cd $wt"
+  echo "     point your agent (Codex/Cursor/claude-code) at this folder."
+}
+
+cmd_docker_up() {
+  local wid="$1" wt="$2" off="$3"
+  local compose="$wt/docker-compose.worktree.yml"
+  if [[ ! -f "$compose" ]]; then
+    echo "awt: no docker-compose.worktree.yml in worktree — skipping docker." >&2
+    return 0
+  fi
+  echo "awt: starting docker (project=$wid) — bind-mount, no image COPY"
+  AWT_WORK_ID="$wid" AWT_PORT_OFFSET="$off" GATEWAY_PORT="$(( 8000 + off ))" DB_PORT="$(( 5432 + off ))" \
+    docker compose -p "awt-$wid" -f "$compose" up -d
+}
+
+cmd_ports() {
+  local wid="${1:?usage: awt ports <work_id>}"
+  local off; off="$(port_offset "$wid")"
+  echo "work_id=$wid  offset=$off"
+  echo "  gateway: $(( 8000 + off ))"
+  echo "  db:      $(( 5432 + off ))"
+  echo "  aihub:   9400 (shared singleton)"
+}
+
+cmd_list() {
+  echo "== git worktrees =="
+  git -C "$MAIN_ROOT" worktree list
+  if [[ -f "$STATUS_FILE" ]]; then
+    echo ""
+    echo "== agent-status.json holders =="
+    python3 - "$STATUS_FILE" <<'PY' 2>/dev/null || true
+import json, sys
+d = json.load(open(sys.argv[1]))
+for s in d.get("sessions", []):
+    wt = s.get("worktree", "-")
+    print(f"  {s.get('agent','?'):12} {s.get('project','?'):28} wt={wt} branch={s.get('branch','-')}")
+PY
+  fi
+}
+
+cmd_rm() {
+  local wid="" force=0
+  wid="${1:?usage: awt rm <work_id> [--force]}"; shift || true
+  [[ "${1:-}" == "--force" ]] && force=1
+  local wt; wt="$(worktree_path "$wid")"
+
+  # Tear down docker first (ignore if absent).
+  docker compose -p "awt-$wid" down 2>/dev/null || true
+
+  if [[ ! -d "$wt" ]]; then
+    echo "awt: no worktree dir at $wt (pruning anyway)"
+    git -C "$MAIN_ROOT" worktree prune
+    return 0
+  fi
+  if [[ "$force" == "1" ]]; then
+    git -C "$MAIN_ROOT" worktree remove --force "$wt"
+  else
+    git -C "$MAIN_ROOT" worktree remove "$wt"
+  fi
+  git -C "$MAIN_ROOT" worktree prune
+  echo "awt: removed $wt (branch feature/$wid kept for its PR)"
+}
+
+main() {
+  local cmd="${1:-}"; shift || true
+  case "$cmd" in
+    new)   cmd_new "$@";;
+    list)  cmd_list "$@";;
+    ports) cmd_ports "$@";;
+    rm)    cmd_rm "$@";;
+    *) echo "usage: awt {new|list|ports|rm} ..." >&2; exit 2;;
+  esac
+}
+main "$@"

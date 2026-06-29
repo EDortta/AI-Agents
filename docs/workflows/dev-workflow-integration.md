@@ -26,3 +26,10 @@ At each stage end, run steps equivalent to:
 - Fails if `handoff.md` has no new entry for the active `work_id`
 - Fails if no lesson was added to `docs/napkin-lessons.md`
 - Warns if commit message does not include active `work_id`
+
+## Running agents in parallel
+
+When more than one agent works the same project at once, give each its own git
+worktree (one per `work_id`) so files, branches, builds and ports never collide.
+See [parallel-worktrees.md](parallel-worktrees.md) and the `awt` helper
+(`scripts/agent-worktree.sh`).
