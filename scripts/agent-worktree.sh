@@ -12,6 +12,8 @@
 # Codex at one worktree folder, Cursor at another.
 #
 # Usage:
+#   awt install [--bin <dir>]      # symlink this script as `awt` on your PATH
+#   awt uninstall [--bin <dir>]    # remove that symlink
 #   awt new <work_id> [--branch <b>] [--base <ref>] [--docker]
 #   awt list
 #   awt ports <work_id>
@@ -21,18 +23,31 @@
 # Conventions: worktrees live at ../<repo>--<work_id>; never touches main/development
 # directly; refuses to overwrite an existing worktree unless --force.
 #
+# Install: `awt` is just this script. Run `./scripts/agent-worktree.sh install`
+# once to symlink it as `awt` into ~/.local/bin (override with --bin or
+# AWT_BIN_DIR). An external installer (e.g. AI-GovernanceKit) can do the same by
+# calling this subcommand, so the kit works both bundled and standalone.
+#
 set -euo pipefail
 
-# --- locate the main repo we are invoked from -------------------------------
-MAIN_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [[ -z "$MAIN_ROOT" ]]; then
-  echo "awt: not inside a git repository." >&2
-  exit 2
-fi
-REPO_NAME="$(basename "$MAIN_ROOT")"
-PARENT="$(dirname "$MAIN_ROOT")"
+# Absolute path to this script, resolving any symlink (so `awt install` records
+# the real file, not the link). Computed eagerly; repo lookup is lazy (below) so
+# install/uninstall work from anywhere, not only inside a git repo.
+SELF="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)/$(basename "$(readlink -f "${BASH_SOURCE[0]}")")"
 CRED_STORE="${AWT_CRED_STORE:-$HOME/.config/credentials/personal}"
 STATUS_FILE="${AWT_STATUS_FILE:-$HOME/Sync/agent-status.json}"
+
+# Lazily resolve the repo we are invoked from. Only worktree commands need it;
+# install/uninstall must run outside any repo.
+require_repo() {
+  MAIN_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -z "$MAIN_ROOT" ]]; then
+    echo "awt: not inside a git repository." >&2
+    exit 2
+  fi
+  REPO_NAME="$(basename "$MAIN_ROOT")"
+  PARENT="$(dirname "$MAIN_ROOT")"
+}
 
 worktree_path() { echo "$PARENT/${REPO_NAME}--$1"; }
 
@@ -190,14 +205,41 @@ cmd_rm() {
   echo "awt: removed $wt (branch feature/$wid kept for its PR)"
 }
 
+cmd_install() {
+  local bin="${AWT_BIN_DIR:-$HOME/.local/bin}"
+  [[ "${1:-}" == "--bin" ]] && { bin="$2"; shift 2; }
+  mkdir -p "$bin"
+  local link="$bin/awt"
+  ln -sfn "$SELF" "$link"
+  echo "awt: installed → $link -> $SELF"
+  case ":$PATH:" in
+    *":$bin:"*) ;;
+    *) echo "awt: note — '$bin' is not on your PATH. Add it, e.g.:" >&2
+       echo "       echo 'export PATH=\"$bin:\$PATH\"' >> ~/.bashrc" >&2;;
+  esac
+}
+
+cmd_uninstall() {
+  local bin="${AWT_BIN_DIR:-$HOME/.local/bin}"
+  [[ "${1:-}" == "--bin" ]] && { bin="$2"; shift 2; }
+  local link="$bin/awt"
+  if [[ -L "$link" ]]; then
+    rm -f "$link"; echo "awt: removed $link"
+  else
+    echo "awt: nothing to remove at $link"
+  fi
+}
+
 main() {
   local cmd="${1:-}"; shift || true
   case "$cmd" in
-    new)   cmd_new "$@";;
-    list)  cmd_list "$@";;
-    ports) cmd_ports "$@";;
-    rm)    cmd_rm "$@";;
-    *) echo "usage: awt {new|list|ports|rm} ..." >&2; exit 2;;
+    install)   cmd_install "$@";;
+    uninstall) cmd_uninstall "$@";;
+    new)   require_repo; cmd_new "$@";;
+    list)  require_repo; cmd_list "$@";;
+    ports) require_repo; cmd_ports "$@";;
+    rm)    require_repo; cmd_rm "$@";;
+    *) echo "usage: awt {install|uninstall|new|list|ports|rm} ..." >&2; exit 2;;
   esac
 }
 main "$@"
