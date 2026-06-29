@@ -198,6 +198,8 @@ upgrade_kit() {
   copy_file_replace ".github/copilot-instructions.md"
   copy_file_replace "new-tag.sh"
   copy_file_replace "scripts/install-agents-kit.sh"
+  copy_file_replace "scripts/agent-worktree.sh"
+  replace_dir "templates"
 
   # Kit-owned directories are replaced wholesale so files deleted from the kit
   # are also deleted from existing installations.
@@ -244,6 +246,8 @@ else
   copy_path ".credentials"
   copy_path "docs"
   copy_path "handoff.md"
+  copy_path "scripts/agent-worktree.sh"
+  copy_path "templates"
   reset_target_readiness_flags
 
   echo "Kit files copied to: $TARGET_DIR"

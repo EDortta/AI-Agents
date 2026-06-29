@@ -1,0 +1,49 @@
+# Per-worktree dev container — bind-mount, no source COPY.
+#
+# Used by `awt new <work_id> --docker`. It runs the pre-built <repo>-dev image
+# (see Dockerfile.dev) with the worktree directory bind-mounted at /app, so:
+#   - editing files in the worktree is immediately visible in the container;
+#   - you transpile/build INSIDE the running container after an issue;
+#   - `docker restart` (or `docker compose -p awt-<id> restart`) applies it —
+#     NO image rebuild.
+#
+# Ports come from the work_id offset that `awt` exports (GATEWAY_PORT/DB_PORT),
+# so two worktrees never collide. The compose project name (`-p awt-<id>`)
+# isolates network and volumes per worktree.
+#
+# Singleton daemons (e.g. AI-hub chrome-daemon on :9400) are NOT replicated here
+# — the container reaches the shared host instance via host networking / the
+# host gateway.
+
+services:
+  app:
+    image: ${AWT_IMAGE:-app-dev}
+    container_name: awt-${AWT_WORK_ID:-dev}-app
+    working_dir: /app
+    volumes:
+      - ..:/app:cached          # the worktree directory (bind mount, not COPY)
+      - venv:/opt/venv          # keep the image's venv; don't shadow it with the mount
+    environment:
+      - AWT_WORK_ID=${AWT_WORK_ID:-dev}
+      - AWT_PORT_OFFSET=${AWT_PORT_OFFSET:-0}
+    ports:
+      - "${GATEWAY_PORT:-8000}:8000"
+    # Long-running shell so you can exec build/transpile/test inside it and just
+    # restart the container to apply — the image was prepared once.
+    command: ["sleep", "infinity"]
+
+  db:
+    image: postgres:16-alpine
+    container_name: awt-${AWT_WORK_ID:-dev}-db
+    environment:
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app
+      - POSTGRES_DB=app
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+volumes:
+  venv:
+  dbdata:

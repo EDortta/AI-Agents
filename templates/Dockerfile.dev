@@ -1,0 +1,35 @@
+# Dev image for per-worktree containers — built ONCE, never per change.
+#
+# Principle (operator requirement): NO `COPY` of source. Dependencies are baked
+# in a single build; the worktree source is bind-mounted at runtime (see
+# docker-compose.worktree.yml). After implementing an issue you transpile/build
+# INSIDE the running container and `docker restart` it — no image rebuild.
+#
+# Build once per stack:
+#   docker build -f templates/Dockerfile.dev -t <repo>-dev .
+#
+# This template is Python-oriented; adapt the base image / dep step per stack
+# (node:LTS + `npm ci`, etc.). The key invariant is: install deps here, mount
+# code there.
+
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:$PATH
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential git curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install deps from the manifest ONLY (not the source). When deps change you
+# rebuild this image; for everyday code changes you do not.
+WORKDIR /app
+COPY pyproject.toml ./
+RUN python -m venv "$VIRTUAL_ENV" \
+    && pip install -U pip \
+    && pip install -e ".[dev]" || pip install -e .
+
+# Source is bind-mounted over /app at runtime; nothing is copied here.
+CMD ["bash"]
