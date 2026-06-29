@@ -37,6 +37,20 @@ directory** linked to the same `.git`, each with its own branch and files. Run
 
 ## The tool: `awt` (`scripts/agent-worktree.sh`)
 
+`awt` **is** `scripts/agent-worktree.sh` — the short name is a symlink on your
+PATH. Install it once (the script self-installs; no copy of secrets, no build):
+
+```bash
+./scripts/agent-worktree.sh install        # symlink → ~/.local/bin/awt
+# override target dir with --bin <dir> or AWT_BIN_DIR; awt uninstall removes it
+```
+
+If you installed the **AI-GovernanceKit**, it runs this for you. Installing only
+the AI-Agents kit standalone? Run the line above yourself. Until then, call the
+script by path: `./scripts/agent-worktree.sh new <work_id> …`.
+
+Once installed:
+
 ```bash
 awt new <work_id> [--branch <b>] [--base <ref>] [--docker]   # create + isolate
 awt list                                                     # worktrees + holders
