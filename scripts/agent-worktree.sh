@@ -6,7 +6,7 @@
 # step on each other — files, branches, builds and service ports collide. A git
 # worktree gives each agent its own directory + branch on the same .git, so they
 # run truly in parallel. This helper standardizes the convention the AI-Agents
-# kit documents in docs/workflows/parallel-worktrees.md.
+# kit documents in .docs/workflows/parallel-worktrees.md.
 #
 # git worktree is native to git, so the isolation works for ANY tool — point
 # Codex at one worktree folder, Cursor at another.

@@ -17,3 +17,6 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+
+# Legacy-layout migration backup (installer)
+.docs-migration-bak/

@@ -29,11 +29,11 @@ Este kit é instalado via `governancekit install-agents`, que preenche
 interativamente os tokens `[PLACEHOLDER]` nos arquivos instalados.
 
 Antes de qualquer outra ação, verifique se ainda existem tokens não preenchidos
-neste arquivo ou em `docs/agents/*.md`:
+neste arquivo ou em `.docs/agents/*.md`:
 
 ```
 grep -r '\[OPERATOR_NAME\]\|\[SMTP_ACCOUNT\]\|\[PROJECT_SLUG\]\|\[GITHUB_OWNER\]' \
-     AGENTS.md docs/agents/
+     AGENTS.md .docs/agents/
 ```
 
 Se qualquer token `[PLACEHOLDER]` for encontrado:
@@ -56,8 +56,8 @@ rastreados. Não há exceção a esta regra.
 Before implementation, identify the target repository.
 
 Required target-project files:
-- `docs/software-overview.md`
-- `docs/limits.md`
+- `.docs/software-overview.md`
+- `.docs/limits.md`
 - `docs/required-reading.md` — and every project-specific document it lists
 
 Required readiness flags:
@@ -70,10 +70,10 @@ If either file is missing or not ready:
 2. Do not inspect, refactor, edit, branch, or run project checks.
 3. Tell the programmer to configure the missing file(s).
 4. Briefly explain:
-   - `docs/software-overview.md`: product, stack, users, modules, key behavior.
-   - `docs/limits.md`: allowed/prohibited agent actions, security boundaries, workflow constraints.
+   - `.docs/software-overview.md`: product, stack, users, modules, key behavior.
+   - `.docs/limits.md`: allowed/prohibited agent actions, security boundaries, workflow constraints.
 
-Every task must stay within `docs/limits.md` unless a human explicitly approves a boundary update.
+Every task must stay within `.docs/limits.md` unless a human explicitly approves a boundary update.
 
 Source-kit exception: when maintaining this reusable kit itself, a human may approve edits to these gates/templates before implementation starts.
 
@@ -88,24 +88,27 @@ Optional user profile:
 
 Always read first:
 - this file
-- `docs/software-overview.md`
-- `docs/limits.md`
+- `.docs/software-overview.md`
+- `.docs/limits.md`
 - `docs/required-reading.md` (and every document it lists)
 
 Documentation ownership:
-- `docs/project/` is project-owned — record project-specific docs there.
-- All other `docs/` files plus `AGENTS.md` and per-tool rule files are kit-owned
-  and overwritten by `install-agents --upgrade` / `--docs-only`. Never hand-edit
-  kit-owned files in a target project; put project knowledge in `docs/project/`.
+- `docs/` is 100% project territory — record project-specific docs there. The
+  installer never overwrites it (`docs/required-reading.md`, `docs/napkin-lessons.md`,
+  issue folders, and any project docs live here).
+- `.docs/` plus `AGENTS.md` and per-tool rule files are kit-owned and overwritten
+  by `install-agents --upgrade`. Never hand-edit kit-owned files in a target
+  project; put project knowledge under `docs/`. Exception: `.docs/software-overview.md`
+  and `.docs/limits.md` are seeded by the kit but filled and preserved per project.
 
 Then load only relevant contracts:
-- coding or issue solving: `docs/agents/programmer.md`
-- code/PR review: `docs/agents/reviewer.md`
-- issue or PR automation: `docs/agents/issue-automation.md`
-- runtime-impacting change: `docs/agents/security.md`
-- personal data handling: `docs/agents/privacy-compliance.md`
-- session restore: `docs/workflows/session-restore.md`
-- session close: `docs/workflows/session-close.md`
+- coding or issue solving: `.docs/agents/programmer.md`
+- code/PR review: `.docs/agents/reviewer.md`
+- issue or PR automation: `.docs/agents/issue-automation.md`
+- runtime-impacting change: `.docs/agents/security.md`
+- personal data handling: `.docs/agents/privacy-compliance.md`
+- session restore: `.docs/workflows/session-restore.md`
+- session close: `.docs/workflows/session-close.md`
 
 Do not load historical issue docs, handoff notes, or lessons unless resuming active work or they are directly relevant.
 

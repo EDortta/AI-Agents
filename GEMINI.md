@@ -2,8 +2,8 @@
 
 Use this repository contract as source of truth:
 - AGENTS.md
-- docs/software-overview.md
-- docs/limits.md
+- .docs/software-overview.md
+- .docs/limits.md
 
 Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.
 
@@ -13,6 +13,6 @@ Implementation policy:
 - Validate with focused tests/checks.
 - Document security and privacy impacts when relevant.
 - Use `work_id` format `WK-YYYYMMDD-<short-slug>` in planning docs and related commits.
-- At each stage close, update `handoff.md` and `docs/napkin-lessons.md` using `docs/workflows/session-close.md`.
+- At each stage close, update `handoff.md` and `docs/napkin-lessons.md` using `.docs/workflows/session-close.md`.
 
 If a request is outside limits, stop and request explicit human approval.

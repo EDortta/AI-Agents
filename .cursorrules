@@ -4,8 +4,8 @@
 
 Read before any implementation:
 - `AGENTS.md`
-- `docs/software-overview.md` — must have `project_context_ready: yes`
-- `docs/limits.md` — must have `limits_ready: yes`
+- `.docs/software-overview.md` — must have `project_context_ready: yes`
+- `.docs/limits.md` — must have `limits_ready: yes`
 
 If either readiness flag is missing or `no`, stop and ask the programmer to fill the file.
 
@@ -33,7 +33,7 @@ At each stage end, produce exactly these artifacts — no other summary format:
 - Files changed: <list>
 - Checks/Tests executed: <command> -> <result>
 - Related commits: <hash or planned>
-- Suggested restart prompt: "Continue work_id <work_id>. Read AGENTS.md, docs/software-overview.md, docs/limits.md and this handoff entry before coding."
+- Suggested restart prompt: "Continue work_id <work_id>. Read AGENTS.md, .docs/software-overview.md, .docs/limits.md and this handoff entry before coding."
 ```
 
 **`docs/napkin-lessons.md` entry** (prepend after header):

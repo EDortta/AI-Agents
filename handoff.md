@@ -121,6 +121,30 @@ Most recent entry should be on top.
 - Suggested restart prompt:
   - "Continue work_id WK-20260504-low-token-contract-v2. Read docs/issues/001-low-token-contract-v2-[review]/RESUME.md first."
 
+## [2026-07-01] WK-20260701-dotdocs-kit-layout - source-side restructure
+
+- Status: ready-for-review
+- Summary: Moved all kit-owned docs from `docs/` to `.docs/`; `docs/` is now 100% project territory. Installer aligned to `.docs/` with fresh-install seeding of `docs/`, upgrade preserving `docs/` + readiness files, and a new idempotent `migrate_legacy_layout()` (backs up, promotes `docs/project/*`→`docs/`, reports conflicts honestly). All references swept; ownership rule rewritten in AGENTS.md.
+- Next steps:
+  - Coordinate merge with the twin Python installer in `AI-GovernanceKit` (same work_id) before merging — layouts must not diverge.
+  - Human review of tutorial prose in `.docs/articles/` for remaining contextual "docs/" mentions.
+- Blockers/Risks:
+  - Twin repo `AI-GovernanceKit` not yet aligned (divergence issue opened there).
+- Files changed:
+  - `scripts/install-agents-kit.sh`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `README*.md`, `.cursorrules`, `.windsurfrules`, `.github/copilot-instructions.md`, `.gitignore`, `docs/required-reading.md`, and the moved `.docs/` tree (agents, workflows, articles, icons, software-overview.md, limits.md, index.html, concepts.html, issues/templates, issues/README.md).
+- Checks/Tests executed:
+  - `bash -n scripts/install-agents-kit.sh` -> passed
+  - fresh install in temp target -> kit under `.docs/`, `docs/` seeded, readiness reset to `no`, exit 30
+  - legacy-migration upgrade in temp target -> kit moved to `.docs/`, `docs/project/*` promoted, backup created
+  - conflict scenario -> clean items promoted, colliding item kept + reported, honest completion message
+  - 2nd upgrade run -> no re-migration (idempotent); backup not clobbered
+  - residual kit-owned `docs/` reference scan -> 0
+  - 3 adversarial skeptics (workflow) -> 6 findings, all fixed and retested
+- Related commits:
+  - planned: `[WK-20260701-dotdocs-kit-layout] Move kit to .docs/, free docs/ for the project`
+- Suggested restart prompt:
+  - "Continue work_id WK-20260701-dotdocs-kit-layout. Read docs/issues/002-dotdocs-kit-layout-[review]/RESUME.md and coordinate with the AI-GovernanceKit twin before merging."
+
 ## [YYYY-MM-DD] <work_id> - <stage>
 
 - Status: <in-progress|blocked|ready-for-review|done>

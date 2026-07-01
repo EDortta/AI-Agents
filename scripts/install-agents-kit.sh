@@ -22,10 +22,14 @@ Options:
   --upgrade        Update kit-owned files while preserving project-local context/state
   --help           Show this help
 
+Layout:
+  Kit-owned files install under .docs/ (managed, replaced on --upgrade).
+  docs/ is 100% project territory and is never overwritten.
+
 Readiness gate:
   Installation exits with non-zero until both are set:
-  - docs/software-overview.md -> project_context_ready: yes
-  - docs/limits.md            -> limits_ready: yes
+  - .docs/software-overview.md -> project_context_ready: yes
+  - .docs/limits.md            -> limits_ready: yes
 USAGE
 }
 
@@ -169,9 +173,84 @@ remove_obsolete_path() {
   fi
 }
 
+migrate_legacy_layout() {
+  # Move a legacy install (kit under docs/, project under docs/project/) to the
+  # new layout (kit under .docs/, project owns docs/). Idempotent: a no-op once
+  # .docs/ already holds the kit. A backup of the pre-migration docs/ is kept.
+  if [[ -d "$TARGET_DIR/.docs/agents" ]]; then
+    return 0
+  fi
+  if [[ ! -d "$TARGET_DIR/docs/agents" && ! -d "$TARGET_DIR/docs/project" ]]; then
+    return 0
+  fi
+
+  echo "Legacy layout detected -> migrating docs/ (kit) to .docs/ and promoting docs/project/."
+  # Never clobber an existing backup: pick the first free .docs-migration-bak[-N].
+  local bak="$TARGET_DIR/.docs-migration-bak"
+  if [[ -e "$bak" ]]; then
+    local n=1
+    while [[ -e "${bak}-${n}" ]]; do n=$((n + 1)); done
+    bak="${bak}-${n}"
+  fi
+  mkdir -p "$bak"
+  cp -a "$TARGET_DIR/docs" "$bak/docs"
+  echo "backup written: ${bak#$TARGET_DIR/}/docs"
+
+  mkdir -p "$TARGET_DIR/.docs/issues"
+  local kit_dirs=(agents workflows articles icons)
+  local d
+  for d in "${kit_dirs[@]}"; do
+    if [[ -d "$TARGET_DIR/docs/$d" ]]; then
+      rm -rf "$TARGET_DIR/.docs/$d"
+      mv "$TARGET_DIR/docs/$d" "$TARGET_DIR/.docs/$d"
+    fi
+  done
+  if [[ -d "$TARGET_DIR/docs/issues/templates" ]]; then
+    rm -rf "$TARGET_DIR/.docs/issues/templates"
+    mv "$TARGET_DIR/docs/issues/templates" "$TARGET_DIR/.docs/issues/templates"
+  fi
+  local kit_files=(software-overview.md limits.md index.html concepts.html issues/README.md)
+  local f
+  for f in "${kit_files[@]}"; do
+    if [[ -f "$TARGET_DIR/docs/$f" ]]; then
+      mkdir -p "$(dirname "$TARGET_DIR/.docs/$f")"
+      mv "$TARGET_DIR/docs/$f" "$TARGET_DIR/.docs/$f"
+    fi
+  done
+
+  # Promote project-owned docs/project/* up into docs/ (project territory).
+  # Items that collide with an existing docs/<name> cannot be auto-promoted; they
+  # are left in place under docs/project/ (a copy is also in the backup) and
+  # reported so the maintainer resolves them by hand.
+  local conflicts=0
+  if [[ -d "$TARGET_DIR/docs/project" ]]; then
+    shopt -s dotglob nullglob
+    local item
+    for item in "$TARGET_DIR/docs/project"/*; do
+      local base
+      base="$(basename "$item")"
+      if [[ -e "$TARGET_DIR/docs/$base" ]]; then
+        conflicts=$((conflicts + 1))
+        echo "CONFLICT: docs/$base already exists; left docs/project/$base in place (also in ${bak#$TARGET_DIR/}/docs/project/$base) -- resolve manually."
+      else
+        mv "$item" "$TARGET_DIR/docs/$base"
+      fi
+    done
+    shopt -u dotglob nullglob
+    # rmdir only succeeds when every item was promoted (dir now empty).
+    rmdir "$TARGET_DIR/docs/project" 2>/dev/null || true
+  fi
+
+  if [[ "$conflicts" -gt 0 ]]; then
+    echo "migration finished with $conflicts unresolved conflict(s) still under docs/project/; resolve them, then delete the folder. Backup kept at ${bak#$TARGET_DIR/}/."
+  else
+    echo "migration complete; review ${bak#$TARGET_DIR/}/ then remove it when satisfied."
+  fi
+}
+
 reset_target_readiness_flags() {
-  local so_file="$TARGET_DIR/docs/software-overview.md"
-  local lim_file="$TARGET_DIR/docs/limits.md"
+  local so_file="$TARGET_DIR/.docs/software-overview.md"
+  local lim_file="$TARGET_DIR/.docs/limits.md"
 
   if [[ -f "$so_file" ]]; then
     sed -i 's/^- project_context_ready:[[:space:]]*yes$/- project_context_ready: no/' "$so_file"
@@ -185,8 +264,10 @@ reset_target_readiness_flags() {
 upgrade_kit() {
   echo "Upgrading kit-owned files in: $TARGET_DIR"
 
+  migrate_legacy_layout
+
   # Root kit files. These are safe to replace because project-specific context
-  # lives in docs/software-overview.md, docs/limits.md, handoff, issues, and lessons.
+  # lives in .docs/software-overview.md, .docs/limits.md, handoff, issues, and lessons.
   copy_file_replace "AGENTS.md"
   copy_file_replace "README.md"
   copy_file_replace "README-ptbr.md"
@@ -203,24 +284,27 @@ upgrade_kit() {
 
   # Kit-owned directories are replaced wholesale so files deleted from the kit
   # are also deleted from existing installations.
-  replace_dir "docs/agents"
-  replace_dir "docs/workflows"
-  replace_dir "docs/articles"
-  replace_dir "docs/icons"
-  replace_dir "docs/issues/templates"
+  replace_dir ".docs/agents"
+  replace_dir ".docs/workflows"
+  replace_dir ".docs/articles"
+  replace_dir ".docs/icons"
+  replace_dir ".docs/issues/templates"
+
+  # Kit-owned reference pages.
+  copy_file_replace ".docs/index.html"
+  copy_file_replace ".docs/concepts.html"
 
   # Keep the issues index current without touching project issue folders.
-  copy_file_replace "docs/issues/README.md"
+  copy_file_replace ".docs/issues/README.md"
 
   # Preserve project-local files/state.
-  echo "preserved project-local: docs/software-overview.md"
-  echo "preserved project-local: docs/limits.md"
+  echo "preserved project-local: .docs/software-overview.md"
+  echo "preserved project-local: .docs/limits.md"
+  echo "preserved project-local: docs/ (project territory, never overwritten)"
   echo "preserved project-local: docs/required-reading.md"
-  echo "preserved project-local: docs/project/"
   echo "preserved project-local: handoff.md"
   echo "preserved project-local: docs/napkin-lessons.md"
-  echo "preserved project-local: docs/issues/* except README.md and templates/"
-  echo "preserved project-local: docs/undercover-issues/"
+  echo "preserved project-local: docs/issues/"
   echo "preserved project-local: .credentials/"
 
   # Add paths here when a future kit version removes a formerly installed file
@@ -246,26 +330,34 @@ else
   copy_path "GEMINI.md"
   copy_path ".github/copilot-instructions.md"
   copy_path ".credentials"
-  copy_path "docs"
+  copy_path ".docs"
   copy_path "handoff.md"
   copy_path "scripts/agent-worktree.sh"
   copy_path "templates"
-  reset_target_readiness_flags
 
-  # Create the project-owned docs folder once; never overwrite it.
-  if [[ ! -e "$TARGET_DIR/docs/project/README.md" ]]; then
-    mkdir -p "$TARGET_DIR/docs/project"
-    printf '# Project Documentation\n\nProject-owned docs live here; the installer never overwrites this folder.\nKit-owned docs (the rest of docs/, AGENTS.md, rule files) are replaced on --upgrade.\nList mandatory pre-issue reading in docs/required-reading.md.\n' \
-      > "$TARGET_DIR/docs/project/README.md"
+  # Seed project territory (docs/) from kit starters when the target lacks them.
+  # These are project-owned once created; --upgrade never overwrites them.
+  mkdir -p "$TARGET_DIR/docs/issues"
+  if [[ -f "$SRC_ROOT/docs/required-reading.md" && ! -e "$TARGET_DIR/docs/required-reading.md" ]]; then
+    cp -a "$SRC_ROOT/docs/required-reading.md" "$TARGET_DIR/docs/required-reading.md"
   fi
+  if [[ -f "$SRC_ROOT/docs/napkin-lessons.md" && ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
+    cp -a "$SRC_ROOT/docs/napkin-lessons.md" "$TARGET_DIR/docs/napkin-lessons.md"
+  fi
+  if [[ ! -e "$TARGET_DIR/docs/README.md" ]]; then
+    printf '# Project Documentation\n\nThis folder (docs/) is 100%%%% project territory; the installer never overwrites it.\nKit-owned docs live under .docs/ and are replaced on --upgrade.\nList mandatory pre-issue reading in docs/required-reading.md.\n' \
+      > "$TARGET_DIR/docs/README.md"
+  fi
+
+  reset_target_readiness_flags
 
   echo "Kit files copied to: $TARGET_DIR"
 fi
 
 echo "Kit files ready in: $TARGET_DIR"
 
-SO_FILE="$TARGET_DIR/docs/software-overview.md"
-LIM_FILE="$TARGET_DIR/docs/limits.md"
+SO_FILE="$TARGET_DIR/.docs/software-overview.md"
+LIM_FILE="$TARGET_DIR/.docs/limits.md"
 
 check_ready_flag() {
   local file="$1"

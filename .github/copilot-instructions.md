@@ -2,8 +2,8 @@
 
 Before suggesting or applying changes, align with:
 - AGENTS.md
-- docs/software-overview.md
-- docs/limits.md
+- .docs/software-overview.md
+- .docs/limits.md
 
 Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.
 
@@ -20,4 +20,4 @@ Issue artifacts:
 
 Session close:
 - At each stage end, update `handoff.md` and `docs/napkin-lessons.md`.
-- Follow `docs/workflows/session-close.md`.
+- Follow `.docs/workflows/session-close.md`.
