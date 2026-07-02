@@ -278,6 +278,44 @@ issue `collect-and-enforce-per-host-identity` in **AI-GovernanceKit** (the
 
 ---
 
+## 8c. Session wind-down alert (MANDATORY, strong limiter)
+
+The operator works **many projects in parallel**. A clean session-close (updating
+`handoff.md`, the active `RESUME.md`, and `docs/napkin-lessons.md` across *every*
+active project) takes about **one hour**. Reaching end-of-day without warning
+means sessions are left dirty and work is lost. This is a **strong limiter**: its
+job is to guarantee that hour of runway, not merely to note the time.
+
+Config (per operator/instance, with defaults):
+
+- `session_winddown_hour` — local time at which wind-down starts.
+  **Default `17:00`** (operator Esteban uses `17:00`).
+- `session_close_budget` — runway needed to close all parallel sessions.
+  **Default `60min`** → hard stop at `session_winddown_hour + session_close_budget`
+  (default `18:00`).
+
+Agents have no continuous clock, so the check is action-triggered: **read the
+local wall-clock time (e.g. `date +%H:%M`) at the start of each response.**
+
+Mandatory rules:
+
+- [MANDATORY] At or after `session_winddown_hour`, **before doing anything else**,
+  warn the operator that it is time to begin closing the sessions, and state how
+  much runway remains until the hard stop.
+- [MANDATORY] Re-issue the warning at the **top of every subsequent response**
+  until the operator acknowledges or closes — never once-and-forget.
+- [MANDATORY] From `session_winddown_hour` onward, **prioritize session-close over
+  new work**. Do not begin a large or new task that cannot both finish *and* be
+  cleanly closed within the remaining runway.
+- [MANDATORY] At the hard stop, do not start any new work — drive only
+  session-close (handoff / RESUME / napkin) to completion.
+
+Enforcement companion: **AI-GovernanceKit** `resume`/`doctor` can surface the
+active `session_winddown_hour` and the current runway (the runtime "how"); this
+contract owns the "what and why".
+
+---
+
 ## 9. Security Decision
 
 For every delivery, classify security impact as:
