@@ -145,6 +145,36 @@ Most recent entry should be on top.
 - Suggested restart prompt:
   - "Continue work_id WK-20260701-dotdocs-kit-layout. Read docs/issues/002-dotdocs-kit-layout-[review]/RESUME.md and coordinate with the AI-GovernanceKit twin before merging."
 
+## [2026-07-02] WK-20260702-branch-ascii-and-identity - ready-for-review
+
+- Status: ready-for-review
+- Summary: Implemented two governance-policy issues in the kit AGENTS.md.
+  (1) Added "Allowed characters (MANDATORY)" subsection to branch naming:
+  restricts branches to `^[a-zA-Z0-9/_-]+$`, prohibits quotes/spaces/shell
+  metacharacters, mandates ASCII transliteration+validation before checkout,
+  and hardened the `awt` worktree helper with the same regex guard (exit 6).
+  (2) Added "8b. Individual identity (MANDATORY)" section defining the minimum
+  identity schema (operator_name, host_id, instance_path, sibling_path,
+  assigned_ports, branch_ownership) plus the 3 mandatory rules, cross-linked to
+  the companion GovernanceKit runtime issue `collect-and-enforce-per-host-identity`.
+- Next steps:
+  - Operator review of both AGENTS.md blocks and the awt guard.
+  - Land companion runtime issue in AI-GovernanceKit.
+- Blockers/Risks:
+  - Doc/contract change + one defensive validation in a helper. Low risk.
+- Files changed:
+  - AGENTS.md (branch section + section 8b)
+  - scripts/agent-worktree.sh (branch-name regex guard)
+  - docs/issues/branch-names-ascii-only-[review].md (renamed from [draft])
+  - docs/issues/mandate-per-host-programmer-identity-[review].md (renamed from [draft])
+- Checks/Tests executed:
+  - `bash -n scripts/agent-worktree.sh` -> passed
+  - manual regex check: `'"development"'` rejected, `development` accepted
+- Related commits:
+  - none (left in working tree per instruction)
+- Suggested restart prompt:
+  - "Continue work_id WK-20260702-branch-ascii-and-identity. Both issue files are [review]; land the AI-GovernanceKit companion."
+
 ## [YYYY-MM-DD] <work_id> - <stage>
 
 - Status: <in-progress|blocked|ready-for-review|done>

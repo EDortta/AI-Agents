@@ -185,6 +185,28 @@ Branch naming:
 - GitHub: `feature/gh-<issue-number>/<short-description>`
 - undercover/local: `feature/uc-<NNN>/<short-description>`
 
+#### Allowed characters (MANDATORY)
+
+Branch names must use only plain ASCII in the class `[a-z0-9/_-]`
+(uppercase permitted solely inside an issue/Jira key, e.g. `UBR-1027`).
+The final name must match `^[a-zA-Z0-9/_-]+$`.
+
+[PROHIBITED] in a branch name — they silently break tooling, prompts, and refs:
+- quotes of any kind (`"` `'` `` ` ``), even from a shell-escaping mistake;
+- whitespace (spaces, tabs);
+- shell/glob metacharacters: `$ & * ? ! ; | < > ( ) { } [ ] \ ^ ~ : @ = + , #`
+  and a leading `-`;
+- accented or non-ASCII letters and any Unicode symbol, homoglyph, or
+  invisible character;
+- `..`, a trailing `/`, a trailing `.lock`, or a trailing `.` (invalid git refs).
+
+[MANDATORY] When deriving a branch slug from an issue title/slug: transliterate
+to ASCII, lowercase, replace every disallowed character with `-`, collapse
+repeats, strip leading/trailing `-`. Verify the final name matches
+`^[a-zA-Z0-9/_-]+$` **before** `git checkout -b` (or `git worktree add -b`).
+Never pass an issue title verbatim to git branch/checkout. An invalid name →
+stop and report; do not create the branch.
+
 Rules:
 - Obtain explicit human permission before creating a branch.
 - Create/switch branch before first code change.
@@ -213,6 +235,46 @@ At session close, update:
 Planning/development docs must include:
 - `work_id: WK-YYYYMMDD-<short-slug>`
 - `date: YYYY-MM-DD`
+
+---
+
+## 8b. Individual identity (MANDATORY)
+
+Kit docs (`AGENTS.md`, role guides, `RESUME.md`, `handoff.md`) are **shared** by
+several programmers/agents/hosts. On shared-branch projects (e.g. the jk-structure
+simulator) multiple hosts may run on the same branch and the same governance
+files. Without data that **individualizes** each host/instance, silent failures
+appear: two hosts commit on the same branch unaware of each other, ports and
+local runtime artifacts collide, and it becomes impossible to audit "which host
+did what" from the shared docs.
+
+Every governed project must carry a per-instance identity file (e.g.
+`WORKSPACE.md`) with at least this minimum schema:
+
+- `operator_name` — human operator (also used as the message prefix)
+- `host_id` — machine/instance identifier
+- `instance_path` — absolute path of this instance's checkout
+- `sibling_path` — path(s) of sibling instance(s), when any
+- `assigned_ports` — ports reserved by this instance
+- `branch_ownership` — who operates which branch on shared-branch projects
+  (includes the same-branch guard before creating/switching a branch)
+
+Mandatory rules:
+
+- [MANDATORY] Before any action, read/establish this instance's identity file.
+  If it is absent → **STOP** and ask the operator to create it. Do not inspect,
+  branch, edit, or commit until identity is established.
+- [MANDATORY] Same-branch guard — on a shared-branch project, before creating or
+  switching a branch, check whether another host owns the current branch
+  (`branch_ownership`/sibling identity). If so, **warn** and do not operate that
+  same branch without explicit alignment.
+- [MANDATORY] Distinguish **shared** artifacts (contract, docs) from
+  **individual** ones (identity file, assigned ports, local runtime artifacts).
+  Never treat individual state as shared, or vice versa.
+
+The executable collection/enforcement of this identity is the companion runtime
+issue `collect-and-enforce-per-host-identity` in **AI-GovernanceKit** (the
+"how"); this contract owns the "what and why".
 
 ---
 

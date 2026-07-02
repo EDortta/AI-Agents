@@ -119,6 +119,14 @@ cmd_new() {
   if [[ "$branch" == "main" || "$branch" == "master" || "$branch" == "development" ]]; then
     echo "awt: refusing to use a protected branch ('$branch') for a worktree." >&2; exit 4
   fi
+  # Branch names must be plain ASCII in [a-zA-Z0-9/_-]; reject quotes, spaces,
+  # shell/glob metacharacters and non-ASCII before touching git (see AGENTS.md
+  # "Allowed characters (MANDATORY)"). Never pass an unsanitized name to git.
+  if ! [[ "$branch" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+    echo "awt: invalid branch name '$branch' — must match ^[a-zA-Z0-9/_-]+\$" >&2
+    echo "     no quotes, spaces, shell metacharacters or non-ASCII allowed." >&2
+    exit 6
+  fi
 
   echo "awt: creating worktree $wt"
   echo "     branch=$branch  base=$base  port-offset=$off"
