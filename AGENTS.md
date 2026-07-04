@@ -49,6 +49,14 @@ Este gate existe por conformidade com a LGPD (Art. 46) e para garantir que
 dados pessoais do operador nunca sejam embutidos literalmente em arquivos
 rastreados. Não há exceção a esta regra.
 
+**Verificação inversa (fonte do kit):** ao editar os arquivos-fonte do kit
+(este repositório), verifique também o caso oposto — dados pessoais reais
+comitados no lugar dos placeholders. Antes de commitar, faça grep pelos
+valores reais do operador (nome, e-mail) obtidos do arquivo de identidade
+da instância / `~/.config/USER.md` — **nunca** hardcode esses valores no
+próprio grep — e substitua qualquer ocorrência por `[OPERATOR_NAME]` /
+`[SMTP_ACCOUNT]`, inclusive em **nomes de arquivo**.
+
 ---
 
 ### 1b. Projeto alvo configurado
@@ -289,7 +297,7 @@ job is to guarantee that hour of runway, not merely to note the time.
 Config (per operator/instance, with defaults):
 
 - `session_winddown_hour` — local time at which wind-down starts.
-  **Default `17:00`** (operator Esteban uses `17:00`).
+  **Default `17:00`**.
 - `session_close_budget` — runway needed to close all parallel sessions.
   **Default `60min`** → hard stop at `session_winddown_hour + session_close_budget`
   (default `18:00`).
