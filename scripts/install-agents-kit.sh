@@ -10,17 +10,28 @@ Usage:
   ./scripts/install-agents-kit.sh --target /path/to/project
   ./scripts/install-agents-kit.sh --target /path/to/project --upgrade
 
-  # Directly from GitHub (curl | bash)
-  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/main/scripts/install-agents-kit.sh) \
+  # Directly from GitHub (curl | bash) — pins to a release tag, not the
+  # mutable "main" branch; verify the printed sha256 against the release
+  # notes if you want an extra check before running.
+  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.0.2/scripts/install-agents-kit.sh) \
     --target /path/to/project
 
+Prefer over the one-liner: clone the repo and inspect it before running,
+especially the first time:
+  git clone --branch v1.0.2 https://github.com/EDortta/AI-Agents.git
+  less AI-Agents/scripts/install-agents-kit.sh
+  ./AI-Agents/scripts/install-agents-kit.sh --target /path/to/project
+
 Options:
-  --target <dir>   Target project directory (default: current dir)
-  --repo <name>    GitHub repo in owner/repo format (default: EDortta/AI-Agents)
-  --ref <ref>      Git ref/branch/tag for download (default: main)
-  --force          Overwrite existing kit files in target
-  --upgrade        Update kit-owned files while preserving project-local context/state
-  --help           Show this help
+  --target <dir>     Target project directory (default: current dir)
+  --repo <name>      GitHub repo in owner/repo format (default: EDortta/AI-Agents)
+  --ref <ref>        Git ref/branch/tag for download (default: v1.0.2 — pin to a
+                      release tag; passing a mutable ref like "main" is your choice,
+                      not the kit's)
+  --checksum <sha256> Expected sha256 of the downloaded tarball; aborts on mismatch
+  --force            Overwrite existing kit files in target
+  --upgrade          Update kit-owned files while preserving project-local context/state
+  --help             Show this help
 
 Layout:
   Kit-owned files install under .docs/ (managed, replaced on --upgrade).
@@ -35,7 +46,8 @@ USAGE
 
 TARGET_DIR="$(pwd)"
 REPO="EDortta/AI-Agents"
-REF="main"
+REF="v1.0.2"
+CHECKSUM=""
 FORCE="0"
 UPGRADE="0"
 
@@ -51,6 +63,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --ref)
       REF="$2"
+      shift 2
+      ;;
+    --checksum)
+      CHECKSUM="$2"
       shift 2
       ;;
     --force)
@@ -101,6 +117,20 @@ if [[ -z "$SRC_ROOT" ]]; then
 
   echo "Downloading kit from: $URL"
   curl -fsSL "$URL" -o "$ARCHIVE"
+
+  ACTUAL_SHA="$(sha256sum "$ARCHIVE" | cut -d' ' -f1)"
+  if [[ -n "$CHECKSUM" ]]; then
+    if [[ "$ACTUAL_SHA" != "$CHECKSUM" ]]; then
+      echo "ERROR: checksum mismatch for downloaded tarball." >&2
+      echo "  expected: $CHECKSUM" >&2
+      echo "  actual:   $ACTUAL_SHA" >&2
+      exit 7
+    fi
+    echo "Checksum verified: $ACTUAL_SHA"
+  else
+    echo "NOTE: no --checksum given, skipping integrity check. Tarball sha256: $ACTUAL_SHA"
+  fi
+
   tar -xzf "$ARCHIVE" -C "$TMP_DIR"
   SRC_ROOT="$(find "$TMP_DIR" -mindepth 1 -maxdepth 1 -type d | head -n1)"
 fi

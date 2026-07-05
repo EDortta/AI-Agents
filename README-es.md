@@ -34,17 +34,20 @@ Regla central:
 
 ## Cómo usar en otro proyecto
 
-Instalación directa desde GitHub (recomendado):
+Preferido: clona e inspecciona antes de ejecutar, sobre todo la primera vez:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/main/scripts/install-agents-kit.sh) \
-  --target /ruta/de/tu-proyecto
+git clone --branch v1.0.2 https://github.com/EDortta/AI-Agents.git
+less AI-Agents/scripts/install-agents-kit.sh
+./AI-Agents/scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto
 ```
 
-Si ya clonaste este repositorio:
+Atajo, si aceptas ejecutar un script directo desde GitHub (fijado a una tag
+de release, no a la rama mutable `main`):
 
 ```bash
-./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.0.2/scripts/install-agents-kit.sh) \
+  --target /ruta/de/tu-proyecto
 ```
 
 Actualiza una instalación existente sin sobrescribir contexto/estado local del proyecto:

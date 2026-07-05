@@ -34,17 +34,20 @@ Core rule:
 
 ## How to Use in Another Project
 
-Install directly from GitHub (recommended):
+Preferred: clone and inspect before running, especially the first time:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/main/scripts/install-agents-kit.sh) \
-  --target /path/to/your-project
+git clone --branch v1.0.2 https://github.com/EDortta/AI-Agents.git
+less AI-Agents/scripts/install-agents-kit.sh
+./AI-Agents/scripts/install-agents-kit.sh --target /path/to/your-project
 ```
 
-If you already cloned this repository:
+Shortcut, if you accept running a script straight from GitHub (pinned to a
+release tag, not the mutable `main` branch):
 
 ```bash
-./scripts/install-agents-kit.sh --target /path/to/your-project
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.0.2/scripts/install-agents-kit.sh) \
+  --target /path/to/your-project
 ```
 
 Upgrade an existing installation without overwriting project-local context/state:
