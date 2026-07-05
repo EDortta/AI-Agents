@@ -27,7 +27,7 @@ services:
       - AWT_WORK_ID=${AWT_WORK_ID:-dev}
       - AWT_PORT_OFFSET=${AWT_PORT_OFFSET:-0}
     ports:
-      - "${GATEWAY_PORT:-8000}:8000"
+      - "127.0.0.1:${GATEWAY_PORT:-8000}:8000"
     # Long-running shell so you can exec build/transpile/test inside it and just
     # restart the container to apply — the image was prepared once.
     command: ["sleep", "infinity"]
@@ -37,10 +37,10 @@ services:
     container_name: awt-${AWT_WORK_ID:-dev}-db
     environment:
       - POSTGRES_USER=app
-      - POSTGRES_PASSWORD=app
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-app}
       - POSTGRES_DB=app
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - dbdata:/var/lib/postgresql/data
 
