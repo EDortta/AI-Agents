@@ -51,6 +51,19 @@ require_repo() {
 
 worktree_path() { echo "$PARENT/${REPO_NAME}--$1"; }
 
+# work_id feeds a filesystem path (worktree_path), a docker compose project
+# name (-p awt-$wid) and the generated .env — never pass an unsanitized value
+# to any of those. No '/' allowed (unlike branch names), since wid is a single
+# path segment, not a ref.
+validate_wid() {
+  local wid="$1"
+  if ! [[ "$wid" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo "awt: invalid work_id '$wid' — must match ^[a-zA-Z0-9_-]+\$" >&2
+    echo "     no slashes, dots, quotes, spaces or shell metacharacters allowed." >&2
+    exit 6
+  fi
+}
+
 # Deterministic, collision-resistant port offset from the work_id. Same work_id
 # always maps to the same ports, so an agent can reconnect to its services.
 port_offset() {
@@ -100,6 +113,7 @@ materialize_env() {
 cmd_new() {
   local wid="" branch="" base="" docker=0
   wid="${1:?usage: awt new <work_id> [--branch b] [--base ref] [--docker]}"; shift || true
+  validate_wid "$wid"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --branch) branch="$2"; shift 2;;
@@ -167,6 +181,7 @@ cmd_docker_up() {
 
 cmd_ports() {
   local wid="${1:?usage: awt ports <work_id>}"
+  validate_wid "$wid"
   local off; off="$(port_offset "$wid")"
   echo "work_id=$wid  offset=$off"
   echo "  gateway: $(( 8000 + off ))"
@@ -193,6 +208,7 @@ PY
 cmd_rm() {
   local wid="" force=0
   wid="${1:?usage: awt rm <work_id> [--force]}"; shift || true
+  validate_wid "$wid"
   [[ "${1:-}" == "--force" ]] && force=1
   local wt; wt="$(worktree_path "$wid")"
 
