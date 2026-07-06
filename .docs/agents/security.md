@@ -7,6 +7,10 @@ Global/common rules remain canonical in `/AGENTS.md`.
 
 Use this guide for runtime-impacting changes, issue implementation, and PR review.
 
+This guide covers *how to review*. The concrete, verifiable rules the delivered
+code must satisfy (secrets, network exposure, CORS, supply chain, agent
+commit-only, …) live in `./security-standards.md` — read it alongside this file.
+
 ## Mandatory Security Review
 
 Evaluate at minimum:

@@ -15,6 +15,8 @@ are genuinely none. `governancekit doctor` fails while this list is empty.
 
 ## Read for specific areas
 
-<!-- Add area-scoped reading here, e.g.:
+- `.docs/agents/security-standards.md` — before any runtime-impacting change, or
+  code touching secrets, auth, network exposure, logs, or releases
+<!-- Add more area-scoped reading here, e.g.:
 - `docs/architecture.md` — when touching the orchestration layer
 -->

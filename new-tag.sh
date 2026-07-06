@@ -16,18 +16,20 @@ fi
 force=false
 [[ "$2" == "--force" || "$2" == "-f" ]] && force=true
 
-# There is no test suite wired into this repo yet (no run-checks.sh). Until
-# one exists, --force is a no-op and tagging always proceeds — it used to
-# look like a test gate but never actually ran anything (r=$? was reading
-# the exit status of the `if ! $force` check itself, always 0).
-if [[ -f "scripts/run-checks.sh" ]]; then
-  if ! $force; then
-    bash scripts/run-checks.sh
-    r=$?
-    if [ $r -ne 0 ]; then
-      echo "Tests failed. Aborting"
-      exit 1
-    fi
+# Release gate (security-standards.md §7): tagging is gated by scripts/run-checks.sh.
+# Fail-closed: a missing gate aborts instead of tagging silently. --force skips the
+# gate but says so loudly and is never the default.
+if $force; then
+  echo "WARNING: --force given — skipping release gate (scripts/run-checks.sh). Not recommended."
+elif [[ ! -f "scripts/run-checks.sh" ]]; then
+  echo "Release gate missing: scripts/run-checks.sh not found. Aborting (use --force to override)."
+  exit 1
+else
+  bash scripts/run-checks.sh
+  r=$?
+  if [ $r -ne 0 ]; then
+    echo "Checks failed. Aborting."
+    exit 1
   fi
 fi
 
