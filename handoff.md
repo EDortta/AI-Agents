@@ -5,6 +5,28 @@ Most recent entry should be on top.
 
 ---
 
+## [2026-07-07] WK-20260707-sec-standards-hardening - draft (issues opened)
+
+- Status: draft — issues opened for review; no standards/code edited
+- Summary: Frente #3 of the AI-* epic. Harvested security/privacy lessons from ~15 kit-installed projects (`docs/napkin-lessons.md`), 11 per-project `SECURITY-ALERT-*.md`, and the central `security-issues/` catalogue (~296 SEC-*). Classified each against the 8-section `.docs/agents/security-standards.md`. Opened epic `003-security-standards-hardening-[draft]` with 13 themed task files, each citing source SEC ids, the standards section it extends (or that it is a new section), concrete proposed rule text, and doctor-automatability. Nothing in `security-standards.md` / `AGENTS.md` / `doctor.py` was changed — these are discussion artifacts for operator approval.
+- Next steps:
+  - Operator reviews the 13 tasks; approve/adjust which become standards additions.
+  - For each approved task, apply the rule to `.docs/agents/security-standards.md` + PR self-check in its own follow-up (rename `[draft]`→`[ready]`→…).
+  - Automatable subset (tasks 01,02,03,04,05,07,08,09,10,11) → `doctor` checks land in AI-GovernanceKit (ties to epic Frente #4).
+- Blockers/Risks:
+  - Some tasks classify long-tail SEC ids by their descriptive slug (not each read verbatim); verify representatives before writing final rule text.
+  - `governancekit doctor` on AI-Agents is FAIL for pre-existing structural reasons (unfilled kit placeholders, tracked `.credentials/*.example`, missing host identity) — not introduced by this work.
+- Files changed:
+  - `docs/issues/003-security-standards-hardening-[draft]/` — new epic: `README.md`, `epic.md`, `issues/003-01..13` (13 task files).
+- Checks/Tests executed:
+  - `git status`: only the new epic folder is added; no tracked file modified by the harvest.
+  - `git check-ignore`: epic path is tracked (not gitignored) in the AI-Agents repo.
+  - `governancekit doctor`: FAIL pre-existing (see Blockers); no new failure references the epic files.
+- Related commits:
+  - `<planned>` WK-20260707-sec-standards-hardening
+
+---
+
 ## [2026-05-11] WK-20260511-php-delphi-audit-capability - done
 
 - Status: done
@@ -174,6 +196,37 @@ Most recent entry should be on top.
   - none (left in working tree per instruction)
 - Suggested restart prompt:
   - "Continue work_id WK-20260702-branch-ascii-and-identity. Both issue files are [review]; land the AI-GovernanceKit companion."
+
+## [2026-07-08] WK-20260708-deploy-gw-hub-vm - epic-drafted
+
+- Status: ready-for-review
+- Summary: Criado o épico `004-deploy-gateway-hub-proxmox-[draft]` (docs/issues) para
+  deploy de AI-Gateway + AI-hub numa **VM Proxmox dedicada** em 192.168.7.200, atrás de
+  nginx interno, em sub-paths. Topologia escolhida pelo operador (1 VM aditiva) sobre a
+  alternativa de 3 LXCs + wipe da caixa (companion `adaptive-gliding-alpaca`, cujo gate de
+  limpeza segue aberto). 6 tasks: root_path do gateway, unit systemd do app (inexistente
+  hoje), Host-allowlist env-configurável do hub + token no unit, bundle nginx, runbook da
+  VM (GATED) e propagação de token + e2e.
+- Next steps:
+  - Operador revisa as 6 issues; avançar `[draft]`→`[ready]` por rename.
+  - Implementar 004-01..04 (código/artefatos versionados) antes de qualquer apply.
+  - Apply em 192.168.7.200 permanece passo separado, gated (política não-autônoma).
+- Blockers/Risks:
+  - Host-allowlist do hub é hardcoded → 403 atrás de proxy (durável em 004-03; fallback
+    nginx `Host: localhost` em 004-04). Login ChatGPT é interativo (janela humana única).
+  - Infra intocável do host (nginx :80, `/enviar-arquivo/`→:5055, túnel :2203, OpenVPN,
+    DHCP vmbr2, wifi) deve sobreviver — VM é aditiva.
+- Files changed:
+  - docs/issues/004-deploy-gateway-hub-proxmox-[draft]/README.md
+  - docs/issues/004-deploy-gateway-hub-proxmox-[draft]/epic.md
+  - docs/issues/004-deploy-gateway-hub-proxmox-[draft]/issues/004-01..06-*.md (6 tasks)
+- Checks/Tests executed:
+  - Estrutura conferida contra `.docs/issues/README.md` + templates + épico 003 real -> ok
+  - `find` da árvore do épico -> 8 arquivos, naming `[draft]` consistente
+- Related commits:
+  - none (arquivos em working tree; sem commit por ora)
+- Suggested restart prompt:
+  - "Continue work_id WK-20260708-deploy-gw-hub-vm. Read AGENTS.md, docs/software-overview.md, docs/limits.md e o épico 004 (docs/issues) antes de implementar. Apply em 192.168.7.200 é gated."
 
 ## [YYYY-MM-DD] <work_id> - <stage>
 
