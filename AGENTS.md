@@ -223,6 +223,18 @@ Rules:
 - Commit only after applicable checks are green, unless impossible and documented.
 - Do not commit caches, local runtime data, backups, credentials, `.env*`, or token files.
 
+#### `development` vs `main` (branch consolidation)
+
+- `development` is the **working branch** — feature/fix branches land here and
+  work accumulates across cycles. **`main` is the consolidated/stable branch.**
+- **Stay on `development` most of the time.** Consolidating into `main` is a
+  deliberate, cycle-end act — not something done on every change. Let several
+  cycles close on `development` first.
+- **On a push request, the agent asks whether to also merge to `main`.** Default
+  is **no** (push `development`, keep `main` as-is). Merge to `main` only on an
+  explicit "yes". Merging to `main` never implies deploy (deploy stays gated,
+  §commit-only).
+
 ---
 
 ## 8. Session Memory
