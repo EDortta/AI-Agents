@@ -1,4 +1,30 @@
-# Handoff Log
+# Handoff
+
+## Sessão 2026-07-16 (WK-20260716-ai-issues-sweep + WK-20260716-git-remote-bare-self-hosted)
+
+### Entregue
+- **`.docs/agents/design-standards.md`** (novo) — regras de desenho destiladas de regressões
+  reais achadas hoje no Gateway/hub. Tese: o objetivo não é ser SOLID, é não regredir; SOLID
+  é meio. Ligado a `AGENTS.md` (§2 load, §3 hard rules), `programmer.md`, `reviewer.md`
+  (claim de teste sem arquivo / guard no chamador / escopo pela metade viram **BLOCKER**),
+  `README.md` e `.docs/agents/README.md`.
+- **`scripts/git-bare-remote.sh` (`gbr`)** + `.docs/workflows/git-bare-remote.md` — issue
+  `git-remote-bare-self-hosted` → `[review]`. Gate de segredos varre o **histórico**;
+  autonomia imposta pelo script (sem `--yes`, recusa sem tty).
+- **Epic 004** — artefatos [review] verificados de verdade (`systemd-analyze verify` limpo,
+  `nginx -t` passa em container) e **divergência de topologia registrada** no `epic.md`.
+
+### Próximo passo (DO THIS FIRST)
+Ler o bloco **"Status (2026-07-16) — a realidade divergiu do plano"** em
+`docs/issues/004-deploy-gateway-hub-proxmox-[draft]/epic.md` e decidir entre as 3 saídas.
+Recomendação registrada lá: **fechar a epic como parcialmente superada** (o hub, que era o
+motivo, já está no stage4 desde 2026-07-15) e mover o Gateway só quando houver razão própria.
+
+### Aberto / consciente
+- `design-standards.md` é **review-gated**: "uma razão para mudar" não tem regex. As duas
+  regras mecânicas (claim de teste sem arquivo de teste; repo com fonte e sem alvo de teste)
+  valem virar gate no `governancekit doctor` — está escrito na seção Enforcement status.
+
 
 Use this file to resume work after clearing sessions.
 Most recent entry should be on top.
