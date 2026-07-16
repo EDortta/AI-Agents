@@ -129,3 +129,44 @@ problema correspondente.
 - Handoff sync status: pending
 - Last handoff update date: 2026-07-16 (status acima; artefatos 004-02/04 verificados
   localmente — `systemd-analyze verify` e `nginx -t` limpos; nenhum apply remoto executado)
+
+---
+
+## Fechamento (2026-07-16) — [superseded-partial], decisão do operador
+
+O operador aprovou a recomendação (3): **fechar como parcialmente superada**.
+
+**O motivo da epic foi atendido.** O *Context* acima diz: mover Gateway+hub para a caixa
+sempre-ligada "so the browser-backed hub (real Chrome/ChatGPT) no longer depends on devel3's
+07:00–18:00 power window". O hub está no stage4 desde 2026-07-15 (`WK-20260715-aihub-stage4`),
+com Chrome real, perfil persistente e sessão que sobrevive ao horário. **Feito** — por outro
+caminho, sem LXC e sem sub-paths.
+
+**O Gateway fica no devel3, deliberadamente.** A janela de energia machucava o hub (sessão de
+browser persistente que não migra), não o Gateway — que é stateless na frente do Postgres. Se
+ele cair fora do horário ninguém perde sessão, só disponibilidade de API. Mover é trabalho de
+infra gateado sem problema correspondente; será uma issue nova quando houver razão própria.
+
+**Verificado hoje, de ponta a ponta (read-only, nada implantado):**
+
+- `AiHubDriver.health()` do devel3 → **`('UP', None)`** contra `http://192.168.7.200:9480`
+  com o token compartilhado. A ponte Gateway→hub **funciona hoje**, sem LXC e sem nginx
+  sub-path. É o critério central de 004-06, atendido fora do desenho desta epic.
+- Token: o serviço vivo (`MainPID`) carrega `AIHUB_DAEMON_TOKEN` via drop-in
+  `ai-gateway.service.d/aihub-token.conf` (SEC-0001). O `.env` do repo **não** o contém — e
+  não deve conter.
+- `drivers.yaml`: `aihub.enabled: true` (2026-07-16), decisão registrada no arquivo. O driver
+  agora aparece no registry.
+- `alembic upgrade head` → **rodado no banco real** (não de rascunho): `0002` → `0003`,
+  downgrade e re-upgrade validados, 925 requests preservados. A "dívida vizinha" da issue 002
+  do Gateway **já estava paga** — o banco tinha as tabelas, ao contrário do que aquela issue
+  registrou em 2026-07-09.
+
+**Estado final das sub-issues:** 004-01 `[done]`, 004-02 `[done]`, 004-03 `[done]`,
+004-04 `[done]` (bloco `/api-gateway/` válido; `/api-hub/` documentado como premissa
+caduca), 004-05 `[superseded]` (o runbook instala um hub que já existe), 004-06 `[done]`
+(propagação de token provada UP; checklist e2e com os endereços reais).
+
+Os artefatos **não** foram jogados fora: a unit systemd e o bloco `/api-gateway/` do nginx
+ficam versionados e verificados, prontos para o dia em que o Gateway tiver motivo para mudar
+de casa. O que caducou foi o *plano de aplicá-los agora*, não o trabalho.
