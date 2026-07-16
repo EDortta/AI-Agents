@@ -310,6 +310,7 @@ upgrade_kit() {
   copy_file_replace "new-tag.sh"
   copy_file_replace "scripts/install-agents-kit.sh"
   copy_file_replace "scripts/agent-worktree.sh"
+  copy_file_replace "scripts/git-bare-remote.sh"
   replace_dir "templates"
 
   # Kit-owned directories are replaced wholesale so files deleted from the kit
@@ -363,6 +364,7 @@ else
   copy_path ".docs"
   copy_path "handoff.md"
   copy_path "scripts/agent-worktree.sh"
+  copy_path "scripts/git-bare-remote.sh"
   copy_path "templates"
 
   # Seed project territory (docs/) from kit starters when the target lacks them.

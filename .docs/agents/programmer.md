@@ -119,6 +119,10 @@ If no persistence change, declare: `No model/migration changes`.
 
 ### Maintainability Review
 
+Design rules (seams, invariant placement, additive contracts, fail direction, and
+why SOLID alone does not stop regressions) live in `./design-standards.md`. Read
+it before implementing; run its review checklist before finalizing.
+
 Before finalizing, review diffs for:
 - introduced duplication
 - ambiguous naming
@@ -128,8 +132,13 @@ Before finalizing, review diffs for:
 
 [MANDATORY] Reuse existing project utilities/patterns before introducing new ones.
 [MANDATORY] Avoid relevant logic duplication; extract reusable units when repeated.
+[MANDATORY] When you add a general mechanism, convert the existing call sites and
+delete what it replaced. An abstraction that exists while callers hand-roll the
+same thing is dead code that reads as live (`./design-standards.md` §7).
 [PROHIBITED] Clever code that harms readability or maintainability.
 [PROHIBITED] Refactor that changes public contract without explicit contract notes.
+[PROHIBITED] Claiming a test, check, or validation that was not run — name the file
+and command, or write `not validated: <what>` (`./design-standards.md` §1).
 
 #### TypeScript / React (when applicable)
 

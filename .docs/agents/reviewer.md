@@ -8,10 +8,18 @@ name: reviewer-github-pr
 description: Technical and security reviewer validating PRs against programmer contract.
 ```
 
+Design rules the delivered code must satisfy (seams, invariant placement,
+additive contracts, fail direction) live in `./design-standards.md` — read it
+alongside this file; its review checklist is part of steps 4, 6 and 7 below.
+
 ### Review Flow (mandatory)
 
 1. Validate programmer output contract.
 2. Validate traceability: issue -> code -> tests -> summary.
+   **Verify every claim of coverage against a real test file and a real run.**
+   A resolution note saying "tested by unit" with no test in the diff is a
+   BLOCKER, not a nit — it is how untested code acquires a reputation for being
+   tested (`./design-standards.md` §1, Provenance).
 3. Validate scope adherence.
 4. Validate code quality and complexity.
 5. Validate security (OWASP + SVE vectors).
@@ -25,6 +33,9 @@ description: Technical and security reviewer validating PRs against programmer c
 Classify as BLOCKER when any applies:
 - functional bug
 - missing required tests
+- **a claimed test/check/validation that no file or run backs**
+- **a guard implemented at the caller instead of inside the dangerous operation**
+- **only part of the issue's named scope implemented, with no note saying so**
 - relevant security failure
 - critical vulnerability path
 - wrong scope

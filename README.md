@@ -169,6 +169,9 @@ Templates available:
 - `scripts/git-bare-remote.sh` (`gbr`): self-hosted git remote on a server you own,
   with a secret gate over the committed history (`.docs/workflows/git-bare-remote.md`)
 - `.docs/agents/`: role-level contracts (programmer, reviewer, issue automation, security, privacy)
+- `.docs/agents/design-standards.md`: design rules that keep the next change from
+  breaking the last one (distilled from real regressions)
+- `.docs/agents/security-standards.md`: security rules the delivered code must satisfy
 - `docs/issues/`: local issue structure and templates
 - `handoff.md`: resumable handoff log between sessions
 - `docs/napkin-lessons.md`: concise lessons learned log

@@ -110,8 +110,8 @@ Documentation ownership:
   and `.docs/limits.md` are seeded by the kit but filled and preserved per project.
 
 Then load only relevant contracts:
-- coding or issue solving: `.docs/agents/programmer.md`
-- code/PR review: `.docs/agents/reviewer.md`
+- coding or issue solving: `.docs/agents/programmer.md` + `.docs/agents/design-standards.md`
+- code/PR review: `.docs/agents/reviewer.md` + `.docs/agents/design-standards.md`
 - issue or PR automation: `.docs/agents/issue-automation.md`
 - runtime-impacting change: `.docs/agents/security.md`
 - personal data handling: `.docs/agents/privacy-compliance.md`
@@ -133,6 +133,13 @@ Do not load historical issue docs, handoff notes, or lessons unless resuming act
 - Preserve existing contracts unless the issue explicitly changes them.
 - Do not introduce hidden behavior or undocumented side effects.
 - Do not expose secrets, tokens, credentials, or sensitive raw payloads.
+- **Never claim a test, a check, or a validation that was not run.** Name the file
+  and the command, or write `not validated: <what>`. A false claim of coverage is
+  worse than none: it retires the risk in the reader's mind while leaving it in
+  the code. (`.docs/agents/design-standards.md` §1.)
+- **A guard belongs inside the dangerous operation, not at the caller.** If every
+  call site must remember the check, one will not — and it will be the one in
+  production. (`design-standards.md` §3.)
 
 ---
 
@@ -161,6 +168,10 @@ For impacted modules only, unless shared tooling/contracts changed:
 
 Tests are required for behavior, API, auth, persistence, shared-interface, or regression-prone changes.
 Tests may be N/A only for docs/comments/metadata with no runtime effect; justify N/A explicitly.
+
+A bug fix ships with a test that **fails without the fix** — if it passes on the
+unfixed code, it is not testing the fix. Design rules that keep a change from
+breaking the last one: `.docs/agents/design-standards.md`.
 
 When changing public contracts, report:
 - backward compatible: yes/no
