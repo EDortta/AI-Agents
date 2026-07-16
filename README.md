@@ -165,6 +165,9 @@ Templates available:
 
 - `AGENTS.md`: universal execution contract
 - `scripts/install-agents-kit.sh`: installer (local run or direct GitHub raw execution)
+- `scripts/agent-worktree.sh` (`awt`): one git worktree per `work_id`, for parallel agents
+- `scripts/git-bare-remote.sh` (`gbr`): self-hosted git remote on a server you own,
+  with a secret gate over the committed history (`.docs/workflows/git-bare-remote.md`)
 - `.docs/agents/`: role-level contracts (programmer, reviewer, issue automation, security, privacy)
 - `docs/issues/`: local issue structure and templates
 - `handoff.md`: resumable handoff log between sessions

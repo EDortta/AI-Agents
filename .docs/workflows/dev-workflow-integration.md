@@ -33,3 +33,15 @@ When more than one agent works the same project at once, give each its own git
 worktree (one per `work_id`) so files, branches, builds and ports never collide.
 See [parallel-worktrees.md](parallel-worktrees.md) and the `awt` helper
 (`scripts/agent-worktree.sh`).
+
+## Backing up a project that has no remote
+
+A project whose history lives on one disk has no versioned backup — Syncthing
+replicating `.git/` replicates corruption too. When a third-party host is not the
+right answer (sensitive data, personal project) and you already run a server, a
+bare repo there closes the gap. See [git-bare-remote.md](git-bare-remote.md) and
+the `gbr` helper (`scripts/git-bare-remote.sh`).
+
+`gbr status` and `gbr scan` are local and read-only — an agent may run them.
+`gbr init` touches a remote server and is **operator-only**; the script itself
+refuses to run without a terminal.
