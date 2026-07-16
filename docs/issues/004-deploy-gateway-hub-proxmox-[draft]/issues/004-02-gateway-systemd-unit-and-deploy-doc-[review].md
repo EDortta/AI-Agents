@@ -59,3 +59,22 @@ starts on boot on the VM with the right env and DB.
 ## DoD
 - Versioned unit + deploy doc; `systemd-analyze verify` clean; alembic-to-head verified on
   a scratch DB; no secret in any committed file.
+
+---
+
+## Verificação (2026-07-16) — WK-20260716-ai-issues-sweep
+
+`systemd-analyze verify deploy/systemd/ai-gateway.service` — **limpo**. A única queixa é
+`Command /opt/ai-gateway/.venv/bin/uvicorn is not executable: No such file or directory`,
+esperada: esse path só existe no host alvo. Nenhum erro de sintaxe, diretiva ou hardening.
+
+Confere com o In Scope: `EnvironmentFile=/etc/ai-gateway/ai-gateway.env` (fora do repo),
+`Restart=always`, `WorkingDirectory=/opt/ai-gateway`, unit de sistema (não user), sem
+`Environment=` com segredo inline. `--root-path` corretamente ausente — o app lê
+`AIGW_ROOT_PATH` (004-01).
+
+**Não validado:** subir de verdade e `curl 127.0.0.1:8000/health` → 200; `alembic upgrade
+head` num banco de rascunho. Ambos exigem o host alvo — deploy gateado.
+
+Esta task **não é afetada** pela divergência de topologia descrita no `epic.md` (status
+2026-07-16): a unit do Gateway independe de onde o hub roda.

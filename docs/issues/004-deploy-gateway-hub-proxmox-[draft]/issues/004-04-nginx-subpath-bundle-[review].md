@@ -57,3 +57,26 @@ fronts both loopback apps on sub-paths, stripping the prefix and, for the hub, p
 ## DoD
 - Versioned nginx bundle; `nginx -t` clean; local proof of prefix strip + hub `Host: localhost`
   (200 not 403) + auth passthrough; explicit note that host nginx is untouched.
+
+---
+
+## Verificação (2026-07-16) — WK-20260716-ai-issues-sweep
+
+`nginx -t` — **passa**. Validado de verdade, não por leitura: o bundle foi incluído num
+`server { listen 80; include ...; }` dentro de um container `nginx:alpine`.
+`nginx: configuration file test is successful`. Prefix-strip (trailing slash no
+`proxy_pass`), `Host: localhost` no bloco do hub e passthrough de `Authorization` estão
+como o In Scope pede.
+
+**A config é válida; a premissa do bloco `/api-hub/` caducou.** Ele faz
+`proxy_pass http://127.0.0.1:9400/`, pressupondo hub no **mesmo** LXC. Desde 2026-07-15
+(`WK-20260715-aihub-stage4`) o hub roda no stage4 com **vhost próprio** (`listen 9480`) —
+um Gateway em LXC novo o alcançaria em `http://192.168.7.200:9480`, não em loopback. O
+bloco `/api-gateway/` continua correto e independente disso.
+
+Ver `epic.md` → "Status (2026-07-16) — a realidade divergiu do plano". Enquanto a decisão
+de topologia não for tomada pelo operador, esta task fica em `[review]`: entregue e
+verificada, mas com metade do escopo apontando para um mundo que mudou.
+
+**Não validado:** proxy contra upstreams reais (200 em `/api-gateway/health`, 200 e não 403
+em `/api-hub/status` com Bearer) — exige os serviços de pé no alvo; deploy gateado.
