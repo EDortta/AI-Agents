@@ -32,6 +32,15 @@ If this file conflicts with `/AGENTS.md`, follow `/AGENTS.md`.
 - Secret leaked into the repo: immediate containment (`git rm --cached` +
   `.gitignore`) and **rotation as an explicit operator task**. History rewrite
   only with human approval.
+- **A database dump is credential material.** `pg_dump`/`mysqldump` output carries
+  password/key hashes, tokens and audit rows — treat it exactly like a key file:
+  gitignored **before** it is created, never after. The window between "I made a
+  backup" and "I remembered to ignore it" is one `git add -A` wide, and that is
+  how it gets committed.
+- **`git add -A` is a weapon in a repo whose `.gitignore` does not yet cover the
+  artifact you just produced.** Before committing, read `git status` — or add
+  explicit paths. Generating an artifact and staging everything in the same breath
+  is the mechanism, not the accident.
 
 ## 2. Logs and personal data (privacy)
 
@@ -194,6 +203,7 @@ Before opening or approving a PR that touches runtime, confirm — or mark `n/a`
 - [ ] No secret added to code, docs, examples or history (`.credentials/`/`.env` only)
 - [ ] Service still fail-fast on missing required env; no secret/PII default in a tracked file
 - [ ] Key material gitignored + `chmod 600` from the first commit
+- [ ] DB dumps / runtime artifacts gitignored **before** being created; `git status` read before commit
 - [ ] No token/password/personal ID/auth payload logged; `Authorization`/PII redacted
 - [ ] No secret or token in a URL or query string
 - [ ] No PII committed or stored plaintext in a synced dir; operator-name/PII gate runs
@@ -222,6 +232,12 @@ hashing and non-expiring tokens, a supply-chain install from a mutable branch,
 and an unauthorized autonomous deploy → the commit-only rule). Client and repo
 identifiers are intentionally omitted: this kit is shared, so the *rule* travels,
 not the incident.
+
+2026-07-17 additions came from an agent (this one) committing a `pg_dump` into a
+repo: the backup was created and the next `git add -A` swept it in, because
+`data/` was not yet ignored. Caught before any push. The rule that would have
+prevented it — *gitignore the artifact before creating it* — did not exist here
+until the mistake did.
 
 **Enforcement status:** §1 (tracked-secret paths, key-material) and §7 (installer
 checksum) are enforced by `governancekit doctor` and the installer. `doctor` also
