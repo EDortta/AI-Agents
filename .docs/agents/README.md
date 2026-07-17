@@ -15,6 +15,9 @@ contracts, not instead of them):
 
 Shared references:
 - [shared references](./_shared.md)
-- [governance: role precedence for conflict rounds](./governance-precedence.md)
+- [governance: role precedence for conflict rounds](./governance-precedence.md) —
+  when roles **disagree**: precedence, then human arbitration
+- [council: adversarial review of approved work](./council.md) — when **nobody**
+  disagrees and the artifact is wrong anyway: findings, never decisions
 
 Common/global rules remain canonical in `/AGENTS.md`.

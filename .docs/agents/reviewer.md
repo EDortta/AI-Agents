@@ -36,6 +36,10 @@ Classify as BLOCKER when any applies:
 - **a claimed test/check/validation that no file or run backs**
 - **a guard implemented at the caller instead of inside the dangerous operation**
 - **only part of the issue's named scope implemented, with no note saying so**
+- **an implementation that does not pass the interface's own suite** — or a suite
+  that is not run against every implementation (`./design-standards.md` §6)
+- **a general mechanism added with zero call sites converted** — the old paths
+  left hand-rolled beside it (`./design-standards.md` §7)
 - relevant security failure
 - critical vulnerability path
 - wrong scope

@@ -23,6 +23,8 @@ required=(
   ".docs/limits.md"
   ".docs/agents/security.md"
   ".docs/agents/security-standards.md"
+  ".docs/agents/design-standards.md"
+  ".docs/agents/council.md"
   ".docs/agents/privacy-compliance.md"
 )
 for f in "${required[@]}"; do

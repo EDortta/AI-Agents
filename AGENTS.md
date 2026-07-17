@@ -113,6 +113,9 @@ Then load only relevant contracts:
 - coding or issue solving: `.docs/agents/programmer.md` + `.docs/agents/design-standards.md`
 - code/PR review: `.docs/agents/reviewer.md` + `.docs/agents/design-standards.md`
 - issue or PR automation: `.docs/agents/issue-automation.md`
+- adversarial review of already-approved work (mechanical sweep, shared-contract
+  change, `not validated:` on a runtime path, gate-changing release):
+  `.docs/agents/council.md`
 - runtime-impacting change: `.docs/agents/security.md`
 - personal data handling: `.docs/agents/privacy-compliance.md`
 - session restore: `.docs/workflows/session-restore.md`
