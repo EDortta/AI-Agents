@@ -75,6 +75,10 @@ Dependency Inversion is not here for purity. It is here because **without a seam
 you cannot write the test**, and without the test you get a regression. That is
 the whole argument.
 
+Interface Segregation lives here for the same reason, one step further in: **an
+interface that is too wide only sends its bill to the test.** You find out how
+wide it is when you write the fake.
+
 - [MANDATORY] A class that owns a policy must not also hard-code **where the data
   lives**. Storage, clock, network and randomness arrive through a parameter (an
   interface, a callable, a default argument), not through an import buried in a
@@ -87,6 +91,11 @@ the whole argument.
 - [PROHIBITED] `datetime.now()` / `random()` / `os.getenv()` called deep inside
   business logic. They make the behaviour untestable and time-dependent; pass
   them in.
+- [IMPROVEMENT] The interface a consumer depends on is the one the consumer uses.
+  **Measure it in the test:** if the fake must implement methods the code under
+  test never calls, the interface is wider than the need — split it
+  (`Reader`/`Writer`) or narrow the parameter to a callable. Count the stubs that
+  are never called; if the number is not zero, write down why.
 - [IMPROVEMENT] If a test needs more than ~3 mocks to run, that is the design
   talking, not the test. Collapse the collaborators before adding the third mock.
 
@@ -148,6 +157,11 @@ action, not next to the caller that happens to know about it today.**
 
 ## 6. Fail-safe, and know which way "safe" points
 
+Liskov lives here, because the shape it takes in the real world is not the
+textbook's. It is not a subclass overriding a method. It is **a value that passes
+as the type without honouring the type's promise** — and the incident is already
+in this section.
+
 - [MANDATORY] Decide the direction **explicitly** and write it down:
   - **auth, secrets, exposure → fail-closed.** No token, no service.
   - **caches, telemetry, optimizations → fail-open.** A broken cache degrades to
@@ -162,18 +176,49 @@ action, not next to the caller that happens to know about it today.**
   dataclass whose every field has one will happily turn `{"nonsense": true}` into
   a valid-looking object with a fresh random id — a ghost that never resolves for
   whoever holds the real id.
+- [MANDATORY] An implementation must not weaken what callers of the base rely on:
+  it does not accept input the base rejects, does not return `None` where the base
+  promises a value, does not raise a type the base's callers do not catch. If it
+  must, **it is not that type** — give it another name.
+  The executable form: **the interface's own suite runs green against every
+  implementation, unchanged** (`pytest.fixture(params=[...])`,
+  `describe.each([...])`). Adding an implementation without registering it in the
+  fixture **breaks the test** — that is the point.
+- [PROHIBITED] An override that turns a documented failure into a silent success,
+  or the reverse. If `save()` raises on a full disk in the base and the in-memory
+  subtype never raises, every test written against the subtype proves nothing
+  about the base's error path — that is §1, the mock proving the mock matches the
+  mock.
 - [IMPROVEMENT] Counters that gate safety never go negative (an underflow reads as
   "off" forever after), and are cleared in `finally` so a failed operation does
   not pin them on.
 
 ## 7. Delete the code you replaced
 
+This is Open/Closed seen from the side that hurts. The extension point existed —
+`chrome_op_guard()` — and four endpoints hand-rolled `try/finally` anyway. The
+symptom you can actually record is not "closed for extension". It is **an
+extension point with no adopters**.
+
 - [MANDATORY] When you add the general mechanism, **convert the call sites** —
   and delete the old one. A context manager that exists while four endpoints
   hand-roll `try/finally` is not an abstraction; it is a fifth thing to keep in
   sync, and it is dead code that reads as live.
+- [MANDATORY] **The proof that a general mechanism is general is the second call
+  site converted**, not the mechanism's own unit test. An extension point with
+  **zero** adopters is dead code that reads as live; with **one**, it is not an
+  abstraction yet — it is a function.
+- [MANDATORY] **Adding the N+1 case must not require editing the N that exist.**
+  If a new endpoint/provider/format forces you to touch all the previous ones, the
+  variation sits in the wrong place: put it behind the seam (§2) and **register**
+  the new case. The executable form: the diff that adds case N+1 touches (a new
+  file + one registration line + its test). If it touches the others, write down
+  why.
 - [MANDATORY] Supporting refactor is declared, not smuggled: name it in the
   output, keep it in the same commit as the reason for it.
+- [PROHIBITED] Adding a parameter or flag to an existing function to serve a new
+  caller when the callers no longer share a path. An `if mode == "x"` in the
+  middle of a shared function **is** the modification that Open/Closed names.
 - [PROHIBITED] Leaving both the old and the new path "just in case". Say which
   one is live.
 
@@ -196,7 +241,11 @@ action, not next to the caller that happens to know about it today.**
 - [ ] Fail direction chosen on purpose: closed for auth, open for caches
 - [ ] Persisted state written atomically; corrupt state boots empty
 - [ ] Deserialization rejects entries missing required fields
+- [ ] Every implementation passes the interface's own suite, unchanged
+- [ ] No implementation weakens what callers of the base rely on
 - [ ] Replaced code deleted, not left beside its replacement
+- [ ] A new general mechanism shipped with its call sites converted — zero adopters is dead code
+- [ ] Adding the N+1 case did not edit the N existing ones, or the diff says why
 
 ---
 
@@ -241,6 +290,32 @@ maps to something that actually broke or was about to:
   `mark_start`/`try`/`finally` instead. The abstraction was written, never
   adopted, and drifted.
 
+The three SOLID letters that were missing (O, L, I) were added on 2026-07-17 into
+the sections that already anchored them, rather than as sections of their own —
+Provenance is per section, and one incident cited under two numbers reads as two
+incidents. What each one is actually standing on differs, and that is worth being
+exact about:
+
+- **§6 / Liskov** — the section states Liskov **in the shape the incident actually
+  had**: a corrupt `watchers.json` entry deserializing into a valid-looking
+  `ConversationWatcher` with a fresh id. It passed as the type and did not honour
+  what callers of the type assume, which is that the id resolves. The textbook
+  shape — a subclass overriding and weakening a contract — is **preventive here**:
+  no incident on record. The "interface's suite against every implementation" rule
+  comes from the `WatcherStore` pair in §2, where two implementations already
+  coexist; it has never been run that way.
+- **§7 / Open-Closed** — "the second call site is the proof" and "N+1 does not edit
+  N" are two generalizations of the **same** incident: the four hand-rolled
+  `try/finally` blocks were literally four copies of the variation
+  `chrome_op_guard()` was supposed to absorb. The flag-parameter prohibition is
+  **preventive** — no incident on record.
+- **§2 / Interface Segregation** — **preventive, no incident.** The >3-mocks line
+  was already in the file with no rule behind it, and the 2026-07-16 sweep traced
+  no regression to an interface that was too wide. It is `[IMPROVEMENT]`, not
+  `[MANDATORY]`, precisely because §0 applies to this file too: a level-3 rule with
+  no level-1 rule behind it is decoration. If it never catches anything, it is a
+  candidate for removal.
+
 Older, from the same kit's history: an unauthorized autonomous `deploy.sh --yes`
 after a commit (→ the commit-only rule), and a branch named with quotes in the
 ref that corrupted tooling (→ the ASCII branch guard). Both are the same shape as
@@ -254,5 +329,11 @@ this cannot be grepped — "one reason to change" has no regex. The two rules th
   "tested"/"testado" wording against the presence of changed test files;
 - **a repository with source but no test target at all** (§1) — `doctor` can
   warn.
+
+Of the three letters added on 2026-07-17, **Liskov is the only mechanizable one
+today**: "the interface's suite runs against every implementation" is a code
+artifact, not an opinion. Open/Closed ("the N+1 diff touches a new file and one
+registration line") is mechanizable in principle and not implemented. Interface
+Segregation is review-only.
 
 Until then, `./reviewer.md` carries them.

@@ -1,5 +1,68 @@
 # Handoff
 
+## Sessão 2026-07-17 (WK-20260717-solid-council)
+
+Branch: `feature/uc-005/solid-council` — 4 commits, **não mergeada**.
+Epic `005-solid-council-[review]`.
+
+### Entregue
+
+- **`design-standards.md` completa SOLID** (`8a71052`). Cobria D (§2) e S (§5).
+  As três faltantes entram **dentro** das seções que já as ancoram, não como
+  §8/§9/§10: Provenance é por seção, e um incidente citado sob dois números lê
+  como dois incidentes. Segue o precedente interno (§2 nomeia DI, §5 nomeia SRP).
+  **Zero renumeração** — §1/§3/§7 são citados por número em 3 arquivos.
+  - §7 ← **OCP** (âncora real: `chrome_op_guard()` morto)
+  - §6 ← **Liskov** (âncora real: dataclass com default em todo campo)
+  - §2 ← **ISP como `[IMPROVEMENT]`**, não MANDATORY — sem incidente atrás, e §0
+    diz que nível 3 sem nível 1 é decoração. Declarado candidato a remoção.
+- **`.docs/agents/council.md`** (`80d0921`) — formaliza os "3 adversarial skeptics"
+  da epic 002 (6 findings, todos corrigidos e retestados), que rodaram uma vez e
+  sumiram. Fronteira contra `governance-precedence.md`: **precedência decide;
+  concílio não decide nada**, produz findings. Discordância entre membros vira
+  conflito de papéis e sai por porta de uma via. **Votar é PROHIBITED** — contar
+  concordância é proxy de evidência.
+- **Ligado** (`49e5daa`) — `AGENTS.md` §2 (load rule com os triggers na linha),
+  `.docs/agents/README.md`, 2 BLOCKERs no `reviewer.md`, `required=` no
+  `run-checks.sh`. Refactor de apoio declarado: `design-standards.md` também
+  entrou no `required=` — faltava desde ontem.
+- **Artefatos** (`c7b3b4c`) — epic `[review]`, 3 tasks `[finished]`.
+
+### Próximo passo (DO THIS FIRST)
+
+**Decidir o merge de `feature/uc-005/solid-council` para `main`.** `AGENTS.md` §7
+exige "sim" explícito; default é não. Nota: este repo **não tem `development`**,
+apesar de o §7 dizer que ela é a branch de trabalho — divergência real do kit
+contra a própria regra, decisão de topologia própria, fora deste épico.
+
+### Aberto / consciente
+
+- **O `council.md` §4 pede um concílio sobre este próprio épico** — "mudança em
+  contrato kit-owned que propaga para outros repos" é trigger MANDATORY, e é
+  exatamente o que este trabalho é. Dogfooding óbvio e ainda não feito. Ressalva:
+  o §4 manda rodar **depois** do reviewer devolver não-BLOCKER, e nenhum reviewer
+  passou por aqui.
+- **Risco aceito e registrado**: pelo §0, **um concílio que nada convoca é
+  decoração** — e nada o convoca. Escolha deliberada do operador nesta fatia.
+  Mitigação: triggers declarados provisórios (n=1) + registro de rodada MANDATORY,
+  que é o que gera os dados para corrigi-los. Está escrito no Enforcement status
+  do próprio arquivo, não escondido.
+- **`not validated:`** o efeito do `council.md` numa rodada real, e o efeito das
+  regras O/L/I numa revisão real. Zero rodadas, zero PRs sob elas.
+- **Épico 2 fatiado desta sessão**: `WK-20260717-harness-generation` (arnês +
+  GovernanceKit). Desenho completo em `docs/issues/005-solid-council-[review]/epic.md`
+  § Épico 2. Ordem forçada por handoff duro: **AI-Agents taggeia → só então o GK
+  calcula o sha256 e bumpa `DEFAULT_REF`**. `_do_upgrade` pula src path inexistente
+  **em silêncio** — GK precisa de checagem explícita, senão renderiza de templates
+  que nunca chegaram (§3: a proteção não cobre o que diz cobrir).
+- **Achado fora de escopo, não corrigido**: os 11 projetos do operador com hooks
+  Claude delegam a um `hook-handler.cjs` com fallback para
+  `$HOME/.claude/helpers/hook-handler.cjs`, **que não existe**. Guard que lê como
+  guard e não é (§3 puro). Só falham em silêncio se `CLAUDE_PROJECT_DIR` não
+  resolver. Relevante para o épico 2 — o kit não deve reproduzir esse padrão.
+
+---
+
 ## Sessão 2026-07-16 (WK-20260716-ai-issues-sweep + WK-20260716-git-remote-bare-self-hosted)
 
 ### Entregue
