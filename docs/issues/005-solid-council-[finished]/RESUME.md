@@ -2,16 +2,20 @@
 
 - work_id: WK-20260717-solid-council
 - date: 2026-07-17
-- branch: `feature/uc-005/solid-council`
-- status: [review] — implementado e validado; aguarda decisão de merge do operador
+- branch: `feature/uc-005/solid-council` → mergeada em `main` (2026-07-17)
+- status: [finished] — implementado, validado e mergeado
 
 ## Next Step (DO THIS FIRST)
 
-Perguntar ao operador se `feature/uc-005/solid-council` (3 commits: 8a71052,
-80d0921, 49e5daa) merge para `main`. `AGENTS.md` §7 exige "sim" explícito e o
-default é **não**. Este repo não tem `development` — se o operador quiser
-corrigir essa divergência (o §7 diz que development é a branch de trabalho), isso
-é decisão de topologia própria, fora deste épico.
+Rodar um concílio sobre este próprio épico, conforme o `council.md` §4 que ele
+introduziu: "mudança em contrato kit-owned que propaga para outros repos" é
+trigger **MANDATORY**, e é exatamente o que este trabalho é. Seria o primeiro
+registro sob o §4 — e o §4 exige registrar findings levantados / sobreviventes /
+virados em teste. Ressalva honesta: o §4 manda rodar **depois** do reviewer
+devolver não-BLOCKER, e nenhum reviewer passou por este épico.
+
+Alternativa, se o operador preferir seguir: abrir o épico 2
+(`WK-20260717-harness-generation`) — desenho pronto em `epic.md` § Épico 2.
 
 ## Estado
 

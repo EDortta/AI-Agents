@@ -95,7 +95,8 @@ Três lacunas, de naturezas diferentes:
 - [x] `bash scripts/run-checks.sh` verde
 - [x] Verificação inversa `AGENTS.md` §1a executada, sem vazamento
 - [x] Session-close: `handoff.md` + `docs/napkin-lessons.md`
-- [ ] Merge para `main` — **requer "sim" explícito do operador** (`AGENTS.md` §7)
+- [x] Merge para `main` — **"sim" explícito do operador dado em 2026-07-17**
+      (`AGENTS.md` §7). Merge não implica deploy; este kit não tem deploy.
 
 ## Privacy Checklist
 
