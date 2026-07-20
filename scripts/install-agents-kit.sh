@@ -177,7 +177,65 @@ copy_file_replace() {
   echo "updated file: $rel"
 }
 
-replace_dir() {
+# ── kit manifest (.gk/) ────────────────────────────────────────────────────────
+#
+# Mirrors governancekit: .gk/manifest.json records the sha256 of every file the KIT
+# wrote, so an upgrade can tell a kit file apart from a file the project authored
+# inside a kit-owned directory. Without it the only possible upgrade is "replace the
+# whole directory", which silently deletes project rules.
+#
+# JSON handling needs python3. When it is missing we degrade to never deleting
+# anything — losing retirement, never losing project work.
+
+STATE_DIR=".gk"
+MANIFEST_REL="$STATE_DIR/manifest.json"
+MANIFEST_LOADED=""
+declare -A KIT_HASHES=()
+PRESERVED=()
+OVERWRITTEN=()
+
+have_python() { command -v python3 >/dev/null 2>&1; }
+
+load_manifest() {
+  [[ -n "$MANIFEST_LOADED" ]] && return 0
+  MANIFEST_LOADED="1"
+
+  local file="$TARGET_DIR/$MANIFEST_REL"
+  [[ -f "$file" ]] || return 0
+  if ! have_python; then
+    echo "WARN: python3 not found — cannot read $MANIFEST_REL; nothing will be deleted."
+    return 0
+  fi
+
+  local path hash
+  while IFS=$'\t' read -r path hash; do
+    [[ -n "$path" ]] && KIT_HASHES["$path"]="$hash"
+  done < <(python3 - "$file" <<'PY'
+import json, sys
+try:
+    with open(sys.argv[1], encoding="utf-8") as fh:
+        data = json.load(fh)
+except Exception:
+    sys.exit(0)
+files = data.get("files") if isinstance(data, dict) else None
+if isinstance(files, dict):
+    for path, digest in files.items():
+        if isinstance(path, str) and isinstance(digest, str):
+            print(f"{path}\t{digest}")
+PY
+  )
+}
+
+file_sha256() { sha256sum "$1" | cut -d' ' -f1; }
+
+# Replace a kit directory WITHOUT discarding project-authored files.
+#
+# Every file the new kit ships is written. A destination file the kit does not ship is
+# removed only when the manifest proves the kit wrote it AND the content is still
+# byte-identical — i.e. retired upstream and never touched here. Everything else is
+# kept and reported. A kit file edited by hand is still kit-owned so the new version
+# wins, but the edit is stashed under .gk/overwritten/ rather than destroyed.
+sync_dir() {
   local rel="$1"
   local src="$SRC_ROOT/$rel"
   local dst="$TARGET_DIR/$rel"
@@ -187,10 +245,135 @@ replace_dir() {
     return 0
   fi
 
-  rm -rf "$dst"
-  mkdir -p "$(dirname "$dst")"
-  cp -a "$src" "$dst"
+  load_manifest
+  mkdir -p "$dst"
+
+  local f sub target rel_to_root recorded
+  # Pass 1 — write everything the new kit ships.
+  while IFS= read -r -d '' f; do
+    sub="${f#"$src"/}"
+    target="$dst/$sub"
+    rel_to_root="${target#"$TARGET_DIR"/}"
+    mkdir -p "$(dirname "$target")"
+    if [[ -f "$target" ]]; then
+      recorded="${KIT_HASHES[$rel_to_root]-}"
+      if [[ -n "$recorded" && "$recorded" != "$(file_sha256 "$target")" ]]; then
+        local stash="$TARGET_DIR/$STATE_DIR/overwritten/$rel_to_root"
+        mkdir -p "$(dirname "$stash")"
+        cp -a "$target" "$stash"
+        OVERWRITTEN+=("$rel_to_root")
+      fi
+    fi
+    cp -a "$f" "$target"
+  done < <(find "$src" -type f -print0)
+
+  # Pass 2 — decide what to do with destination files the new kit does not ship.
+  while IFS= read -r -d '' f; do
+    sub="${f#"$dst"/}"
+    rel_to_root="${f#"$TARGET_DIR"/}"
+    if [[ -f "$src/$sub" ]]; then
+      continue
+    fi
+    recorded="${KIT_HASHES[$rel_to_root]-}"
+    if [[ -n "$recorded" && "$recorded" == "$(file_sha256 "$f")" ]]; then
+      rm -f "$f"
+      continue
+    fi
+    PRESERVED+=("$rel_to_root")
+  done < <(find "$dst" -type f -print0)
+
+  find "$dst" -type d -empty -delete 2>/dev/null || true
+  mkdir -p "$dst"
   echo "updated directory: $rel"
+}
+
+# Record every kit file now on disk. Merges over the previous manifest: a narrower run
+# must not make the next upgrade forget that e.g. AGENTS.md is kit-owned.
+write_manifest() {
+  if ! have_python; then
+    echo "WARN: python3 not found — skipping $MANIFEST_REL; the next upgrade will not"
+    echo "      be able to retire files this kit version dropped (nothing is lost)."
+    return 0
+  fi
+
+  local tmp
+  tmp="$(mktemp)"
+  local rel dst f rel_to_root
+  for rel in "$@"; do
+    dst="$TARGET_DIR/$rel"
+    if [[ -f "$dst" ]]; then
+      printf '%s\t%s\n' "$rel" "$(file_sha256 "$dst")" >> "$tmp"
+    elif [[ -d "$dst" ]]; then
+      while IFS= read -r -d '' f; do
+        rel_to_root="${f#"$TARGET_DIR"/}"
+        printf '%s\t%s\n' "$rel_to_root" "$(file_sha256 "$f")" >> "$tmp"
+      done < <(find "$dst" -type f -print0)
+    fi
+  done
+
+  mkdir -p "$TARGET_DIR/$STATE_DIR"
+  # Self-contained ignore rules: manifest.json stays TRACKED so a team sharing the
+  # checkout judges file ownership from the same baseline, while the credential half
+  # and the stash never reach git. Kept inside .gk/ so the installer never has to edit
+  # the project's own .gitignore.
+  cat > "$TARGET_DIR/$STATE_DIR/.gitignore" <<'IGN'
+# Managed by the AI-Agents installer.
+# manifest.json is intentionally NOT ignored — the team must share it.
+secrets.json
+overwritten/
+IGN
+
+  python3 - "$TARGET_DIR/$MANIFEST_REL" "$tmp" "$REPO" "$REF" <<'PY'
+import json, sys
+manifest_path, pairs_path, repo, ref = sys.argv[1:5]
+try:
+    with open(manifest_path, encoding="utf-8") as fh:
+        previous = json.load(fh)
+    files = previous.get("files") if isinstance(previous, dict) else {}
+    files = dict(files) if isinstance(files, dict) else {}
+    metadata = previous.get("metadata") if isinstance(previous, dict) else {}
+    metadata = metadata if isinstance(metadata, dict) else {}
+except Exception:
+    files, metadata = {}, {}
+
+with open(pairs_path, encoding="utf-8") as fh:
+    for line in fh:
+        path, _, digest = line.rstrip("\n").partition("\t")
+        if path and digest:
+            files[path] = digest
+
+with open(manifest_path, "w", encoding="utf-8") as fh:
+    json.dump(
+        {"state_version": 1, "repo": repo, "ref": ref,
+         "metadata": metadata, "files": files},
+        fh, indent=2, sort_keys=True,
+    )
+    fh.write("\n")
+PY
+  rm -f "$tmp"
+  echo "recorded kit manifest: $MANIFEST_REL"
+}
+
+report_upgrade_effects() {
+  if [[ ${#PRESERVED[@]} -gt 0 ]]; then
+    echo
+    echo "Preserved ${#PRESERVED[@]} project-authored file(s) inside kit directories:"
+    local p
+    for p in "${PRESERVED[@]}"; do echo "  kept: $p"; done
+  fi
+  if [[ ${#OVERWRITTEN[@]} -gt 0 ]]; then
+    echo
+    echo "Replaced ${#OVERWRITTEN[@]} kit file(s) you had edited by hand — your version"
+    echo "was stashed under $STATE_DIR/overwritten/:"
+    local p
+    for p in "${OVERWRITTEN[@]}"; do echo "  stashed: $p"; done
+    echo "  Kit files are kit-owned. Move lasting project rules into your own files."
+  fi
+  if [[ ${#KIT_HASHES[@]} -eq 0 ]]; then
+    echo
+    echo "Note: no kit manifest existed before this run, so nothing was deleted."
+    echo "This run wrote one; later upgrades can retire files the kit drops."
+  fi
 }
 
 remove_obsolete_path() {
@@ -224,7 +407,7 @@ migrate_legacy_layout() {
   fi
   mkdir -p "$bak"
   cp -a "$TARGET_DIR/docs" "$bak/docs"
-  echo "backup written: ${bak#$TARGET_DIR/}/docs"
+  echo "backup written: ${bak#"$TARGET_DIR"/}/docs"
 
   mkdir -p "$TARGET_DIR/.docs/issues"
   local kit_dirs=(agents workflows articles icons)
@@ -261,7 +444,7 @@ migrate_legacy_layout() {
       base="$(basename "$item")"
       if [[ -e "$TARGET_DIR/docs/$base" ]]; then
         conflicts=$((conflicts + 1))
-        echo "CONFLICT: docs/$base already exists; left docs/project/$base in place (also in ${bak#$TARGET_DIR/}/docs/project/$base) -- resolve manually."
+        echo "CONFLICT: docs/$base already exists; left docs/project/$base in place (also in ${bak#"$TARGET_DIR"/}/docs/project/$base) -- resolve manually."
       else
         mv "$item" "$TARGET_DIR/docs/$base"
       fi
@@ -272,9 +455,9 @@ migrate_legacy_layout() {
   fi
 
   if [[ "$conflicts" -gt 0 ]]; then
-    echo "migration finished with $conflicts unresolved conflict(s) still under docs/project/; resolve them, then delete the folder. Backup kept at ${bak#$TARGET_DIR/}/."
+    echo "migration finished with $conflicts unresolved conflict(s) still under docs/project/; resolve them, then delete the folder. Backup kept at ${bak#"$TARGET_DIR"/}/."
   else
-    echo "migration complete; review ${bak#$TARGET_DIR/}/ then remove it when satisfied."
+    echo "migration complete; review ${bak#"$TARGET_DIR"/}/ then remove it when satisfied."
   fi
 }
 
@@ -311,15 +494,16 @@ upgrade_kit() {
   copy_file_replace "scripts/install-agents-kit.sh"
   copy_file_replace "scripts/agent-worktree.sh"
   copy_file_replace "scripts/git-bare-remote.sh"
-  replace_dir "templates"
+  sync_dir "templates"
 
-  # Kit-owned directories are replaced wholesale so files deleted from the kit
-  # are also deleted from existing installations.
-  replace_dir ".docs/agents"
-  replace_dir ".docs/workflows"
-  replace_dir ".docs/articles"
-  replace_dir ".docs/icons"
-  replace_dir ".docs/issues/templates"
+  # Kit-owned directories are synced file-by-file: kit files are replaced, files the
+  # kit dropped are retired only when the manifest proves it wrote them untouched, and
+  # project-authored files inside these directories are preserved (see sync_dir).
+  sync_dir ".docs/agents"
+  sync_dir ".docs/workflows"
+  sync_dir ".docs/articles"
+  sync_dir ".docs/icons"
+  sync_dir ".docs/issues/templates"
 
   # Kit-owned reference pages.
   copy_file_replace ".docs/index.html"
@@ -347,8 +531,24 @@ upgrade_kit() {
   done
 }
 
+# Every path the kit owns, for the manifest. Kept next to the copy/upgrade lists so a
+# future path added there is added here too — a path missing from the manifest is
+# simply never retired, which is safe but silently accumulates.
+KIT_OWNED_PATHS=(
+  "AGENTS.md" "README.md" "README-ptbr.md" "README-es.md"
+  ".cursorrules" "CLAUDE.md" ".windsurfrules" "GEMINI.md"
+  ".github/copilot-instructions.md" "new-tag.sh"
+  "scripts/install-agents-kit.sh" "scripts/agent-worktree.sh" "scripts/git-bare-remote.sh"
+  "templates"
+  ".docs/agents" ".docs/workflows" ".docs/articles" ".docs/icons"
+  ".docs/issues/templates" ".docs/issues/README.md"
+  ".docs/index.html" ".docs/concepts.html"
+)
+
 if [[ "$UPGRADE" == "1" ]]; then
   upgrade_kit
+  write_manifest "${KIT_OWNED_PATHS[@]}"
+  report_upgrade_effects
 else
   # Core files/directories to install
   copy_path "AGENTS.md"
@@ -382,6 +582,10 @@ else
   fi
 
   reset_target_readiness_flags
+
+  # Record ownership on a fresh install too, so the FIRST upgrade already knows what
+  # the kit put here instead of having to preserve everything indiscriminately.
+  write_manifest "${KIT_OWNED_PATHS[@]}"
 
   echo "Kit files copied to: $TARGET_DIR"
 fi

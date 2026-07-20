@@ -101,11 +101,20 @@ scan_history() {
   done
 
   # 2. Secret-shaped content in any blob reachable from any ref.
-  hit="$(git grep -I -l -E "$SECRET_CONTENT" $(git rev-list --all 2>/dev/null | head -300) -- 2>/dev/null | head -20 || true)"
-  if [[ -n "$hit" ]]; then
-    echo "  [!] secret-shaped content in history:"
-    printf '      %s\n' $hit
-    findings=$((findings + 1))
+  # The revision list is passed as an array so word splitting is explicit rather than
+  # incidental, and the result is read line-by-line: paths may contain spaces.
+  local revs=()
+  mapfile -t revs < <(git rev-list --all 2>/dev/null | head -300)
+  if (( ${#revs[@]} > 0 )); then
+    local hits=()
+    mapfile -t hits < <(
+      git grep -I -l -E "$SECRET_CONTENT" "${revs[@]}" -- 2>/dev/null | head -20 || true
+    )
+    if (( ${#hits[@]} > 0 )); then
+      echo "  [!] secret-shaped content in history:"
+      printf '      %s\n' "${hits[@]}"
+      findings=$((findings + 1))
+    fi
   fi
 
   if (( findings == 0 )); then
