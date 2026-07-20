@@ -37,7 +37,7 @@ Regla central:
 Preferido: clona e inspecciona antes de ejecutar, sobre todo la primera vez:
 
 ```bash
-git clone --branch v1.0.2 https://github.com/EDortta/AI-Agents.git
+git clone --branch v1.1.0 https://github.com/EDortta/AI-Agents.git
 less AI-Agents/scripts/install-agents-kit.sh
 ./AI-Agents/scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto
 ```
@@ -46,7 +46,7 @@ Atajo, si aceptas ejecutar un script directo desde GitHub (fijado a una tag
 de release, no a la rama mutable `main`):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.0.2/scripts/install-agents-kit.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.0/scripts/install-agents-kit.sh) \
   --target /ruta/de/tu-proyecto
 ```
 
