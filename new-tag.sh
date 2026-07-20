@@ -1,6 +1,10 @@
 #!/bin/bash
+# Fail-closed. Without this the script used to sail past a failed `git tag` and still
+# push main, exiting 0 — so a release could report success while the tag either did not
+# exist or pointed at an older commit than the one just pushed.
+set -euo pipefail
 
-if [[ -z "$1" || "$1" == "--force" || "$1" == "-f" ]]; then
+if [[ -z "${1:-}" || "$1" == "--force" || "$1" == "-f" ]]; then
   git tag | sort -V | tail -n 5
   exit 0
 fi
@@ -14,7 +18,19 @@ else
 fi
 
 force=false
-[[ "$2" == "--force" || "$2" == "-f" ]] && force=true
+# Written as an if, not `[[ ... ]] && force=true`: under `set -e` that form aborts the
+# script whenever the test is false, which is the common case.
+if [[ "${2:-}" == "--force" || "${2:-}" == "-f" ]]; then
+  force=true
+fi
+
+# Refuse to re-release an existing tag. Moving a published tag would silently change
+# what a pinned installer downloads; cutting the next patch version is the safe move.
+if git rev-parse -q --verify "refs/tags/$NEXT_TAG" >/dev/null; then
+  echo "ERROR: tag $NEXT_TAG already exists (points at $(git log -1 --format=%h "$NEXT_TAG"))." >&2
+  echo "       Releases are immutable — cut the next version instead of moving it." >&2
+  exit 3
+fi
 
 # Release gate (security-standards.md §7): tagging is gated by scripts/run-checks.sh.
 # Fail-closed: a missing gate aborts instead of tagging silently. --force skips the
