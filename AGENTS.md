@@ -1,10 +1,14 @@
 # AGENTS.md
 
+<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+     Project-specific rules  -> docs/project-rules.md (never overwritten)
+     Operator values ({{…}}) -> .gk/identity.json    (never overwritten) -->
+
 
 ## Prefixo obrigatório nas mensagens ao operador
 
-Toda mensagem de texto enviada diretamente ao operador (`[OPERATOR_NAME]`) **deve começar
-com "`[OPERATOR_NAME]`, "** — incluindo a vírgula e o espaço.
+Toda mensagem de texto enviada diretamente ao operador (`{{OPERATOR_NAME}}`) **deve começar
+com "`{{OPERATOR_NAME}}`, "** — incluindo a vírgula e o espaço.
 
 Aplica-se a: respostas no chat, resumos de sessão, perguntas de clarificação.
 Não se aplica a: tool calls, conteúdo de arquivos, corpos de issue/PR.
@@ -19,31 +23,57 @@ Instruction precedence:
 3. target-repository role/workflow docs loaded by this file
 4. local user preferences (`~/.config/USER.md` if present)
 
+### Este arquivo é do kit — trate-o como read-only
+
+`AGENTS.md` e os demais arquivos listados no banner acima pertencem ao kit AI-Agents:
+`install-agents-kit.sh --upgrade` os substitui pela versão nova. Qualquer coisa escrita
+aqui é conteúdo de projeto dentro de arquivo alheio e vira, no melhor caso, um merge
+manual a cada upgrade.
+
+Agente: **suas coisas vão em `docs/project-rules.md`.** Esse arquivo é 100% do projeto,
+está deliberadamente fora do manifesto do kit, e nenhum caminho de upgrade o alcança.
+
+| Você quer registrar… | Escreva em |
+|---|---|
+| regra que vale só neste projeto | `docs/project-rules.md` |
+| nome/conta do operador (slot `{{…}}`) | `.gk/identity.json` |
+| contexto e limites do projeto | `.docs/software-overview.md`, `.docs/limits.md` |
+| estado da sessão, lições, issues | `handoff.md`, `docs/napkin-lessons.md`, `docs/issues/` |
+
+Editar um arquivo do kit é aceitável apenas quando a mudança é do **próprio kit** e vai
+ser enviada para o repositório do kit. Nunca para acomodar este projeto.
+
 ---
 
 ## 1. Start Gate
 
 ### 1a. Placeholders do operador preenchidos (pré-condição absoluta)
 
-Este kit é instalado via `governancekit install-agents`, que preenche
-interativamente os tokens `[PLACEHOLDER]` nos arquivos instalados.
+Os arquivos do kit trazem slots no formato `{{…}}` — chaves duplas em volta de um nome
+em MAIÚSCULAS. Os valores ficam em `.gk/identity.json` e são reaplicados pelo instalador
+a cada `--upgrade`. `{{…}}` é **sempre** um slot; colchetes (`[MANDATORY]`,
+`[PROHIBITED]`, `[DEFAULT]`) são vocabulário de conteúdo e nunca devem ser tratados
+como placeholder.
 
-Antes de qualquer outra ação, verifique se ainda existem tokens não preenchidos
-neste arquivo ou em `.docs/agents/*.md`:
+Esta seção descreve os slots sem nunca escrever um literalmente: um slot escrito na
+prosa seria substituído junto com os de verdade — colocando o dado pessoal do operador
+exatamente no texto que manda mantê-lo fora — e o grep abaixo o acusaria para sempre.
+
+Antes de qualquer outra ação, verifique se ainda existe slot não preenchido neste
+arquivo ou em `.docs/agents/*.md`:
 
 ```
-grep -r '\[OPERATOR_NAME\]\|\[SMTP_ACCOUNT\]\|\[PROJECT_SLUG\]\|\[GITHUB_OWNER\]' \
-     AGENTS.md .docs/agents/
+grep -rnE '\{\{[A-Z][A-Z0-9_]*\}\}' AGENTS.md .docs/agents/
 ```
 
-Se qualquer token `[PLACEHOLDER]` for encontrado:
+Se o grep retornar qualquer linha:
 
 1. **Pare imediatamente.** Não execute nenhuma ação — nem leitura de código,
    nem inspeção, nem branch, nem commit.
-2. Informe ao operador:
-   > "Este kit contém placeholders não preenchidos: `[TOKEN]`. Execute
-   > `governancekit install-agents` (ou preencha manualmente) e reinicie."
-3. Não prossiga até que o operador confirme que os tokens foram substituídos.
+2. Informe ao operador quais slots ficaram sem valor (cite o nome do token, sem
+   as chaves) e peça: preencher `.gk/identity.json` e rodar
+   `install-agents-kit.sh --target . --upgrade` (ou substituir manualmente).
+3. Não prossiga até que o operador confirme que os slots foram substituídos.
 
 Este gate existe por conformidade com a LGPD (Art. 46) e para garantir que
 dados pessoais do operador nunca sejam embutidos literalmente em arquivos
@@ -51,11 +81,12 @@ rastreados. Não há exceção a esta regra.
 
 **Verificação inversa (fonte do kit):** ao editar os arquivos-fonte do kit
 (este repositório), verifique também o caso oposto — dados pessoais reais
-comitados no lugar dos placeholders. Antes de commitar, faça grep pelos
+comitados no lugar dos slots. Antes de commitar, faça grep pelos
 valores reais do operador (nome, e-mail) obtidos do arquivo de identidade
 da instância / `~/.config/USER.md` — **nunca** hardcode esses valores no
-próprio grep — e substitua qualquer ocorrência por `[OPERATOR_NAME]` /
-`[SMTP_ACCOUNT]`, inclusive em **nomes de arquivo**.
+próprio grep — e substitua qualquer ocorrência pelo slot correspondente
+(`OPERATOR_NAME` / `SMTP_ACCOUNT`, entre chaves duplas), inclusive em
+**nomes de arquivo**.
 
 ---
 
@@ -67,6 +98,7 @@ Required target-project files:
 - `.docs/software-overview.md`
 - `.docs/limits.md`
 - `docs/required-reading.md` — and every project-specific document it lists
+- `docs/project-rules.md` — project-specific rules (read after this file)
 
 Required readiness flags:
 - `project_context_ready: yes`
@@ -98,16 +130,22 @@ Always read first:
 - this file
 - `.docs/software-overview.md`
 - `.docs/limits.md`
+- `docs/project-rules.md` — **project-specific rules (read after this file)**
 - `docs/required-reading.md` (and every document it lists)
 
 Documentation ownership:
 - `docs/` is 100% project territory — record project-specific docs there. The
-  installer never overwrites it (`docs/required-reading.md`, `docs/napkin-lessons.md`,
-  issue folders, and any project docs live here).
+  installer never overwrites it (`docs/project-rules.md`, `docs/required-reading.md`,
+  `docs/napkin-lessons.md`, issue folders, and any project docs live here).
 - `.docs/` plus `AGENTS.md` and per-tool rule files are kit-owned and overwritten
   by `install-agents --upgrade`. Never hand-edit kit-owned files in a target
-  project; put project knowledge under `docs/`. Exception: `.docs/software-overview.md`
-  and `.docs/limits.md` are seeded by the kit but filled and preserved per project.
+  project; **project rules go in `docs/project-rules.md`**, not in this file.
+  Exception: `.docs/software-overview.md` and `.docs/limits.md` are seeded by the
+  kit but filled and preserved per project.
+- `AGENTS.md` is protected: once it differs from what the kit installed, `--upgrade`
+  keeps your version and leaves `AGENTS.md.kit-new` beside it for a manual merge. That
+  is a safety net for rules already written here — not a licence to keep writing them
+  here.
 
 Then load only relevant contracts:
 - coding or issue solving: `.docs/agents/programmer.md` + `.docs/agents/design-standards.md`
@@ -381,7 +419,7 @@ When a task requires sending email, credentials and mechanism live in `~/.config
 
 | File | Purpose |
 |------|---------|
-| `~/.config/email/credentials.conf` | SMTP account (`[SMTP_ACCOUNT]`) + app password |
+| `~/.config/email/credentials.conf` | SMTP account (`{{SMTP_ACCOUNT}}`) + app password |
 | `~/.config/email/send.py` | CLI/script helper — reads credentials automatically |
 
 ```bash

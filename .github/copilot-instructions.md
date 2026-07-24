@@ -1,9 +1,14 @@
 # GitHub Copilot Instructions
 
+<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+     Project-specific rules  -> docs/project-rules.md (never overwritten)
+     Operator values ({{…}}) -> .gk/identity.json    (never overwritten) -->
+
 Before suggesting or applying changes, align with:
 - AGENTS.md
 - .docs/software-overview.md
 - .docs/limits.md
+- docs/project-rules.md — project-specific rules (project-owned; never overwritten)
 
 Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.
 

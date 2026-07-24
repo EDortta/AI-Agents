@@ -1,5 +1,9 @@
 # AI-Agents Universal Kit
 
+<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+     Project-specific rules  -> docs/project-rules.md (never overwritten)
+     Operator values ({{…}}) -> .gk/identity.json    (never overwritten) -->
+
 ![AI-Agents Logo](./.docs/icons/logo.png)
 
 Portuguese version: [README-ptbr.md](./README-ptbr.md)  
@@ -59,11 +63,92 @@ Upgrade an existing installation without overwriting project-local context/state
 Upgrade mode updates kit-owned files and preserves:
 - `.docs/software-overview.md`
 - `.docs/limits.md`
+- `docs/project-rules.md`
 - `handoff.md`
 - `docs/napkin-lessons.md`
 - project issue folders under `docs/issues/`
 - `docs/undercover-issues/`
 - `.credentials/`
+
+### Where project-specific rules go
+
+`AGENTS.md` is the first file every agent reads, which makes it the first place
+people write project rules — and it is kit-owned, so `--upgrade` replaces it.
+Write project rules in **`docs/project-rules.md`** instead. The installer seeds it
+once and never touches it again; it is deliberately absent from the kit manifest,
+and that absence is what guarantees it.
+
+`AGENTS.md` is nonetheless **protected**: once its content differs from what the kit
+installed, `--upgrade` keeps your version, writes the new one to `AGENTS.md.kit-new`
+beside it, and tells you. Nothing is overwritten silently. When the manifest is
+missing (an install predating `.gk/`, or no `python3`) the installer cannot prove the
+file is untouched, so it fails closed and preserves it.
+
+Every replaced root file is also copied to `.gk/pre-upgrade/` before being written.
+
+Kit files also say so in their first lines: a short banner naming them kit-owned and
+pointing at `docs/project-rules.md`. The release gate asserts the banner is present,
+so an edit cannot quietly remove the one thing that tells the next agent where to write.
+
+### Operator values: `{{…}}` slots and `.gk/identity.json`
+
+Kit files never contain the operator's real name or account — they carry `{{…}}` slots
+(double braces around an UPPERCASE name), because personal data must not sit in tracked
+kit source. The values live in **`.gk/identity.json`**:
+
+```json
+{
+  "values": { "OPERATOR_NAME": "…", "SMTP_ACCOUNT": "…" },
+  "refs":   { "EMAIL_CREDENTIALS": "~/.config/email/credentials.conf" }
+}
+```
+
+`values` holds literals; `refs` holds **paths** to credential files — never a secret
+inline, since this file is tracked so the whole team renders the same text. The
+installer re-applies both on every install and every `--upgrade`, so a filled slot is
+not drift: the file on disk and the incoming kit version match byte for byte, and the
+upgrade neither burns the value nor asks you to merge one. `.gk/identity.json` is
+absent from the kit manifest, and that absence is what guarantees no upgrade touches it.
+
+Only *declared* tokens are substituted, so a GitHub Actions `${{ … }}` expression or a
+mustache template you ship as an example is left alone. Braces are used rather than
+brackets because `[MANDATORY]`, `[PROHIBITED]` and `[DEFAULT]` are content vocabulary
+in these documents: a bracket token cannot be told from prose without a hand-maintained
+allowlist, a `{{…}}` token always can.
+
+Without `python3`, or with no `identity.json`, nothing is substituted — the slots stay
+unfilled and the Start Gate in `AGENTS.md` stops agents until a human fills them.
+
+### Migrating an existing target: `--check` → `--migrate` → `--upgrade`
+
+A project installed before all this usually has both problems at once: project rules
+typed into `AGENTS.md`, and operator values typed over the placeholders. `--migrate`
+separates them mechanically, once:
+
+```bash
+./scripts/install-agents-kit.sh --target /path/to/your-project --check     # what drifted
+./scripts/install-agents-kit.sh --target /path/to/your-project --migrate   # separate it
+./scripts/install-agents-kit.sh --target /path/to/your-project --upgrade   # now clean
+```
+
+`--migrate` reads operator values back out of the target — using the template's own
+slots as the probe, so a value is only recorded when the surrounding line still matches
+exactly — and writes them to `.gk/identity.json`. A file whose only difference from the
+kit is *inserted* lines is unambiguous, so those lines move to `docs/project-rules.md`
+and the file returns to the kit version. Anything else — a kit line rewritten or
+deleted — is reported and left untouched: the kit does not guess what an edit meant.
+Legacy `[TOKEN]` spellings are rewritten to `{{…}}`; a slot that was never filled is
+recognised as unfilled, not mistaken for a value. Shell scripts are reported, never
+content-migrated.
+
+It writes to the target, so it is gated: an interactive TTY plus a typed confirmation,
+with no flag to skip it, and a copy of everything it can touch in `.gk/pre-migrate/`.
+
+In CI, make an unmerged protected file fail the run (the upgrade still completes):
+
+```bash
+./scripts/install-agents-kit.sh --target /path/to/your-project --upgrade --strict
+```
 
 Important:
 - the installer uses a readiness gate and exits with non-zero until:
@@ -174,6 +259,7 @@ Templates available:
 - `.docs/agents/security-standards.md`: security rules the delivered code must satisfy
 - `docs/issues/`: local issue structure and templates
 - `handoff.md`: resumable handoff log between sessions
+- `docs/project-rules.md`: project-specific rules; project-owned, never overwritten
 - `docs/napkin-lessons.md`: concise lessons learned log
 - `.docs/workflows/session-close.md`: end-of-stage/session close checklist
 - `.docs/workflows/dev-workflow-integration.md`: optional automation hook for stage-end session close

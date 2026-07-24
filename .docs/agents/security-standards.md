@@ -58,7 +58,7 @@ If this file conflicts with `/AGENTS.md`, follow `/AGENTS.md`.
   retention policy before production. No PII in filenames.
 - **Anti-reintroduction gate:** the distributed contract (`AGENTS.md`, shared
   docs) is scanned against a configured operator-name / PII regex, not just
-  `[PLACEHOLDER]` tokens (LGPD Art. 46). Wire it as a pre-commit / CI check.
+  unfilled `{{…}}` slots (LGPD Art. 46). Wire it as a pre-commit / CI check.
 - 500 errors never expose a stack trace or internal detail outside dev.
 - Every personal-data field collected has a written purpose and retention policy
   before production. See `./privacy-compliance.md`.

@@ -1,5 +1,9 @@
 # AI-Agents Universal Kit
 
+<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+     Project-specific rules  -> docs/project-rules.md (never overwritten)
+     Operator values ({{…}}) -> .gk/identity.json    (never overwritten) -->
+
 ![Logo AI-Agents](./.docs/icons/logo.png)
 
 English version: [README.md](./README.md)  
@@ -59,11 +63,95 @@ Atualize uma instalação existente sem sobrescrever contexto/estado local do pr
 O modo upgrade atualiza arquivos pertencentes ao kit e preserva:
 - `.docs/software-overview.md`
 - `.docs/limits.md`
+- `docs/project-rules.md`
 - `handoff.md`
 - `docs/napkin-lessons.md`
 - pastas de issues do projeto em `docs/issues/`
 - `docs/undercover-issues/`
 - `.credentials/`
+
+### Onde ficam as regras específicas do projeto
+
+O `AGENTS.md` é o primeiro arquivo que todo agente lê, o que faz dele o primeiro
+lugar onde as pessoas escrevem regra de projeto — e ele pertence ao kit, então o
+`--upgrade` o substitui. Escreva regra de projeto em **`docs/project-rules.md`**.
+O instalador o cria uma vez e nunca mais o toca; ele está deliberadamente **fora**
+do manifesto do kit, e é essa ausência que garante isso.
+
+Ainda assim o `AGENTS.md` é **protegido**: quando seu conteúdo diverge do que o kit
+instalou, o `--upgrade` mantém a sua versão, grava a nova em `AGENTS.md.kit-new` ao
+lado e avisa. Nada é sobrescrito em silêncio. Sem manifesto (instalação anterior ao
+`.gk/`, ou sem `python3`) o instalador não consegue provar que o arquivo está
+intocado, então falha fechado e preserva.
+
+Todo arquivo de raiz substituído também é copiado para `.gk/pre-upgrade/` antes.
+
+Os arquivos do kit também se declaram: um banner curto nas primeiras linhas diz que
+são kit-owned e aponta para `docs/project-rules.md`. O gate de release verifica que o
+banner está lá, para que uma edição qualquer não apague justamente a única linha que
+diz ao próximo agente onde escrever.
+
+### Valores do operador: slots `{{…}}` e `.gk/identity.json`
+
+Arquivos do kit nunca contêm o nome ou a conta real do operador — eles trazem slots
+`{{…}}` (chaves duplas em volta de um nome em MAIÚSCULAS), porque dado pessoal não
+pode ficar em fonte rastreada. Os valores vivem em **`.gk/identity.json`**:
+
+```json
+{
+  "values": { "OPERATOR_NAME": "…", "SMTP_ACCOUNT": "…" },
+  "refs":   { "EMAIL_CREDENTIALS": "~/.config/email/credentials.conf" }
+}
+```
+
+`values` guarda literais; `refs` guarda **caminhos** para arquivos de credencial —
+nunca um segredo inline, já que este arquivo é rastreado para que o time inteiro
+renderize o mesmo texto. O instalador reaplica os dois a cada install e a cada
+`--upgrade`, então um slot preenchido não é deriva: o arquivo em disco e a versão nova
+do kit ficam byte a byte iguais, e o upgrade não queima o valor nem pede merge por
+causa dele. `.gk/identity.json` está ausente do manifesto, e é essa ausência que
+garante que nenhum upgrade o toca.
+
+Só tokens *declarados* são substituídos, então uma expressão `${{ … }}` do GitHub
+Actions ou um template mustache de exemplo passa intacto. Chaves em vez de colchetes
+porque `[MANDATORY]`, `[PROHIBITED]` e `[DEFAULT]` são vocabulário de conteúdo nestes
+documentos: token entre colchetes não se distingue da prosa sem uma allowlist mantida
+à mão; `{{…}}` sempre se distingue.
+
+Sem `python3`, ou sem `identity.json`, nada é substituído — os slots ficam vazios e o
+Start Gate do `AGENTS.md` trava os agentes até um humano preenchê-los.
+
+### Migrar um alvo existente: `--check` → `--migrate` → `--upgrade`
+
+Um projeto instalado antes disso tudo costuma ter os dois problemas juntos: regras de
+projeto digitadas dentro do `AGENTS.md` e valores do operador digitados por cima dos
+placeholders. O `--migrate` separa os dois mecanicamente, uma vez:
+
+```bash
+./scripts/install-agents-kit.sh --target /caminho/do/seu-projeto --check     # o que derivou
+./scripts/install-agents-kit.sh --target /caminho/do/seu-projeto --migrate   # separar
+./scripts/install-agents-kit.sh --target /caminho/do/seu-projeto --upgrade   # agora limpo
+```
+
+O `--migrate` lê os valores do operador de volta do alvo — usando os próprios slots do
+template como sonda, de modo que um valor só é registrado quando a linha em volta ainda
+bate exatamente — e os grava em `.gk/identity.json`. Um arquivo cuja única diferença
+para o kit são linhas *inseridas* é inequívoco: essas linhas vão para
+`docs/project-rules.md` e o arquivo volta à versão do kit. Qualquer outra coisa — linha
+do kit reescrita ou removida — é reportada e deixada intacta: o kit não adivinha o que
+uma edição quis dizer. Grafias legadas `[TOKEN]` viram `{{…}}`; um slot que nunca foi
+preenchido é reconhecido como vazio, não confundido com valor. Scripts shell são
+reportados, nunca migrados por conteúdo.
+
+Ele escreve no alvo, então é gateado: TTY interativo mais confirmação digitada, sem
+flag para pular, e uma cópia de tudo que ele pode tocar em `.gk/pre-migrate/`.
+
+Em CI, fazer um arquivo protegido não-mesclado falhar a execução (o upgrade
+mesmo assim se completa):
+
+```bash
+./scripts/install-agents-kit.sh --target /caminho/do/seu-projeto --upgrade --strict
+```
 
 Importante:
 - o instalador usa um readiness gate e termina com código diferente de zero até que:

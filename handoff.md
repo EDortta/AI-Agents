@@ -1,5 +1,121 @@
 # Handoff
 
+## [2026-07-24] WK-20260723-agents-md-protegido - Parte 3 IMPLEMENTADA (ready-for-review)
+
+- Status: ready-for-review. Itens A–F do plano
+  (`~/.claude/plans/analisa-as-issues-abertas-proud-meadow.md`) implementados e
+  verificados. **Nada commitado, taggeado ou empurrado** — Partes 1+2+3 estão na árvore
+  de trabalho.
+- **A. Sintaxe `{{…}}`** — `AGENTS.md` (3 slots reais), Start Gate reescrito para
+  `grep -rnE '\{\{[A-Z][A-Z0-9_]*\}\}'`, `.docs/agents/security-standards.md`,
+  `run-checks.sh` check 5. Ocorrências em `docs/issues/**` não mudam (registro histórico).
+- **B. Contrato read-only** — banner nas primeiras linhas dos 13 `KIT_ROOT_FILES` +
+  seção "Este arquivo é do kit" no topo do `AGENTS.md` com tabela "isto vai em tal
+  arquivo". `run-checks.sh` check 8 afirma o banner em todos os 13.
+- **C. `.gk/identity.json` + `apply_identity()`** — renderiza a fonte que entra num
+  tempdir e reaponta `SRC_ROOT`; só tokens declarados; sem python3/sem identity → nada
+  substituído e o Start Gate trava. `seed_identity()` no install e no upgrade. Manifesto
+  grava hash pós-substituição. `run-checks.sh` check 7 afirma que está fora de
+  `KIT_OWNED_PATHS` e que `upgrade_kit` chama `apply_identity`.
+- **D. `--migrate`** — gateado (TTY + "yes" digitado, sem flag para pular; backup em
+  `.gk/pre-migrate/`). Extrai valores usando os slots do template como sonda; grafia
+  legada `[TOKEN]` reconhecida como não-preenchida e reescrita para `{{…}}`; só-inserção
+  vai para `docs/project-rules.md`; linha do kit reescrita/removida é reportada e não
+  tocada; scripts `.sh` nunca migrados por conteúdo; relatório redige os valores.
+- **E/F.** `run-checks.sh` (checks 5 ampliado, 7, 8; shellcheck agora é 9); os três
+  READMEs documentam `{{…}}`, `identity.json` e o fluxo `--check → --migrate → --upgrade`.
+- **Dois defeitos encontrados pelo próprio teste, ambos corrigidos:**
+  1. A prosa do Start Gate escrevia `{{TOKEN}}` literal — seria substituída junto com os
+     slots reais (colocando o nome do operador no parágrafo que manda mantê-lo fora) e o
+     grep do gate acusaria o arquivo para sempre. Prosa agora usa `{{…}}`; novo check no
+     `run-checks.sh` proíbe slot genérico literal em `AGENTS.md`/`.docs/`.
+  2. `copy_file_replace`/`check_drift` julgavam só pelo manifesto, então depois do
+     `--migrate` um arquivo byte a byte idêntico ao que ia ser escrito era marcado como
+     deriva, pedindo merge contra si mesmo. Agora `dst == src` é curto-circuito nos dois
+     — a mesma regra nos dois, senão relatório e upgrade voltam a discordar.
+- Checks: 8 cenários executados de verdade em alvos sintéticos (20 asserções, todas
+  PASS); `bash scripts/run-checks.sh` verde; `shellcheck -S error` limpo; sweep de status
+  de `docs/issues/` vazio. Script de regressão em
+  `<scratchpad>/regression-part3.sh` (não commitado — decisão do operador se vira teste
+  do repo).
+- Não validado: nenhum alvo real foi tocado; `--migrate` num `AGENTS.md` de kit ANTIGO
+  (os 24 alvos) vai cair em MANUAL na maioria, porque o template mudou muito — é o
+  comportamento correto, mas o volume de trabalho manual só se mede rodando.
+- Next: operador revisa e decide o commit. Depois, gateados e separados: (a) aplicar
+  `--check`/`--migrate` aos 33 alvos reais; (b) nova tag + bump dos pins.
+
+---
+
+## [2026-07-23] WK-20260723-agents-md-protegido - ready-for-review
+
+- Status: ready-for-review
+- Summary: Varredura das issues abertas (6 soltas + 5 épicos): só uma tinha trabalho
+  técnico pendente. Implementada a proteção do `AGENTS.md` no `--upgrade` (opções A+B+C
+  do DoD) e feito o sweep de deriva de status em `docs/issues/`.
+  **A.** `copy_file_replace` agora julga pelo `.gk/manifest.json` antes de sobrescrever —
+  reusando o que `sync_dir` já fazia e que arquivos de raiz nunca receberam. `AGENTS.md`
+  entra em `PROTECTED_ROOT_FILES`: divergiu, não é substituído; a versão nova vai para
+  `AGENTS.md.kit-new`. Sem manifesto (instalação pré-`.gk/`) → fail-closed. Novas flags
+  `--strict` (exit 6 em CI) e `--check` (relatório read-only).
+  **B.** Destino oficial para regra de projeto em `docs/project-rules.md` — em `docs/`
+  (território do projeto), não em `.docs/` como a issue propunha, porque `.docs/` é
+  sincronizado pelo kit. Fora de `KIT_OWNED_PATHS` de propósito; ponteiro nos 6 arquivos
+  de regra por ferramenta.
+  **C.** Backup de todo arquivo de raiz substituído em `.gk/pre-upgrade/`.
+  Sweep: 30 arquivos/pastas renomeados por `git mv` para os status permitidos por
+  `.docs/issues/README.md` (`[done]`/`[solved]`/`[superseded*]` não constavam da lista).
+- Dry-run: `--check` rodado em 33 alvos reais (read-only, nada escrito — verificado).
+  Primeira passada reportou "No drift" em 20 alvos, incluindo o `jk-structure` da issue.
+  Era bug do `check_drift`: iterava as chaves do manifesto, então arquivo AUSENTE do
+  manifesto ficava invisível — enquanto o `copy_file_replace` trata ausência como
+  fail-closed e preserva. Relatório e comportamento discordavam, e o relatório era o
+  otimista. Causa: lista de arquivos de raiz duplicada em três lugares. Unificada em
+  `KIT_ROOT_FILES`. Resultado real: **24 alvos com conteúdo de projeto no `AGENTS.md`**
+  (o maior, `jk-structure-web-canonical`, com +816 linhas sobre a v1.1.1), 3 só com
+  placeholders substituídos, 5 idênticos a uma versão do kit.
+- Next steps:
+  - Operador revisa e aprova; `agents-md-sobrescrito-no-upgrade-[review]` → `[finished]`.
+  - Decidir o caso "só placeholders" (3 alvos): hoje eles pedem merge manual a cada
+    upgrade, para sempre, por uma customização que o kit espera. Duas saídas na issue.
+  - Migrar as regras de projeto dos 24 alvos para `docs/project-rules.md`. Passo do
+    operador, um repo de cada vez.
+  - Nova tag (`new-tag.sh`) e bump dos pins de instalação — passo separado, gated.
+- Blockers/Risks:
+  - Risco de regressão aceito e documentado: um alvo cujo `AGENTS.md` diverge por motivo
+    legítimo passa a exigir um merge manual uma vez. Hoje a alternativa é perda silenciosa.
+  - Caso `python3` ausente verificado por leitura de código (cai no mesmo caminho
+    fail-closed já testado sem manifesto), não por execução num host sem `python3`.
+- Files changed:
+  - `scripts/install-agents-kit.sh` (`copy_file_replace`, `PROTECTED_ROOT_FILES`,
+    `check_drift`, `seed_project_rules`, `write_manifest`, `--strict`, `--check`)
+  - `scripts/run-checks.sh` (checagem 6, quatro invariantes; shellcheck vira 7)
+  - `docs/project-rules.md` (novo starter)
+  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`,
+    `.github/copilot-instructions.md` (ponteiro)
+  - `README.md`, `README-ptbr.md`, `README-es.md` (seção nova sobre o `--upgrade`)
+  - `docs/issues/` — renomeações + `Resolução` na issue + nota de nomenclatura no épico 004
+  - `.docs/agents/council.md`, `docs/issues/001-*/README.md`, `001-*/RESUME.md` (refs)
+- Checks/Tests executed:
+  - install fresco em alvo limpo -> `docs/project-rules.md` criado, ponteiro presente,
+    `AGENTS.md` gravado no manifesto
+  - `--upgrade` com alvo intocado -> substitui em silêncio, 14 backups em `.gk/pre-upgrade/`
+  - `--upgrade` com `AGENTS.md` editado -> regra sobrevive, `.kit-new` presente, e o
+    manifesto **não** absorve o hash do projeto (bug encontrado e corrigido)
+  - dois `--upgrade` seguidos -> regra ainda viva na segunda passada
+  - `--upgrade --strict` -> exit 6 | `--check --upgrade` e `--strict` sozinho -> exit 2
+  - `--upgrade` sem `.gk/` -> fail-closed, não substitui
+  - `--check` -> md5 da árvore idêntico antes/depois (escreve nada)
+  - 3 testes de regressão negativos -> `run-checks.sh` FALHA em cada um
+  - `bash scripts/run-checks.sh` -> all checks passed
+  - `shellcheck -S error scripts/install-agents-kit.sh scripts/run-checks.sh` -> limpo
+  - `find docs/issues -name '*.md' | grep -vE '\[(draft|ready|started|blocked|review|finished|cancelled)\]'` -> vazio
+- Related commits:
+  - planned: `fix(install): AGENTS.md protegido no --upgrade + docs/project-rules.md [WK-20260723-agents-md-protegido]`
+- Suggested restart prompt:
+  - "Continue work_id WK-20260723-agents-md-protegido. Read AGENTS.md, .docs/software-overview.md, .docs/limits.md, docs/project-rules.md e `docs/issues/agents-md-sobrescrito-no-upgrade-[review].md` (seção Resolução) antes de mexer."
+
+---
+
 ## Sessão 2026-07-17 (WK-20260717-solid-council)
 
 Branch: `feature/uc-005/solid-council` — 4 commits, **não mergeada**.

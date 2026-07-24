@@ -1,11 +1,16 @@
 # Cursor Rules for This Repository
 
+<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+     Project-specific rules  -> docs/project-rules.md (never overwritten)
+     Operator values ({{…}}) -> .gk/identity.json    (never overwritten) -->
+
 ## 1. Start Gate (always do this first)
 
 Read before any implementation:
 - `AGENTS.md`
 - `.docs/software-overview.md` — must have `project_context_ready: yes`
 - `.docs/limits.md` — must have `limits_ready: yes`
+- `docs/project-rules.md` — project-specific rules (project-owned; never overwritten)
 
 If either readiness flag is missing or `no`, stop and ask the programmer to fill the file.
 
