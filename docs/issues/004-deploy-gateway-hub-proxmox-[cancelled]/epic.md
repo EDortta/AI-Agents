@@ -162,10 +162,17 @@ infra gateado sem problema correspondente; será uma issue nova quando houver ra
   do Gateway **já estava paga** — o banco tinha as tabelas, ao contrário do que aquela issue
   registrou em 2026-07-09.
 
-**Estado final das sub-issues:** 004-01 `[done]`, 004-02 `[done]`, 004-03 `[done]`,
-004-04 `[done]` (bloco `/api-gateway/` válido; `/api-hub/` documentado como premissa
-caduca), 004-05 `[superseded]` (o runbook instala um hub que já existe), 004-06 `[done]`
-(propagação de token provada UP; checklist e2e com os endereços reais).
+**Estado final das sub-issues:** 004-01 `[finished]`, 004-02 `[finished]`,
+004-03 `[finished]`, 004-04 `[finished]` (bloco `/api-gateway/` válido; `/api-hub/`
+documentado como premissa caduca), 004-05 `[cancelled]` — **superada**: o runbook
+instala um hub que já existe —, 004-06 `[finished]` (propagação de token provada UP;
+checklist e2e com os endereços reais).
+
+**Nota de nomenclatura (2026-07-23, WK-20260723-agents-md-protegido):** esta epic e a
+004-05 estavam rotuladas `[superseded-partial]` e `[superseded]`, que não constam da
+lista de status permitidos em `.docs/issues/README.md`. Renomeadas para `[cancelled]`
+— o valor permitido mais próximo de "encerrada sem entregar como desenhada". O motivo
+real continua sendo o descrito acima; só o rótulo mudou.
 
 Os artefatos **não** foram jogados fora: a unit systemd e o bloco `/api-gateway/` do nginx
 ficam versionados e verificados, prontos para o dia em que o Gateway tiver motivo para mudar

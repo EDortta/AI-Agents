@@ -201,7 +201,7 @@ that is.
 On 2026-07-01, during `WK-20260701-dotdocs-kit-layout`, three adversarial skeptics
 were run against work that was already implemented and self-verified. They
 returned **6 findings, all fixed and retested** (`handoff.md`,
-`docs/issues/002-dotdocs-kit-layout-[done]/RESUME.md`). The round was never
+`docs/issues/002-dotdocs-kit-layout-[finished]/RESUME.md`). The round was never
 documented: no workflow, no contract, no spec. It was mentioned afterwards only as
 evidence that the work was sound. This file exists because that instrument worked
 and then vanished.

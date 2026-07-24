@@ -2,7 +2,7 @@
 
 - work_id: WK-20260711-git-remote-bare-self-hosted
 - date: 2026-07-11
-- status: [draft]
+- status: [finished] (entregue e validado em 2026-07-16; ver "Resolução" abaixo)
 
 ## Problema
 

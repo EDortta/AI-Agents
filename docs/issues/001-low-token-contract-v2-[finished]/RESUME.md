@@ -18,7 +18,7 @@
 - `docs/agents/_shared.md`
 - `docs/workflows/session-restore.md`
 - `docs/workflows/session-close.md`
-- `docs/issues/001-low-token-contract-v2-[review]/`
+- `docs/issues/001-low-token-contract-v2-[finished]/`
 - `docs/agents/security.md`
 - `docs/agents/privacy-compliance.md`
 - `scripts/install-agents-kit.sh`

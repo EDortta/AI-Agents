@@ -26,4 +26,4 @@
 - Napkin lesson added in `docs/napkin-lessons.md`: yes
 
 ## Task Index
-- `issues/001-low-token-root-contract-[review].md`
+- `issues/001-low-token-root-contract-[finished].md`
