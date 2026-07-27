@@ -283,6 +283,112 @@ for adapter in "${adapters[@]}"; do
   [[ "$adapter_ok" == "1" ]] && ok "$adapter loads all mandatory contracts"
 done
 
+echo "== 10c. Installer release and identity preflight stay coherent =="
+installer="scripts/install-agents-kit.sh"
+installer_ref="$(awk -F'"' '$1 == "REF=" { print $2; exit }' "$installer")"
+latest_tag="$(git tag --sort=-version:refname | head -n1)"
+next_tag="$(
+  python3 - "$latest_tag" <<'PY'
+import re
+import sys
+
+match = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", sys.argv[1])
+if match:
+    major, minor, patch = map(int, match.groups())
+    print(f"v{major}.{minor}.{patch + 1}")
+PY
+)"
+if [[ "$installer_ref" == "$latest_tag" || "$installer_ref" == "$next_tag" ]]; then
+  ok "installer REF is the current release or the next patch ($installer_ref)"
+else
+  err "installer REF $installer_ref is stale; expected $latest_tag or $next_tag"
+fi
+if grep -qF "/$installer_ref/scripts/install-agents-kit.sh" "$installer" &&
+   grep -qF -- "--branch $installer_ref" "$installer" &&
+   grep -qF "default: $installer_ref" "$installer"; then
+  ok "installer examples and --ref help match REF=$installer_ref"
+else
+  err "installer release references disagree with REF=$installer_ref"
+fi
+
+identity_test_root="$(mktemp -d)"
+trap 'rm -rf -- "$identity_test_root"' EXIT
+noninteractive_target="$identity_test_root/noninteractive"
+mkdir -p "$noninteractive_target"
+set +e
+bash "$repo_root/$installer" --target "$noninteractive_target" --upgrade \
+  >"$identity_test_root/noninteractive.log" 2>&1
+noninteractive_rc=$?
+set -e
+if [[ "$noninteractive_rc" == "8" ]] &&
+   grep -q 'OPERATOR_NAME' "$identity_test_root/noninteractive.log" &&
+   grep -q 'SMTP_ACCOUNT' "$identity_test_root/noninteractive.log" &&
+   [[ ! -e "$noninteractive_target/AGENTS.md" ]]; then
+  ok "non-interactive upgrade fails before copying files when identity is empty"
+else
+  err "non-interactive upgrade did not fail early with both missing identity fields"
+fi
+
+interactive_target="$identity_test_root/interactive"
+mkdir -p "$interactive_target"
+set +e
+printf 'Test Operator\ntest@example.invalid\n' |
+  script -qec "bash '$repo_root/$installer' --target '$interactive_target' --upgrade" /dev/null \
+    >"$identity_test_root/interactive.log" 2>&1
+interactive_rc=$?
+set -e
+if [[ "$interactive_rc" == "30" ]] &&
+   grep -q 'Test Operator' "$interactive_target/AGENTS.md" &&
+   grep -q 'test@example.invalid' "$interactive_target/AGENTS.md" &&
+   ! grep -q '{{OPERATOR_NAME}}\\|{{SMTP_ACCOUNT}}' "$interactive_target/AGENTS.md" &&
+   [[ "$(stat -c '%a' "$interactive_target/.credentials/identity.json")" == "600" ]]; then
+  ok "interactive upgrade collects, protects, and applies required identity first"
+else
+  err "interactive upgrade did not collect and apply both identity fields"
+fi
+rm -rf -- "$identity_test_root"
+trap - EXIT
+
+echo "== 10d. Landing page is publishable and release-safe =="
+landing="docs/index.html"
+landing_copy=".docs/index.html"
+pages_workflow=".github/workflows/pages.yml"
+if [[ -f "$landing" && -f "$landing_copy" ]] && cmp -s "$landing" "$landing_copy"; then
+  ok "public landing and distributed landing are byte-identical"
+else
+  err "$landing and $landing_copy differ or one is missing"
+fi
+if grep -qF 'github.com/EDortta/AI-Agents' "$landing" &&
+   grep -qF 'github.com/EDortta/AI-GovernanceKit' "$landing" &&
+   ! grep -q 'GITHUB_OWNER' "$landing"; then
+  ok "landing repository links use EDortta and contain no owner placeholder"
+else
+  err "landing repository links are missing, wrong, or contain GITHUB_OWNER"
+fi
+if grep -qF 'ko-fi.com/edortta' "$landing" &&
+   grep -q 'PIX' "$landing" &&
+   grep -q 'ETH' "$landing"; then
+  ok "landing retains PIX, ETH, and Ko-fi support information"
+else
+  err "landing lost PIX, ETH, or Ko-fi support information"
+fi
+landing_refs="$(grep -oE 'AI-Agents/v[0-9]+\.[0-9]+\.[0-9]+/scripts/install-agents-kit\.sh' "$landing" |
+  sed -E 's#AI-Agents/(v[0-9]+\.[0-9]+\.[0-9]+)/.*#\1#' | sort -u)"
+if [[ "$landing_refs" == "$installer_ref" ]]; then
+  ok "every landing installer URL matches REF=$installer_ref"
+else
+  err "landing installer URLs use '${landing_refs:-none}', expected $installer_ref"
+fi
+if [[ -f "$pages_workflow" ]] &&
+   grep -qF 'path: docs' "$pages_workflow" &&
+   grep -qF 'actions/configure-pages@v5' "$pages_workflow" &&
+   grep -qF 'actions/upload-pages-artifact@v4' "$pages_workflow" &&
+   grep -qF 'actions/deploy-pages@v4' "$pages_workflow"; then
+  ok "GitHub Pages workflow deploys only docs/ with current official actions"
+else
+  err "GitHub Pages workflow is missing or does not deploy docs/ correctly"
+fi
+
 echo "== 11. shellcheck (advisory, if installed) =="
 if command -v shellcheck >/dev/null 2>&1; then
   while IFS= read -r script; do

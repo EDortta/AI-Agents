@@ -51,7 +51,7 @@ Core rule:
 Preferred: clone and inspect before running, especially the first time:
 
 ```bash
-git clone --branch v1.1.1 https://github.com/EDortta/AI-Agents.git
+git clone --branch v1.1.5 https://github.com/EDortta/AI-Agents.git
 less AI-Agents/scripts/install-agents-kit.sh
 ./AI-Agents/scripts/install-agents-kit.sh --target /path/to/your-project
 ```
@@ -60,7 +60,7 @@ Shortcut, if you accept running a script straight from GitHub (pinned to a
 release tag, not the mutable `main` branch):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.1/scripts/install-agents-kit.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
   --target /path/to/your-project
 ```
 
@@ -120,11 +120,13 @@ colleague's name from the repository. That is the point — the operator's name 
 account are the personal data the slot scheme exists to keep out of the repo, and
 sharing one file would only move the leak from `AGENTS.md` into a JSON.
 
-The installer re-applies the values on every install and every `--upgrade`, so a filled
-slot is not drift: the file on disk and the incoming kit version match byte for byte,
-and the upgrade neither burns the value nor asks you to merge one. `.credentials/` is
-the one directory no upgrade path touches, so the file is safe by construction rather
-than by an entry in a list.
+On every install and `--upgrade`, the installer resolves these required values first.
+In an interactive terminal it prompts for empty `OPERATOR_NAME` and `SMTP_ACCOUNT`
+values; in a non-interactive run it fails before copying kit files and names what must
+be configured. It stores the file with mode `0600`, then re-applies the values, so a
+filled slot is not drift: the file on disk and the incoming kit version match byte for
+byte, and the upgrade neither burns the value nor asks you to merge one.
+`.credentials/` is the one directory no upgrade path touches.
 
 Only *declared* tokens are substituted, so a GitHub Actions `${{ … }}` expression or a
 mustache template you ship as an example is left alone. Braces are used rather than
@@ -132,8 +134,8 @@ brackets because `[MANDATORY]`, `[PROHIBITED]` and `[DEFAULT]` are content vocab
 in these documents: a bracket token cannot be told from prose without a hand-maintained
 allowlist, a `{{…}}` token always can.
 
-Without `python3`, or with no `identity.json`, nothing is substituted — the slots stay
-unfilled and the Start Gate in `AGENTS.md` stops agents until a human fills them.
+`python3` is required to validate and apply identity. The installer fails early when it
+is unavailable or when required values cannot be collected.
 
 ### Migrating an existing target: `--check` → `--migrate` → `--upgrade`
 
