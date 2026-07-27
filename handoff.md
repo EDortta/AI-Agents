@@ -1,5 +1,20 @@
 # Handoff
 
+## [2026-07-27] WK-20260727-context-optimization - finished
+
+- Branch: `feature/uc-006/context-optimization` in AI-Agents and AI-GovernanceKit.
+- AI-Agents owns the canonical manifest, manifest/state schemas, baseline budgets,
+  reading/telemetry contract, installer propagation, and epic state.
+- AI-GovernanceKit owns inspect/build, token-counter seam, deterministic selection,
+  budgets, provenance, duplicate reporting, JSON output, and local telemetry.
+- Real implementation + runtime selection: 19,692 / 22,000 exact tokens. Mandatory
+  rules remain full; savings come from excluding unrelated roles and history.
+- Validation: `bash scripts/run-checks.sh` PASS; GovernanceKit pytest 125 PASS;
+  real human and JSON CLI paths exercised.
+- Not validated: install from a published ref; third-party agent integrations.
+- Commit, merge into `main`, and push authorized by the operator.
+- Tag, release, and deploy remain unperformed and separately gated.
+
 ## [2026-07-24] WK-20260723-agents-md-protegido - Parte 3 IMPLEMENTADA (ready-for-review)
 
 - Status: ready-for-review. Itens A–F do plano
@@ -12,7 +27,7 @@
 - **B. Contrato read-only** — banner nas primeiras linhas dos 13 `KIT_ROOT_FILES` +
   seção "Este arquivo é do kit" no topo do `AGENTS.md` com tabela "isto vai em tal
   arquivo". `run-checks.sh` check 8 afirma o banner em todos os 13.
-- **C. `.gk/identity.json` + `apply_identity()`** — renderiza a fonte que entra num
+- **C. `.credentials/identity.json` + `apply_identity()`** — renderiza a fonte que entra num
   tempdir e reaponta `SRC_ROOT`; só tokens declarados; sem python3/sem identity → nada
   substituído e o Start Gate trava. `seed_identity()` no install e no upgrade. Manifesto
   grava hash pós-substituição. `run-checks.sh` check 7 afirma que está fora de

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
 # Project-specific rules  -> docs/project-rules.md (never overwritten)
-# Operator values ({{…}}) -> .gk/identity.json    (never overwritten)
+# Operator values ({{…}}) -> .credentials/identity.json (untracked, per-programmer)
 set -euo pipefail
 
 usage() {
@@ -39,10 +39,12 @@ Options:
   --check            Read-only drift report: what an --upgrade would preserve, replace,
                       or stash. Writes nothing.
   --migrate          Separate project content from kit content BEFORE upgrading:
-                      extracts operator values into .gk/identity.json, moves purely
+                      extracts operator values into .credentials/identity.json, moves purely
                       added sections out to docs/project-rules.md, and reports what
                       needs a human. Writes to the target; requires a TTY and an
                       explicit confirmation.
+  --dry-run          With --migrate: print exactly the same report and write nothing.
+                      No TTY needed, so it is safe from a script or an agent.
   --help             Show this help
 
 Recommended workflow on an existing target:
@@ -57,10 +59,10 @@ Layout:
   seeds it once and no upgrade ever touches it.
 
 Operator values:
-  Kit files carry {{TOKEN}} slots. Values live in .gk/identity.json ("values" for
+  Kit files carry {{TOKEN}} slots. Values live in .credentials/identity.json ("values" for
   literals, "refs" for paths to credential files — never a secret inline) and are
   re-applied on every install/upgrade, so an upgrade cannot burn them. No upgrade
-  path touches .gk/identity.json.
+  path touches .credentials/identity.json.
 
 Protected files:
   AGENTS.md is kit-owned but never replaced once it differs from what the kit
@@ -83,6 +85,7 @@ UPGRADE="0"
 STRICT="0"
 CHECK="0"
 MIGRATE="0"
+DRY_RUN="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -122,6 +125,10 @@ while [[ $# -gt 0 ]]; do
       MIGRATE="1"
       shift
       ;;
+    --dry-run)
+      DRY_RUN="1"
+      shift
+      ;;
     --help|-h)
       usage
       exit 0
@@ -148,6 +155,11 @@ fi
 
 if [[ "$STRICT" == "1" && "$UPGRADE" != "1" ]]; then
   echo "ERROR: --strict only applies to --upgrade." >&2
+  exit 2
+fi
+
+if [[ "$DRY_RUN" == "1" && "$MIGRATE" != "1" ]]; then
+  echo "ERROR: --dry-run only applies to --migrate (--check is already read-only)." >&2
   exit 2
 fi
 
@@ -250,9 +262,15 @@ BACKED_UP=()
 # Every root file replaced through copy_file_replace, named once. upgrade_kit walks it,
 # KIT_OWNED_PATHS includes it, and check_drift judges exactly it — the three used to be
 # separate lists, and check_drift silently disagreed with what an upgrade actually does.
+#
+# README*.md are deliberately ABSENT. They are the kit's own documentation — the
+# page you read to decide whether to install it — not a file a consuming project
+# should receive. Shipping them meant --upgrade replaced the project's README with
+# the kit's: Lumina/lumina's README.md today opens with "# IA-Agents Universal Kit",
+# and a 447-line project README in another target was one upgrade from the same
+# fate. A kit that overwrites the front page of the projects it serves is broken.
 KIT_ROOT_FILES=(
   "AGENTS.md"
-  "README.md" "README-ptbr.md" "README-es.md"
   ".cursorrules" "CLAUDE.md" ".windsurfrules" "GEMINI.md"
   ".github/copilot-instructions.md"
   "new-tag.sh"
@@ -355,7 +373,14 @@ copy_file_replace() {
 
 STATE_DIR=".gk"
 MANIFEST_REL="$STATE_DIR/manifest.json"
-IDENTITY_REL="$STATE_DIR/identity.json"
+# Under .credentials/, not .gk/, and NEVER tracked. The operator's name and account
+# are personal data (LGPD Art. 46) — the same data the placeholder scheme exists to
+# keep out of the repository — so sharing one file across a team would just move the
+# leak from AGENTS.md into a JSON. Each programmer establishes their own; .credentials/
+# is also the one directory no upgrade path touches, so the file is safe by
+# construction rather than by an entry in a list.
+IDENTITY_REL=".credentials/identity.json"
+IDENTITY_EXAMPLE_REL=".credentials/identity.json.example"
 MANIFEST_LOADED=""
 declare -A KIT_HASHES=()
 PRESERVED=()
@@ -403,7 +428,7 @@ file_sha256() { sha256sum "$1" | cut -d' ' -f1; }
 # upgrade either burned the value or demanded a manual merge for a value that was
 # never in dispute.
 #
-# Now the value lives in .gk/identity.json (project-owned, no upgrade path reaches it)
+# Now the value lives in .credentials/identity.json (project-owned, no upgrade path reaches it)
 # and the installer re-applies it to the incoming kit source on every run. A filled
 # slot is therefore not drift at all: the rendered source and the file on disk match
 # byte for byte, and the manifest records the rendered hash.
@@ -421,27 +446,28 @@ file_sha256() { sha256sum "$1" | cut -d' ' -f1; }
 # the Start Gate still reports the slots.
 seed_identity() {
   local dst="$TARGET_DIR/$IDENTITY_REL"
-  [[ -e "$dst" ]] && return 0
+  mkdir -p "$TARGET_DIR/.credentials"
 
-  mkdir -p "$TARGET_DIR/$STATE_DIR"
-  cat > "$dst" <<'JSON'
-{
-  "state_version": 1,
-  "_readme": [
-    "Operator values for the {{TOKEN}} slots in kit-owned files.",
-    "'values' holds literals. 'refs' holds PATHS to credential files — never put a",
-    "secret in here; this file is tracked so the team shares the same baseline.",
-    "install-agents-kit.sh re-applies these on every install/--upgrade, and no",
-    "upgrade path overwrites this file."
-  ],
-  "values": {
-    "OPERATOR_NAME": "",
-    "SMTP_ACCOUNT": ""
-  },
-  "refs": {}
-}
-JSON
-  echo "created project-owned file: $IDENTITY_REL"
+  # The ignore rule matters more than the file: a target installed before this
+  # existed has a .credentials/.gitignore without it, and .credentials/ is never
+  # synced by an upgrade, so nothing else would ever add it. Writing identity.json
+  # into a directory that does not ignore it would commit the operator's name.
+  local ign="$TARGET_DIR/.credentials/.gitignore"
+  if [[ ! -f "$ign" ]]; then
+    printf '# Ignore real secrets\n*.token\njira.json\nidentity.json\n\n# Keep templates and docs tracked\n!*.example\n!README.md\n!.gitignore\n' > "$ign"
+    echo "created: .credentials/.gitignore"
+  elif ! grep -qx 'identity.json' "$ign"; then
+    printf 'identity.json\n' >> "$ign"
+    echo "updated: .credentials/.gitignore now ignores identity.json"
+  fi
+
+  [[ -e "$dst" ]] && return 0
+  if [[ -f "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" ]]; then
+    cp -a "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" "$dst"
+  else
+    printf '{\n  "state_version": 1,\n  "values": { "OPERATOR_NAME": "", "SMTP_ACCOUNT": "" },\n  "refs": {}\n}\n' > "$dst"
+  fi
+  echo "created programmer-owned file (untracked): $IDENTITY_REL"
 }
 
 # Render the incoming kit source with this project's identity, then point SRC_ROOT at
@@ -588,17 +614,18 @@ sync_dir() {
   echo "updated directory: $rel"
 }
 
-# Self-contained ignore rules: manifest.json and identity.json stay TRACKED so a team
-# sharing the checkout judges file ownership from the same baseline and gets the same
-# {{TOKEN}} values, while the credential half and the backups never reach git. Kept
-# inside .gk/ so the installer never has to edit the project's own .gitignore.
+# Self-contained ignore rules: manifest.json stays TRACKED so a team sharing the
+# checkout judges file ownership from the same baseline, while the backups and stashes
+# never reach git. Kept inside .gk/ so the installer never has to edit the project's
+# own .gitignore. Operator values live in .credentials/identity.json, untracked and
+# per-programmer — see seed_identity.
 write_gk_gitignore() {
   mkdir -p "$TARGET_DIR/$STATE_DIR"
   cat > "$TARGET_DIR/$STATE_DIR/.gitignore" <<'IGN'
 # Managed by the AI-Agents installer.
-# manifest.json and identity.json are intentionally NOT ignored — the team shares them.
-# Never put a secret in identity.json: use "refs" to point at a local credential file.
+# manifest.json is intentionally NOT ignored — the team must share it.
 secrets.json
+context-telemetry.jsonl
 overwritten/
 pre-upgrade/
 pre-migrate/
@@ -686,6 +713,20 @@ report_upgrade_effects() {
   if [[ ${#BACKED_UP[@]} -gt 0 ]]; then
     echo
     echo "Backed up ${#BACKED_UP[@]} replaced file(s) under $STATE_DIR/pre-upgrade/."
+  fi
+  if [[ ${#RETIRED[@]} -gt 0 ]]; then
+    echo
+    echo "Removed ${#RETIRED[@]} file(s) the kit no longer ships (copy in $STATE_DIR/pre-upgrade/):"
+    local p
+    for p in "${RETIRED[@]}"; do echo "  removed: $p"; done
+    echo "  The kit no longer installs its own README into projects."
+  fi
+  if [[ ${#RETIRE_KEPT[@]} -gt 0 ]]; then
+    echo
+    echo "The kit no longer ships these, but yours differ from what it installed, so"
+    echo "they were KEPT — they are probably your project's own:"
+    local p
+    for p in "${RETIRE_KEPT[@]}"; do echo "  kept: $p"; done
   fi
   if [[ ${#PRESERVED[@]} -gt 0 ]]; then
     echo
@@ -775,12 +816,96 @@ check_drift() {
   echo
   echo "Summary: $kept kept (protected), $((replaced + other)) replaced with a stashed copy,"
   echo "         $untracked replaced with no stashed copy (untracked root file)."
+  if [[ "$untracked" -gt 0 ]]; then
+    # "No stashed copy" means no .gk/overwritten/ entry, not no backup at all — every
+    # replaced root file is copied to .gk/pre-upgrade/ first. Saying only the first
+    # half reads as data loss, which is the opposite of what happens.
+    echo "         (those are still copied to $STATE_DIR/pre-upgrade/ before being written)"
+  fi
   if [[ "$kept" -gt 0 ]]; then
     echo "Run --upgrade to apply; --upgrade --strict exits non-zero while any KEPT file"
     echo "still needs a manual merge."
   fi
-  # Every replaced root file is copied to .gk/pre-upgrade/ regardless, so "no stashed
-  # copy" means no .gk/overwritten/ entry, not no backup at all.
+
+  report_target_hazards
+}
+
+# Conditions in the TARGET that make an upgrade lose more than the drift report shows.
+# All three came from a real migration (wa-hub, 2026-07-24) rather than from imagining
+# failure modes: each had already happened somewhere.
+HAZARD_SHOWN="0"
+hazard() {
+  if [[ "$HAZARD_SHOWN" == "0" ]]; then
+    echo
+    echo "Hazards in this target:"
+    HAZARD_SHOWN="1"
+  fi
+}
+
+report_target_hazards() {
+
+  # 1. A kit file the target's .gitignore excludes. Replacing it leaves NO git trace:
+  #    no history, no diff to review, nothing to revert to. The .gk/pre-upgrade/ copy
+  #    stops being a convenience and becomes the only net.
+  if git -C "$TARGET_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    local rel
+    for rel in "${KIT_ROOT_FILES[@]}"; do
+      [[ -f "$TARGET_DIR/$rel" ]] || continue
+      if git -C "$TARGET_DIR" check-ignore -q "$rel" 2>/dev/null; then
+        hazard
+        echo "  GITIGNORED: $rel — an upgrade replaces it with no git trace."
+        echo "              Your only copy afterwards is $STATE_DIR/pre-upgrade/$rel."
+      fi
+    done
+
+    # 2. A project rule can live on history that was never merged here. --migrate reads
+    #    the WORKING TREE, so such a rule is invisible to it and stays lost.
+    #
+    #    Scanned over ALL refs, not just local branches: a real target (GCF) archives
+    #    every branch as a tag before deleting it — its own project rule says so — so
+    #    the unmerged work sits under refs/tags/archive/**, and a refs/heads-only scan
+    #    reported a clean target while two commits' worth of AGENTS.md history was
+    #    sitting right there.
+    local unmerged ref shown_refs=0
+    unmerged="$(git -C "$TARGET_DIR" rev-list --count --all --not HEAD -- AGENTS.md 2>/dev/null || echo 0)"
+    if [[ "${unmerged:-0}" -gt 0 ]]; then
+      hazard
+      echo "  UNMERGED:   AGENTS.md has $unmerged commit(s) reachable from other refs but"
+      echo "              not from HEAD. Carried by:"
+      while IFS= read -r ref; do
+        [[ "$shown_refs" -ge 5 ]] && { echo "              … (and more)"; break; }
+        n="$(git -C "$TARGET_DIR" rev-list --count "HEAD..$ref" -- AGENTS.md 2>/dev/null || echo 0)"
+        if [[ "${n:-0}" -gt 0 ]]; then
+          echo "                $ref ($n)"
+          shown_refs=$((shown_refs + 1))
+        fi
+      done < <(git -C "$TARGET_DIR" for-each-ref --format='%(refname:short)' \
+                 refs/heads refs/remotes refs/tags 2>/dev/null)
+      echo "              --migrate only reads the working tree. Review them first:"
+      echo "                git log --all --not HEAD -p -- AGENTS.md"
+    fi
+  fi
+
+  # 3. A kit path that is a symlink. cp writes THROUGH a symlink, so replacing
+  #    .docs/limits.md would overwrite whatever it points at — often a file in docs/,
+  #    which the kit promises never to touch. Seen in production (wa-hub).
+  # The readiness files are not kit-owned (the project fills them) but the installer
+  # still edits them in place, so they belong in this scan.
+  local p
+  for p in "${KIT_OWNED_PATHS[@]}" ".docs/software-overview.md" ".docs/limits.md"; do
+    [[ -e "$TARGET_DIR/$p" ]] || continue
+    if [[ -L "$TARGET_DIR/$p" ]]; then
+      hazard
+      echo "  SYMLINK:    $p -> $(readlink "$TARGET_DIR/$p")"
+      echo "              in-place edits resolve the link first; copies do not."
+      continue
+    fi
+    while IFS= read -r link; do
+      hazard
+      echo "  SYMLINK:    ${link#"$TARGET_DIR"/} -> $(readlink "$link")"
+      echo "              writes follow the link and can land outside kit territory."
+    done < <(find "$TARGET_DIR/$p" -maxdepth 3 -type l -print 2>/dev/null)
+  done
 }
 
 # ── --migrate: separate project content from kit content ──────────────────────
@@ -793,7 +918,7 @@ check_drift() {
 #
 # --migrate answers it mechanically:
 #   1. Operator values are read back out of the target, positionally, using the
-#      template's own {{TOKEN}} slots as the probe, and stored in .gk/identity.json —
+#      template's own {{TOKEN}} slots as the probe, and stored in .credentials/identity.json —
 #      so the next upgrade re-applies them instead of burning them. Targets still on
 #      the old [TOKEN] spelling are recognised as unfilled, not mistaken for a value.
 #   2. A file whose only difference from the rendered template is INSERTED lines is
@@ -805,40 +930,74 @@ check_drift() {
 # Writing mode, so it is gated: TTY plus a typed confirmation, with no --yes to skip.
 # Everything it can touch is copied to .gk/pre-migrate/ first.
 migrate_project_content() {
-  echo "Migration (project content out of kit files) for: $TARGET_DIR"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    echo "Migration DRY RUN (nothing will be written) for: $TARGET_DIR"
+  else
+    echo "Migration (project content out of kit files) for: $TARGET_DIR"
+  fi
 
   if ! have_python; then
     echo "ERROR: --migrate needs python3 (diffing and JSON). Install it and re-run." >&2
     exit 2
   fi
-  if [[ ! -t 0 ]]; then
-    echo "ERROR: --migrate rewrites kit files in the target and requires an interactive" >&2
-    echo "       confirmation. There is no non-interactive flag; run it from a terminal." >&2
-    exit 3
+
+  # A target still on the legacy layout keeps the kit under docs/ instead of .docs/.
+  # Every kit file that names a path then differs from the template on those lines —
+  # "- docs/limits.md" against "- .docs/limits.md" — and the whole file is reported as
+  # rewritten by hand when nothing of the sort happened. The layout has to move first.
+  local legacy="0"
+  if [[ ! -d "$TARGET_DIR/.docs/agents" ]] &&
+     { [[ -d "$TARGET_DIR/docs/agents" ]] || [[ -d "$TARGET_DIR/docs/project" ]]; }; then
+    legacy="1"
   fi
 
-  echo
-  echo "This rewrites kit-owned files in the target:"
-  echo "  - operator values found in them are written to $IDENTITY_REL"
-  echo "  - purely added sections move to docs/project-rules.md"
-  echo "  - files with rewritten or deleted kit lines are reported and left untouched"
-  echo "A copy of every file it can touch is kept in $STATE_DIR/pre-migrate/."
-  echo
-  local reply=""
-  read -r -p "Type 'yes' to proceed: " reply
-  if [[ "$reply" != "yes" ]]; then
-    echo "Aborted; nothing was written."
-    exit 0
+  if [[ "$legacy" == "1" && "$DRY_RUN" == "1" ]]; then
+    echo
+    echo "NOTE: this target is on the LEGACY layout (kit under docs/, no .docs/)."
+    echo "      A dry run cannot move it, so every file that names a kit path will show"
+    echo "      up below as rewritten by hand. The report is pessimistic on purpose —"
+    echo "      run --migrate for real (it moves the layout first, with a backup) to"
+    echo "      see what actually needs a human."
   fi
 
-  seed_identity
-  seed_project_rules
-  write_gk_gitignore
+  # The TTY gate exists because this writes. --dry-run writes nothing, so requiring a
+  # terminal would only stop the safe way of previewing 15 repositories before touching
+  # any of them.
+  if [[ "$DRY_RUN" != "1" ]]; then
+    if [[ ! -t 0 ]]; then
+      echo "ERROR: --migrate rewrites kit files in the target and requires an interactive" >&2
+      echo "       confirmation. Use --migrate --dry-run to preview non-interactively." >&2
+      exit 3
+    fi
+
+    echo
+    echo "This rewrites kit-owned files in the target:"
+    echo "  - operator values found in them are written to $IDENTITY_REL"
+    echo "  - purely added sections move to docs/project-rules.md"
+    echo "  - files with rewritten or deleted kit lines are reported and left untouched"
+    if [[ "$legacy" == "1" ]]; then
+      echo "  - LEGACY LAYOUT: the kit moves from docs/ to .docs/ first (backup kept)"
+    fi
+    echo "A copy of every file it can touch is kept in $STATE_DIR/pre-migrate/."
+    echo
+    local reply=""
+    read -r -p "Type 'yes' to proceed: " reply
+    if [[ "$reply" != "yes" ]]; then
+      echo "Aborted; nothing was written."
+      exit 0
+    fi
+
+    # Before anything is compared: put the kit where the template says it is.
+    migrate_legacy_layout
+    seed_identity
+    seed_project_rules
+    write_gk_gitignore
+  fi
 
   # Fresh each run, for the same reason pre-upgrade/ is: a backup that accumulates
   # runs no longer identifies a state anyone can return to.
   local backup_root="$TARGET_DIR/$STATE_DIR/pre-migrate"
-  rm -rf "$backup_root"
+  if [[ "$DRY_RUN" != "1" ]]; then rm -rf "$backup_root"; fi
 
   local rel docs=()
   for rel in "${KIT_ROOT_FILES[@]}"; do
@@ -849,26 +1008,65 @@ migrate_project_content() {
     docs+=("$rel")
   done
 
-  for rel in "${KIT_ROOT_FILES[@]}" "docs/project-rules.md" "$IDENTITY_REL"; do
-    [[ -f "$TARGET_DIR/$rel" ]] || continue
-    mkdir -p "$(dirname "$backup_root/$rel")"
-    cp -a "$TARGET_DIR/$rel" "$backup_root/$rel"
-  done
-  echo "backup written: $STATE_DIR/pre-migrate/"
+  if [[ "$DRY_RUN" != "1" ]]; then
+    for rel in "${KIT_ROOT_FILES[@]}" "docs/project-rules.md" "$IDENTITY_REL"; do
+      [[ -f "$TARGET_DIR/$rel" ]] || continue
+      mkdir -p "$(dirname "$backup_root/$rel")"
+      cp -a "$TARGET_DIR/$rel" "$backup_root/$rel"
+    done
+    echo "backup written: $STATE_DIR/pre-migrate/"
+  fi
   echo
 
   local today
   today="$(date +%Y-%m-%d)"
 
+  # Every version of each kit file, so the target can be diffed against the version it
+  # was actually installed from rather than against today's template.
+  #
+  # This is the difference between a migration that works and one that does not. A
+  # target installed on an older kit differs from today's template by everything the
+  # kit itself changed since — hundreds of lines that are not the project's and that
+  # would all land in the "a kit line was rewritten, decide by hand" bucket, burying
+  # the twenty lines the project actually added. Measured on 36 real targets: judged
+  # against today's template, 300–800 lines of "drift" per target; judged against the
+  # installed-from version, 10–110, and almost all of it clean insertion.
+  #
+  # Only possible when the source is a git checkout of the kit (the normal case when
+  # running ./scripts/install-agents-kit.sh from a clone). A tarball has no history,
+  # so this degrades to comparing against the current template and says so.
+  local hist_dir=""
+  if git -C "$SRC_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+    hist_dir="$(mktemp -d)"
+    local rel_h safe sha n
+    for rel_h in "${docs[@]}"; do
+      safe="${rel_h//\//__}"
+      mkdir -p "$hist_dir/$safe"
+      n=0
+      while IFS= read -r sha; do
+        n=$((n + 1))
+        [[ "$n" -gt 40 ]] && break
+        git -C "$SRC_ROOT" show "$sha:$rel_h" > "$hist_dir/$safe/$n.txt" 2>/dev/null \
+          || rm -f "$hist_dir/$safe/$n.txt"
+      done < <(git -C "$SRC_ROOT" log --format=%H --follow -- "$rel_h" 2>/dev/null)
+    done
+  else
+    echo "note: kit source is not a git checkout — comparing against the current"
+    echo "      template only. Expect more files reported as needing a human."
+    echo
+  fi
+
   # `set -e` would kill the script on a non-zero exit before the report below could
   # explain it, so the status is captured instead.
   local rc=0
   python3 - "$SRC_ROOT" "$TARGET_DIR" "$TARGET_DIR/$IDENTITY_REL" \
-            "$TARGET_DIR/docs/project-rules.md" "$today" "${docs[@]}" <<'PY' || rc=$?
+            "$TARGET_DIR/docs/project-rules.md" "$today" "$hist_dir" "$DRY_RUN" \
+            "${docs[@]}" <<'PY' || rc=$?
 import difflib, glob, json, os, re, sys
 
-src_root, target_dir, identity_path, rules_path, today = sys.argv[1:6]
-doc_files = sys.argv[6:]
+src_root, target_dir, identity_path, rules_path, today, hist_dir, dry = sys.argv[1:8]
+doc_files = sys.argv[8:]
+DRY_RUN = dry == "1"
 
 TOKEN_RE = re.compile(r"\{\{([A-Z][A-Z0-9_]*)\}\}")
 # A slot the operator never filled — in either the current {{...}} spelling or the
@@ -914,6 +1112,23 @@ for section in ("values", "refs"):
             if isinstance(key, str) and isinstance(value, str) and key and value:
                 declared[key] = value
 
+def bases(rel):
+    """Every kit version of `rel` that this target could have been installed from:
+    the current template first, then the collected history, newest to oldest."""
+    out = []
+    current = read(os.path.join(src_root, rel))
+    if current is not None:
+        out.append(("current", current))
+    if hist_dir:
+        folder = os.path.join(hist_dir, rel.replace("/", "__"))
+        for path in sorted(glob.glob(os.path.join(folder, "*.txt")),
+                           key=lambda p: int(os.path.basename(p)[:-4])):
+            text = read(path)
+            if text is not None and text not in [t for _n, t in out]:
+                out.append(("history/" + os.path.basename(path)[:-4], text))
+    return out
+
+
 # ── 1. read operator values back out of the target ────────────────────────────
 probe_files = list(doc_files)
 for path in sorted(glob.glob(os.path.join(src_root, ".docs", "agents", "*.md"))):
@@ -923,33 +1138,39 @@ candidates = {}
 ambiguous = set()
 unfilled = set()
 
+# Probed against every known kit version, not just the current one: the line carrying
+# a slot has itself been reworded across releases, and only the version the target was
+# installed from still matches it exactly. A probe that finds nothing simply means that
+# base is not the one — it is not evidence of ambiguity, so it is silently skipped.
+# Ambiguity is decided further down, from disagreeing values.
 for rel in probe_files:
-    template = read(os.path.join(src_root, rel))
     current = read(os.path.join(target_dir, rel))
-    if template is None or current is None:
+    if current is None:
         continue
     current_lines = current.splitlines()
-    for line in template.splitlines():
-        names = TOKEN_RE.findall(line)
-        if not names:
-            continue
-        # Turn the template line into a probe: everything literal, each slot a lazy
-        # capture. A line that matches exactly once in the target tells us, with no
-        # guessing, what the operator typed over that slot.
-        pattern, last = "", 0
-        for match in TOKEN_RE.finditer(line):
-            pattern += re.escape(line[last:match.start()]) + "(.+?)"
-            last = match.end()
-        probe = re.compile("^" + pattern + re.escape(line[last:]) + "$")
-        hits = [m for m in (probe.match(l) for l in current_lines) if m]
-        if len(hits) != 1:
-            ambiguous.update(names)
-            continue
-        for name, captured in zip(names, hits[0].groups()):
-            if UNFILLED_RE.match(captured):
-                unfilled.add(name)
-            else:
-                candidates.setdefault(name, set()).add(captured)
+    tried = set()
+    for _label, template in bases(rel):
+        for line in template.splitlines():
+            names = TOKEN_RE.findall(line)
+            if not names or line in tried:
+                continue
+            tried.add(line)
+            # Turn the template line into a probe: everything literal, each slot a lazy
+            # capture. A line matching exactly once in the target tells us, with no
+            # guessing, what the operator typed over that slot.
+            pattern, last = "", 0
+            for match in TOKEN_RE.finditer(line):
+                pattern += re.escape(line[last:match.start()]) + "(.+?)"
+                last = match.end()
+            probe = re.compile("^" + pattern + re.escape(line[last:]) + "$")
+            hits = [m for m in (probe.match(l) for l in current_lines) if m]
+            if len(hits) != 1:
+                continue
+            for name, captured in zip(names, hits[0].groups()):
+                if UNFILLED_RE.match(captured):
+                    unfilled.add(name)
+                else:
+                    candidates.setdefault(name, set()).add(captured)
 
 added, conflicts = [], []
 for name in sorted(candidates):
@@ -966,15 +1187,16 @@ for name in sorted(candidates):
     declared[name] = value
     added.append(name)
 
-if added:
+if added and not DRY_RUN:
     with open(identity_path, "w", encoding="utf-8") as fh:
         json.dump(identity, fh, indent=2, sort_keys=True, ensure_ascii=False)
         fh.write("\n")
 
 print("== operator values ==")
 if added:
+    verb = "would extract ->" if DRY_RUN else "extracted ->"
     for name in added:
-        print("  extracted -> identity.json: %s (%s)" % (name, redact(declared[name])))
+        print("  %s identity.json: %s (%s)" % (verb, name, redact(declared[name])))
 else:
     print("  nothing new extracted")
 for name in sorted(unfilled - set(added)):
@@ -991,10 +1213,45 @@ def render(text):
     return text
 
 
+def split_sections(block):
+    """Split one insert opcode at markdown headings.
+
+    Sections appended one after another arrive as a SINGLE insert, so judging the
+    block as a whole lets a rule the kit already carries drag a genuine project rule
+    along with it — or the other way round. Judge each section on its own.
+    """
+    parts, cur = [], []
+    for line in block.splitlines(keepends=True):
+        if line.startswith("#") and any(x.strip() for x in cur):
+            parts.append("".join(cur))
+            cur = []
+        cur.append(line)
+    if cur:
+        parts.append("".join(cur))
+    return [p for p in parts if p.strip()] or ([block] if block.strip() else [])
+
+
+def separate(base_text, current):
+    """Diff the target against one candidate base. Returns (inserted blocks, blocking
+    opcode kinds). Pure insertion is unambiguous project content; anything else is a
+    kit line the project rewrote or deleted, which the kit refuses to interpret."""
+    a = render(base_text).splitlines(keepends=True)
+    b = current.splitlines(keepends=True)
+    inserted, blocking = [], set()
+    for tag, _i1, _i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            continue
+        if tag == "insert":
+            inserted.append("".join(b[j1:j2]))
+        else:
+            blocking.add(tag)  # "replace": a kit line was rewritten; "delete": removed
+    return inserted, blocking
+
+
 # ── 2. move purely-added content out, report the rest ─────────────────────────
 print()
 print("== kit files ==")
-moved_blocks, needs_human, clean, normalized, respelled = [], [], [], [], []
+moved_blocks, needs_human, clean, normalized, respelled, absorbed = [], [], [], [], [], []
 
 for rel in doc_files:
     template = read(os.path.join(src_root, rel))
@@ -1017,62 +1274,132 @@ for rel in doc_files:
 
     if rendered == current:
         clean.append(rel)
-        if current != before:
+        if current != before and not DRY_RUN:
             with open(os.path.join(target_dir, rel), "w", encoding="utf-8") as fh:
                 fh.write(current)
         continue
 
-    a = rendered.splitlines(keepends=True)
-    b = current.splitlines(keepends=True)
-    inserted, blocking = [], set()
-    for tag, _i1, _i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
-        if tag == "equal":
-            continue
-        if tag == "insert":
-            inserted.append("".join(b[j1:j2]))
-        else:
-            blocking.add(tag)  # "replace": a kit line was rewritten; "delete": removed
+    # Judge against the kit version this file was installed from, not against today's
+    # template — see the history collection above. The winner is the base that leaves
+    # the least unexplained: no blocking opcodes if any base achieves that, then the
+    # fewest inserted lines.
+    best = None
+    for label, base_text in bases(rel):
+        inserted, blocking = separate(base_text, current)
+        cost = (1 if blocking else 0, sum(x.count("\n") for x in inserted))
+        if best is None or cost < best[0]:
+            best = (cost, label, inserted, blocking)
+    _cost, label, inserted, blocking = best
+
     if blocking:
-        needs_human.append((rel, sorted(blocking)))
+        needs_human.append((rel, sorted(blocking), label))
         continue
 
-    blocks = [block for block in inserted if block.strip()]
-    with open(os.path.join(target_dir, rel), "w", encoding="utf-8") as fh:
-        fh.write(rendered)
+    # An inserted block whose lines are already in today's template is not project
+    # content at all: the kit absorbed that rule since this target was installed
+    # (the operator's own global rules got pasted into targets for years before the
+    # kit carried them). Moving it to project-rules.md would duplicate the kit.
+    template_lines = set(l.strip() for l in rendered.splitlines() if l.strip())
+    blocks, taken = [], []
+    for block in inserted:
+        for section in split_sections(block):
+            lines = [l.strip() for l in section.splitlines() if l.strip()]
+            if not lines:
+                continue
+            if sum(1 for l in lines if l in template_lines) / len(lines) >= 0.6:
+                taken.append(section)
+            else:
+                blocks.append(section)
+
+    if not DRY_RUN:
+        with open(os.path.join(target_dir, rel), "w", encoding="utf-8") as fh:
+            fh.write(rendered)
+    if taken:
+        absorbed.append((rel, sum(x.count("\n") for x in taken)))
     if blocks:
-        moved_blocks.append((rel, blocks))
-    else:
+        moved_blocks.append((rel, blocks, label))
+    elif not taken:
         normalized.append(rel)
 
-if moved_blocks:
-    with open(rules_path, "a", encoding="utf-8") as fh:
-        for rel, blocks in moved_blocks:
-            fh.write("\n\n## Migrado de `%s` em %s\n\n" % (rel, today))
-            fh.write(
-                "Movido por `install-agents-kit.sh --migrate`: estas linhas foram "
-                "acrescentadas ao arquivo do kit por este projeto. Revise, edite e "
-                "remova o que não valer mais — nenhum upgrade toca este arquivo.\n\n"
-            )
-            for block in blocks:
-                if not block.endswith("\n"):
-                    block += "\n"
-                fh.write(block)
-                fh.write("\n")
+# Six substantial rules in one file is a file nobody re-reads. A real migration
+# (wa-hub) settled on docs/project-rules.md as an INDEX plus a docs/project-rules/
+# folder holding one rule per file, which reads far better. Honour that layout when
+# the target already has the folder — the kit blesses the pattern instead of letting
+# every target invent its own — and keep the single file otherwise, so nothing changes
+# for a target that never asked for it.
+rules_dir = os.path.join(os.path.dirname(rules_path), "project-rules")
+use_folder = os.path.isdir(rules_dir)
 
-for rel, blocks in moved_blocks:
+
+def slugify(text, fallback):
+    words = re.findall(r"[a-z0-9]+", text.lower().replace("ç", "c"))
+    return "-".join(words)[:48] or fallback
+
+
+def next_index():
+    highest = 0
+    for name in os.listdir(rules_dir):
+        m = re.match(r"^(\d+)-", name)
+        if m:
+            highest = max(highest, int(m.group(1)))
+    return highest + 1
+
+
+header = ("Movido por `install-agents-kit.sh --migrate`: estas linhas foram "
+          "acrescentadas ao arquivo do kit por este projeto (comparado com a versão "
+          "do kit `%s`). Revise, edite e remova o que não valer mais — nenhum upgrade "
+          "toca isto.")
+
+if moved_blocks and not DRY_RUN:
+    if use_folder:
+        index_lines = []
+        for rel, blocks, label in moved_blocks:
+            for block in blocks:
+                title = next((l.lstrip("# ").strip() for l in block.splitlines()
+                              if l.startswith("#")), "regra de %s" % rel)
+                n = next_index()
+                name = "%02d-%s.md" % (n, slugify(title, "regra-%02d" % n))
+                with open(os.path.join(rules_dir, name), "w", encoding="utf-8") as fh:
+                    fh.write("<!-- %s -->\n\n" % (header % label))
+                    fh.write(block if block.endswith("\n") else block + "\n")
+                index_lines.append("- [`project-rules/%s`](project-rules/%s) — %s"
+                                   % (name, name, title))
+        with open(rules_path, "a", encoding="utf-8") as fh:
+            fh.write("\n\n## Migrado em %s\n\n" % today)
+            fh.write("\n".join(index_lines) + "\n")
+    else:
+        with open(rules_path, "a", encoding="utf-8") as fh:
+            for rel, blocks, label in moved_blocks:
+                fh.write("\n\n## Migrado de `%s` em %s\n\n" % (rel, today))
+                fh.write((header % label) + "\n\n")
+                for block in blocks:
+                    if not block.endswith("\n"):
+                        block += "\n"
+                    fh.write(block)
+                    fh.write("\n")
+
+dest = "docs/project-rules/ (+ index)" if use_folder else "docs/project-rules.md"
+for rel, blocks, label in moved_blocks:
     lines = sum(block.count("\n") + 1 for block in blocks)
-    print("  MOVED  %s: %d added block(s), ~%d line(s) -> docs/project-rules.md" % (rel, len(blocks), lines))
+    print("  MOVED  %s: %d block(s), ~%d line(s) -> %s (vs %s)"
+          % (rel, len(blocks), lines, dest, label))
+for rel, lines in absorbed:
+    print("  ABSORBED %s: ~%d line(s) already in the current kit — dropped, not duplicated" % (rel, lines))
 for rel in normalized:
     print("  RESET  %s: differed only in whitespace; restored to the kit version" % rel)
 for rel in respelled:
     print("  RESPELL %s: legacy [TOKEN] slots rewritten to the {{…}} spelling" % rel)
 for rel in clean:
     print("  CLEAN  %s: already identical to the kit" % rel)
-for rel, tags in needs_human:
+for rel, tags, label in needs_human:
     what = " and ".join({"replace": "rewritten kit lines", "delete": "deleted kit lines"}[t] for t in tags)
-    print("  MANUAL %s: has %s — left untouched, nothing was moved" % (rel, what))
+    print("  MANUAL %s: has %s (closest kit version: %s) — left untouched, nothing moved"
+          % (rel, what, label))
 
 print()
+if DRY_RUN:
+    print("DRY RUN — nothing above was written. Re-run without --dry-run to apply.")
+    print()
 if needs_human:
     print("%d file(s) need a human before --upgrade is clean." % len(needs_human))
     print("For each: diff it against the kit version, move the project's part into")
@@ -1080,6 +1407,10 @@ if needs_human:
 else:
     print("No file needs a manual decision. --upgrade should now be a clean replace.")
 PY
+  # Plain `[[ ... ]] && rm` would return 1 when there is no history dir, and `set -e`
+  # would take that as a failure and kill the run just before the report.
+  if [[ -n "$hist_dir" ]]; then rm -rf "$hist_dir"; fi
+
   if [[ "$rc" -ne 0 ]]; then
     echo
     echo "ERROR: migration aborted (exit $rc); the target is unchanged apart from the" >&2
@@ -1089,7 +1420,11 @@ PY
 
   echo
   echo "Shell scripts are not content-migrated; run --check to see whether any differ."
-  echo "Next: review the changes (git diff), then run --upgrade."
+  if [[ "$DRY_RUN" == "1" ]]; then
+    echo "Next: re-run without --dry-run to apply, then --upgrade."
+  else
+    echo "Next: review the changes (git diff), then run --upgrade."
+  fi
 }
 
 # The official home for project-specific rules.
@@ -1111,6 +1446,142 @@ seed_project_rules() {
       > "$dst"
   fi
   echo "created project-owned file: docs/project-rules.md"
+}
+
+# Retire a root file the kit used to install and no longer claims.
+#
+# Never a blind rm: the whole reason README.md is being retired is that it collides
+# with a file projects own, so "delete the target's README" is exactly the damage to
+# avoid. Same rule sync_dir uses for retirement — the manifest must prove the kit
+# wrote it AND the bytes must still match. Anything else is kept and reported, and
+# the operator decides.
+RETIRED=()
+RETIRE_KEPT=()
+retire_root_file() {
+  local rel="$1"
+  local dst="$TARGET_DIR/$rel"
+  [[ -f "$dst" ]] || return 0
+
+  load_manifest
+  local recorded="${KIT_HASHES[$rel]-}"
+  if [[ -n "$recorded" && "$recorded" == "$(file_sha256 "$dst")" ]]; then
+    local backup="$TARGET_DIR/$STATE_DIR/pre-upgrade/$rel"
+    mkdir -p "$(dirname "$backup")"
+    cp -a "$dst" "$backup"
+    rm -f "$dst"
+    RETIRED+=("$rel")
+  else
+    RETIRE_KEPT+=("$rel")
+  fi
+}
+
+# Seed a directory file-by-file, never touching what is already there.
+#
+# copy_path refuses outright when the destination exists, which is right for a kit
+# directory but wrong for .credentials/: that directory holds the programmer's real
+# tokens and their identity.json. A programmer who writes .credentials/identity.json
+# before installing used to get "Target already has '.credentials'" and an aborted
+# install — and --force, the only way past it, would have deleted the credentials.
+seed_dir_missing() {
+  local rel="$1"
+  local src="$SRC_ROOT/$rel"
+  [[ -d "$src" ]] || return 0
+
+  local f sub dst
+  while IFS= read -r -d '' f; do
+    sub="${f#"$src"/}"
+    dst="$TARGET_DIR/$rel/$sub"
+    [[ -e "$dst" ]] && continue
+    mkdir -p "$(dirname "$dst")"
+    cp -a "$f" "$dst"
+  done < <(find "$src" -type f -print0)
+}
+
+# Keep the kit's half of docs/required-reading.md current, inside a file the project
+# owns.
+#
+# The index is the single place an agent looks to know what to read, so it has to list
+# BOTH territories — and that creates the circular problem this kit keeps meeting: the
+# kit half must stay current (a two-year-old index would never mention council.md),
+# but the file also holds project reading and must never be replaced wholesale.
+#
+# Resolved with a managed region: everything between the markers belongs to the kit and
+# is regenerated; everything outside is the project's and is never touched. A file
+# without markers gets the block inserted after its title and keeps all its content —
+# an existing target has a hand-written index that must survive.
+READING_INDEX_REL="docs/required-reading.md"
+READING_BEGIN="<!-- AI-AGENTS:BEGIN kit reading list"
+READING_END="<!-- AI-AGENTS:END -->"
+sync_reading_index() {
+  local block="$SRC_ROOT/templates/required-reading.kit-block.md"
+  local dst="$TARGET_DIR/$READING_INDEX_REL"
+  [[ -f "$block" ]] || return 0
+
+  if [[ ! -f "$dst" ]]; then
+    mkdir -p "$(dirname "$dst")"
+    if [[ -f "$SRC_ROOT/$READING_INDEX_REL" ]]; then
+      cp -a "$SRC_ROOT/$READING_INDEX_REL" "$dst"
+      echo "created project-owned file: $READING_INDEX_REL"
+    fi
+    return 0
+  fi
+
+  if ! have_python; then
+    echo "WARN: python3 not found — $READING_INDEX_REL kit block not refreshed."
+    return 0
+  fi
+
+  local result
+  result="$(python3 - "$dst" "$block" "$READING_BEGIN" "$READING_END" <<'PY'
+import sys
+
+path, block_path, begin, end = sys.argv[1:5]
+with open(path, encoding="utf-8") as fh:
+    text = fh.read()
+with open(block_path, encoding="utf-8") as fh:
+    block = fh.read().strip("\n")
+
+begin_line = (begin + " — gerado por install-agents-kit.sh; edições aqui dentro são "
+              "substituídas no --upgrade. Escreva fora do bloco. -->")
+managed = "%s\n%s\n%s" % (begin_line, block, end)
+
+n_begin, n_end = text.count(begin), text.count(end)
+start, stop = text.find(begin), text.find(end)
+
+if n_begin == 1 and n_end == 1 and stop > start:
+    new = text[:start] + managed + text[stop + len(end):]
+    verb = "refreshed"
+elif n_begin == 0 and n_end == 0:
+    # No markers: an index written before this existed. Insert after the H1 so the
+    # project's own list stays exactly where its author put it.
+    lines = text.split("\n")
+    at = 1 if lines and lines[0].startswith("# ") else 0
+    new = "\n".join(lines[:at] + ["", managed, ""] + lines[at:])
+    verb = "adopted"
+else:
+    # One marker damaged, or several blocks. Inserting again would add a SECOND kit
+    # block and the file would grow one every upgrade — worse than a stale block, and
+    # silent. Refuse and let a human look.
+    print("damaged")
+    raise SystemExit(0)
+
+if new == text:
+    print("unchanged")
+else:
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(new)
+    print(verb)
+PY
+  )" || { echo "WARN: could not update $READING_INDEX_REL; left as is."; return 0; }
+
+  case "$result" in
+    refreshed) echo "refreshed kit block in: $READING_INDEX_REL" ;;
+    adopted)   echo "inserted kit reading block into existing $READING_INDEX_REL (your list kept)" ;;
+    damaged)
+      echo "WARN: $READING_INDEX_REL has damaged or duplicated AI-AGENTS markers."
+      echo "      Left untouched — fix the markers by hand, then re-run --upgrade."
+      ;;
+  esac
 }
 
 remove_obsolete_path() {
@@ -1148,13 +1619,32 @@ migrate_legacy_layout() {
 
   mkdir -p "$TARGET_DIR/.docs/issues"
   local kit_dirs=(agents workflows articles icons)
-  local d
+  local d f base left=0
+
+  # Move file by file, and only files THIS kit version ships. Moving the whole
+  # directory would sweep project content into kit territory: since docs/agents/ was
+  # freed for projects, real targets keep their own personas there (GCF has tatu.md,
+  # inovacaoSistemas has quati-bento.md). Those belong to docs/, and their own docs
+  # link to them by that path — relocating them under .docs/ would both misfile them
+  # and break the links, for no gain.
   for d in "${kit_dirs[@]}"; do
-    if [[ -d "$TARGET_DIR/docs/$d" ]]; then
-      rm -rf "$TARGET_DIR/.docs/$d"
-      mv "$TARGET_DIR/docs/$d" "$TARGET_DIR/.docs/$d"
-    fi
+    [[ -d "$TARGET_DIR/docs/$d" ]] || continue
+    mkdir -p "$TARGET_DIR/.docs/$d"
+    while IFS= read -r -d '' f; do
+      base="${f#"$TARGET_DIR/docs/$d"/}"
+      if [[ -e "$SRC_ROOT/.docs/$d/$base" ]]; then
+        mkdir -p "$(dirname "$TARGET_DIR/.docs/$d/$base")"
+        mv -f "$f" "$TARGET_DIR/.docs/$d/$base"
+      else
+        left=$((left + 1))
+        echo "left in project territory (not a kit file): docs/$d/$base"
+      fi
+    done < <(find "$TARGET_DIR/docs/$d" -type f -print0)
+    rmdir "$TARGET_DIR/docs/$d" 2>/dev/null || true
   done
+  if [[ "$left" -gt 0 ]]; then
+    echo "  ^ $left file(s) stayed under docs/ because the kit does not ship them."
+  fi
   if [[ -d "$TARGET_DIR/docs/issues/templates" ]]; then
     rm -rf "$TARGET_DIR/.docs/issues/templates"
     mv "$TARGET_DIR/docs/issues/templates" "$TARGET_DIR/.docs/issues/templates"
@@ -1198,17 +1688,24 @@ migrate_legacy_layout() {
   fi
 }
 
+# `sed -i` writes a temp file and renames it over the target, which REPLACES a symlink
+# with a regular file and leaves the file it pointed at untouched. A target that
+# symlinks .docs/limits.md -> ../docs/limits.md (a real arrangement, seen in wa-hub)
+# would silently end up with two divergent copies and no link. Resolve first, edit the
+# real file.
+sed_in_place() {
+  local file="$1" expr="$2" real
+  [[ -e "$file" ]] || return 0
+  real="$(readlink -f -- "$file" 2>/dev/null || printf '%s' "$file")"
+  [[ -f "$real" ]] || return 0
+  sed -i "$expr" "$real"
+}
+
 reset_target_readiness_flags() {
-  local so_file="$TARGET_DIR/.docs/software-overview.md"
-  local lim_file="$TARGET_DIR/.docs/limits.md"
-
-  if [[ -f "$so_file" ]]; then
-    sed -i 's/^- project_context_ready:[[:space:]]*yes$/- project_context_ready: no/' "$so_file"
-  fi
-
-  if [[ -f "$lim_file" ]]; then
-    sed -i 's/^- limits_ready:[[:space:]]*yes$/- limits_ready: no/' "$lim_file"
-  fi
+  sed_in_place "$TARGET_DIR/.docs/software-overview.md" \
+    's/^- project_context_ready:[[:space:]]*yes$/- project_context_ready: no/'
+  sed_in_place "$TARGET_DIR/.docs/limits.md" \
+    's/^- limits_ready:[[:space:]]*yes$/- limits_ready: no/'
 }
 
 upgrade_kit() {
@@ -1256,6 +1753,9 @@ upgrade_kit() {
   # the destination the AGENTS.md protection points people at.
   seed_project_rules
 
+  # The single reading index: the kit's half is regenerated, the project's half is not.
+  sync_reading_index
+
   # Preserve project-local files/state.
   echo "preserved project-local: .docs/software-overview.md"
   echo "preserved project-local: docs/project-rules.md"
@@ -1266,6 +1766,13 @@ upgrade_kit() {
   echo "preserved project-local: docs/napkin-lessons.md"
   echo "preserved project-local: docs/issues/"
   echo "preserved project-local: .credentials/"
+
+  # The kit used to install its own README into every target. It no longer does;
+  # a copy still sitting there is kit litter on the project's front page.
+  local readme
+  for readme in "README.md" "README-ptbr.md" "README-es.md"; do
+    retire_root_file "$readme"
+  done
 
   # Add paths here when a future kit version removes a formerly installed file
   # outside the replaced directories above.
@@ -1283,6 +1790,7 @@ KIT_OWNED_PATHS=(
   "${KIT_ROOT_FILES[@]}"
   "templates"
   ".docs/agents" ".docs/workflows" ".docs/articles" ".docs/icons"
+  ".docs/context-manifest.yaml" ".docs/context-optimization.md" ".docs/schemas"
   ".docs/issues/templates" ".docs/issues/README.md"
   ".docs/index.html" ".docs/concepts.html"
 )
@@ -1320,15 +1828,14 @@ else
 
   # Core files/directories to install
   copy_path "AGENTS.md"
-  copy_path "README.md"
-  copy_path "README-ptbr.md"
-  copy_path "README-es.md"
   copy_path ".cursorrules"
   copy_path "CLAUDE.md"
   copy_path ".windsurfrules"
   copy_path "GEMINI.md"
   copy_path ".github/copilot-instructions.md"
-  copy_path ".credentials"
+  # Merged, not claimed: this directory holds the programmer's real tokens and their
+  # identity.json, which may well predate the install.
+  seed_dir_missing ".credentials"
   copy_path ".docs"
   copy_path "handoff.md"
   copy_path "scripts/agent-worktree.sh"
@@ -1338,9 +1845,7 @@ else
   # Seed project territory (docs/) from kit starters when the target lacks them.
   # These are project-owned once created; --upgrade never overwrites them.
   mkdir -p "$TARGET_DIR/docs/issues"
-  if [[ -f "$SRC_ROOT/docs/required-reading.md" && ! -e "$TARGET_DIR/docs/required-reading.md" ]]; then
-    cp -a "$SRC_ROOT/docs/required-reading.md" "$TARGET_DIR/docs/required-reading.md"
-  fi
+  sync_reading_index
   if [[ -f "$SRC_ROOT/docs/napkin-lessons.md" && ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
     cp -a "$SRC_ROOT/docs/napkin-lessons.md" "$TARGET_DIR/docs/napkin-lessons.md"
   fi

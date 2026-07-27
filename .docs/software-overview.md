@@ -23,6 +23,8 @@ If this file is missing or not ready in a target project, agents must stop imple
 ## Components
 - `AGENTS.md`: global operating contract and precedence rules.
 - `.docs/agents/`: role and specialized contracts (programmer, reviewer, issue automation, security, and optional domain add-ons).
+- `.docs/context-manifest.yaml`: deterministic context selection and budget contract.
+- `.docs/schemas/`: machine-readable manifest and active-work state contracts.
 - `docs/issues/`: local issue artifacts grouped by epic folders, with templates.
 - `handoff.md`: resumable handoff notes between sessions.
 - `docs/napkin-lessons.md`: concise lessons learned log.

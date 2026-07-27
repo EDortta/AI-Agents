@@ -1,5 +1,10 @@
 # Napkin Lessons Learned
 
+- 2026-07-27: Measure canonical rules before choosing a context budget. The base is
+  about 7.2k tokens and implementation adds about 8k; a 12k ceiling would weaken the
+  contract. Keep mandatory documents atomic and save tokens by excluding unrelated
+  roles/history rather than truncating rules.
+
 Short, practical lessons captured at session close.
 Keep each lesson concise and actionable.
 

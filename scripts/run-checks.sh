@@ -26,10 +26,36 @@ required=(
   ".docs/agents/design-standards.md"
   ".docs/agents/council.md"
   ".docs/agents/privacy-compliance.md"
+  ".docs/context-manifest.yaml"
+  ".docs/schemas/context-manifest.schema.json"
+  ".docs/schemas/context-state.schema.json"
 )
 for f in "${required[@]}"; do
   if [[ -f "$f" ]]; then ok "$f"; else err "missing required file: $f"; fi
 done
+
+echo "== 1b. Context contract is structurally valid =="
+if python3 - "$repo_root" <<'PY'
+import json
+import sys
+from pathlib import Path
+import yaml
+from jsonschema import Draft202012Validator
+
+root = Path(sys.argv[1])
+manifest_path = root / ".docs/context-manifest.yaml"
+manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+schema_path = manifest_path.parent / manifest["$schema"]
+schema = json.loads(schema_path.read_text(encoding="utf-8"))
+Draft202012Validator(schema).validate(manifest)
+assert manifest["budgets"]["total_input_tokens"] > 0
+assert manifest["budgets"]["categories"]["base_contracts"] > 0
+PY
+then
+  ok "context manifest validates against its declared schema"
+else
+  err "context manifest/schema validation failed"
+fi
 
 echo "== 2. No unresolved merge-conflict markers =="
 # Match at line start to avoid flagging prose that mentions the markers.
@@ -127,14 +153,32 @@ else
   err "AGENTS.md is not protected in install-agents-kit.sh — --upgrade would overwrite it blindly"
 fi
 
-echo "== 7. Operator identity stays project-owned and reachable =="
+echo "== 7. Operator identity stays per-programmer, untracked and reachable =="
 # Same shape as check 6, for the other half of the separation: {{TOKEN}} values live in
-# .gk/identity.json so an upgrade re-applies them instead of burning them. The guarantee
-# is again an ABSENCE from KIT_OWNED_PATHS, so assert it.
+# .credentials/identity.json so an upgrade re-applies them instead of burning them. The
+# guarantee is again an ABSENCE from KIT_OWNED_PATHS, so assert it.
 if awk '/^KIT_OWNED_PATHS=\(/,/^\)/' scripts/install-agents-kit.sh | grep -q 'identity'; then
-  err ".gk/identity.json is listed in KIT_OWNED_PATHS — an upgrade would overwrite operator values"
+  err ".credentials/identity.json is listed in KIT_OWNED_PATHS — an upgrade would overwrite operator values"
 else
-  ok ".gk/identity.json is not kit-owned"
+  ok ".credentials/identity.json is not kit-owned"
+fi
+
+# The file holds the operator's real name and account. A tracked identity.json is the
+# exact leak the {{...}} scheme exists to prevent, only harder to notice.
+if git check-ignore -q .credentials/identity.json; then
+  ok ".credentials/identity.json is gitignored"
+else
+  err ".credentials/identity.json is NOT gitignored — operator personal data would be committed"
+fi
+if git ls-files --error-unmatch .credentials/identity.json >/dev/null 2>&1; then
+  err ".credentials/identity.json is TRACKED — remove it from the index"
+else
+  ok ".credentials/identity.json is not tracked"
+fi
+if [[ -f .credentials/identity.json.example ]]; then
+  ok ".credentials/identity.json.example ships as the starter"
+else
+  err ".credentials/identity.json.example is missing — a fresh install has no starter"
 fi
 
 if grep -q 'apply_identity' scripts/install-agents-kit.sh &&
@@ -144,7 +188,51 @@ else
   err "upgrade_kit does not call apply_identity — an upgrade would reinstall empty {{TOKEN}} slots"
 fi
 
-echo "== 8. Kit-owned files declare themselves kit-owned =="
+echo "== 8. Single reading index is intact and in sync =="
+# docs/required-reading.md is the one place an agent looks to know what to read. It is
+# project-owned, but the kit's half lives in a managed block that install/upgrade
+# regenerates from templates/. If the two drift, targets get a stale index and nobody
+# notices — the failure mode is a document silently not being read.
+block="templates/required-reading.kit-block.md"
+index="docs/required-reading.md"
+if [[ -f "$block" ]]; then ok "$block ships"; else err "missing $block — the installer has nothing to inject"; fi
+if grep -q 'AI-AGENTS:BEGIN kit reading list' "$index" && grep -q 'AI-AGENTS:END' "$index"; then
+  ok "$index has the managed-block markers"
+else
+  err "$index lost its AI-AGENTS markers — an upgrade would re-insert the block and duplicate it"
+fi
+if [[ -f "$block" ]] &&
+   diff -q <(awk '/AI-AGENTS:BEGIN/{f=1;next} /AI-AGENTS:END/{f=0} f' "$index") \
+           <(cat "$block") >/dev/null 2>&1; then
+  ok "kit block in $index matches $block"
+else
+  err "kit block in $index differs from $block — regenerate it (install --upgrade) before tagging"
+fi
+if grep -q 'required-reading\.md' AGENTS.md; then
+  ok "AGENTS.md points at the single index"
+else
+  err "AGENTS.md no longer points at docs/required-reading.md"
+fi
+
+echo "== 9. The kit does not ship its own README into consuming projects =="
+# README.md is the kit's front page, not a file a consumer should receive. Shipping it
+# meant --upgrade replaced the project's README with the kit's — which really happened
+# (a target's README.md now opens with "# IA-Agents Universal Kit").
+if awk '/^KIT_ROOT_FILES=\(/,/^\)/' scripts/install-agents-kit.sh | grep -q '"README'; then
+  err "README*.md is back in KIT_ROOT_FILES — an upgrade would overwrite project READMEs"
+elif grep -qE '^\s*copy_path "README' scripts/install-agents-kit.sh; then
+  err "install still copy_path's README*.md into targets"
+else
+  ok "README*.md is neither installed nor upgraded into targets"
+fi
+if awk '/^upgrade_kit\(\)/,/^}/' scripts/install-agents-kit.sh | grep -q 'retire_root_file' &&
+   awk '/^upgrade_kit\(\)/,/^}/' scripts/install-agents-kit.sh | grep -q '"README.md"'; then
+  ok "--upgrade retires a kit README left in a target"
+else
+  err "no retirement path for READMEs the kit installed before this change"
+fi
+
+echo "== 10. Kit-owned files declare themselves kit-owned =="
 # The read-only contract is what stops the next agent from writing project rules into a
 # file the upgrade replaces. It only works if the banner is actually in every file, and
 # a banner is trivially lost to an unrelated edit — so it is asserted, not trusted.
@@ -164,7 +252,7 @@ if [[ "$missing" -eq 0 ]]; then
   ok "every KIT_ROOT_FILES entry carries the banner"
 fi
 
-echo "== 9. shellcheck (advisory, if installed) =="
+echo "== 11. shellcheck (advisory, if installed) =="
 if command -v shellcheck >/dev/null 2>&1; then
   while IFS= read -r script; do
     shellcheck -S error "$script" && ok "$script" || err "shellcheck errors: $script"

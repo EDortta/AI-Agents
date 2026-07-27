@@ -1,7 +1,7 @@
 #!/bin/bash
 # AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
 # Project-specific rules  -> docs/project-rules.md (never overwritten)
-# Operator values ({{…}}) -> .gk/identity.json    (never overwritten)
+# Operator values ({{…}}) -> .credentials/identity.json (untracked, per-programmer)
 # Fail-closed. Without this the script used to sail past a failed `git tag` and still
 # push main, exiting 0 — so a release could report success while the tag either did not
 # exist or pointed at an older commit than the one just pushed.
