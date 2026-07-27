@@ -1,5 +1,11 @@
 # Handoff
 
+## [2026-07-27] WK-20260727-restore-landing - finished
+
+- Restored `docs/index.html`, matching GitHub Pages `main:/docs`.
+- Public landing contains EDortta links, Pix, ETH, Ko-fi, Amazon Q, and v1.1.4 install examples.
+- Documentation/templates keep reusable placeholders.
+
 ## [2026-07-27] WK-20260727-context-hardening - finished
 
 - Manifest/schema now separate task and risk contracts, enforce a real reserve, and
