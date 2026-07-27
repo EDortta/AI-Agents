@@ -252,6 +252,37 @@ if [[ "$missing" -eq 0 ]]; then
   ok "every KIT_ROOT_FILES entry carries the banner"
 fi
 
+echo "== 10b. Every agent adapter loads the same mandatory context =="
+adapters=(
+  "CLAUDE.md"
+  "GEMINI.md"
+  ".cursorrules"
+  ".windsurfrules"
+  ".github/copilot-instructions.md"
+  ".amazonq/rules/ai-agents.md"
+)
+mandatory=(
+  "AGENTS.md"
+  ".docs/software-overview.md"
+  ".docs/limits.md"
+  "docs/required-reading.md"
+  "docs/project-rules.md"
+)
+for adapter in "${adapters[@]}"; do
+  if [[ ! -f "$adapter" ]]; then
+    err "missing agent adapter: $adapter"
+    continue
+  fi
+  adapter_ok=1
+  for contract in "${mandatory[@]}"; do
+    if ! grep -qF "$contract" "$adapter"; then
+      err "$adapter does not load mandatory contract: $contract"
+      adapter_ok=0
+    fi
+  done
+  [[ "$adapter_ok" == "1" ]] && ok "$adapter loads all mandatory contracts"
+done
+
 echo "== 11. shellcheck (advisory, if installed) =="
 if command -v shellcheck >/dev/null 2>&1; then
   while IFS= read -r script; do

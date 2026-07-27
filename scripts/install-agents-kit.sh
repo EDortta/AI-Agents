@@ -273,6 +273,7 @@ KIT_ROOT_FILES=(
   "AGENTS.md"
   ".cursorrules" "CLAUDE.md" ".windsurfrules" "GEMINI.md"
   ".github/copilot-instructions.md"
+  ".amazonq/rules/ai-agents.md"
   "new-tag.sh"
   "scripts/install-agents-kit.sh" "scripts/agent-worktree.sh" "scripts/git-bare-remote.sh"
 )
@@ -1833,6 +1834,7 @@ else
   copy_path ".windsurfrules"
   copy_path "GEMINI.md"
   copy_path ".github/copilot-instructions.md"
+  copy_path ".amazonq/rules/ai-agents.md"
   # Merged, not claimed: this directory holds the programmer's real tokens and their
   # identity.json, which may well predate the install.
   seed_dir_missing ".credentials"

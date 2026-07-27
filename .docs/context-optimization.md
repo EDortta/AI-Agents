@@ -19,9 +19,16 @@ The structured `context-state.json` beside an active epic is additive. Existing
 may generate their Markdown views from structured state only after consumers have
 adopted the schema; this release performs no conversion.
 
+Token counts identify their mode and tokenizer. A tokenizer-specific count is an
+estimate unless a target model with that exact tokenizer is explicitly known.
+
+The declared `reserve` is subtracted from usable input budget. Task, risk, project,
+active-work, and retrieved-evidence categories are accounted independently.
+
 Telemetry is opt-in (`context build --telemetry`), local JSONL, metadata-only, and
 requires a `work_id`. It records paths and counts, never source content. Operators
 should delete entries older than the manifest's `retention_days` (30 by default).
+`governancekit context telemetry prune` performs that retention operation.
 
 ```bash
 governancekit context inspect

@@ -563,7 +563,7 @@
     </div>
     <div>
       <span class="term-prompt">$</span>
-      <span class="term-cmd"> bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.0.2/scripts/install-agents-kit.sh) \</span>
+      <span class="term-cmd"> bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.3/scripts/install-agents-kit.sh) \</span>
     </div>
     <div style="padding-left:16px">
       <span class="term-cmd">--target /path/to/your-project</span>
@@ -745,6 +745,7 @@
       <div class="compat-pill"><span class="dot"></span>Cursor &nbsp;<code style="font-size:0.75rem;color:var(--muted)">.cursorrules</code></div>
       <div class="compat-pill"><span class="dot"></span>Windsurf / Cascade &nbsp;<code style="font-size:0.75rem;color:var(--muted)">.windsurfrules</code></div>
       <div class="compat-pill"><span class="dot"></span>Gemini &nbsp;<code style="font-size:0.75rem;color:var(--muted)">GEMINI.md</code></div>
+      <div class="compat-pill"><span class="dot"></span>Amazon Q Developer &nbsp;<code style="font-size:0.75rem;color:var(--muted)">.amazonq/rules/ai-agents.md</code></div>
     </div>
   </div>
 </section>
@@ -762,7 +763,7 @@
     </div>
     <div class="code-block">
 <span class="cm" data-i18n="inst.c1"># 1 — Install AI-Agents policy pack into your project (run from anywhere)</span>
-<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.0.2/scripts/install-agents-kit.sh) \
+<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.3/scripts/install-agents-kit.sh) \
   --target /path/to/your-project
 
 <span class="cm" data-i18n="inst.c2"># 2 — Install GovernanceKit CLI</span>
@@ -780,7 +781,7 @@
       To upgrade an existing installation without overwriting project context:
     </p>
     <div class="code-block" style="margin-top:10px">
-<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.0.2/scripts/install-agents-kit.sh) \
+<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.3/scripts/install-agents-kit.sh) \
   --target /path/to/your-project <span class="st">--upgrade</span>
     </div>
   </div>
@@ -942,7 +943,7 @@
       's4.p':         'Use the task template under <code>.docs/issues/templates/</code>. Agents follow the execution loop automatically from here.',
       'compat.label': 'Broad compatibility',
       'compat.title': 'Works with every major AI assistant.',
-      'compat.sub':   'One policy pack, many adapters. The same governance contract surfaces natively in whichever tool your team uses.',
+      'compat.sub':   'One policy pack, many adapters. Every adapter loads AGENTS.md, overview, limits, required reading, and project rules; upgrades restore kit-owned adapters instead of letting local edits weaken the contract.',
       'inst.label':   'Installation',
       'inst.title':   'Three commands. Done.',
       'inst.sub':     'No configuration manager needed — plain files you can read and edit.',
@@ -1024,7 +1025,7 @@
       's4.p':         'Use o template de tarefa em <code>.docs/issues/templates/</code>. Os agentes seguem o loop de execução automaticamente a partir daí.',
       'compat.label': 'Ampla compatibilidade',
       'compat.title': 'Funciona com todos os principais assistentes de IA.',
-      'compat.sub':   'Um policy pack, muitos adaptadores. O mesmo contrato de governança aparece nativamente em qualquer ferramenta que o seu time use.',
+      'compat.sub':   'Um policy pack, muitos adaptadores. Todos carregam AGENTS.md, visão geral, limites, leituras obrigatórias e regras do projeto; upgrades restauram adaptadores do kit para impedir que edições locais enfraqueçam o contrato.',
       'inst.label':   'Instalação',
       'inst.title':   'Três comandos. Pronto.',
       'inst.sub':     'Sem gerenciador de configuração necessário — arquivos simples que você pode ler e editar.',
@@ -1106,7 +1107,7 @@
       's4.p':         'Usa la plantilla de tarea en <code>.docs/issues/templates/</code>. Los agentes siguen el bucle de ejecución automáticamente desde ese punto.',
       'compat.label': 'Amplia compatibilidad',
       'compat.title': 'Funciona con todos los principales asistentes de IA.',
-      'compat.sub':   'Un policy pack, muchos adaptadores. El mismo contrato de gobernanza aparece nativamente en la herramienta que tu equipo use.',
+      'compat.sub':   'Un policy pack, muchos adaptadores. Todos cargan AGENTS.md, visión general, límites, lecturas obligatorias y reglas del proyecto; los upgrades restauran adaptadores del kit para evitar que ediciones locales debiliten el contrato.',
       'inst.label':   'Instalación',
       'inst.title':   'Tres comandos. Listo.',
       'inst.sub':     'Sin gestor de configuración necesario — archivos simples que puedes leer y editar.',

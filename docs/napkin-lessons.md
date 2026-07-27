@@ -1,5 +1,9 @@
 # Napkin Lessons Learned
 
+- 2026-07-27: A declared reserve must reduce usable budget; a zero-use category does
+  not reserve anything. Name task and risk contract costs independently so telemetry
+  explains where policy tokens are spent.
+
 - 2026-07-27: Measure canonical rules before choosing a context budget. The base is
   about 7.2k tokens and implementation adds about 8k; a 12k ceiling would weaken the
   contract. Keep mandatory documents atomic and save tokens by excluding unrelated
