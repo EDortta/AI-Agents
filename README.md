@@ -1,8 +1,15 @@
 # AI-Agents Universal Kit
 
+## Deterministic context budgets
+
+The kit ships `.docs/context-manifest.yaml`, validated by JSON Schema, so compatible
+runtimes load only the contracts required by a task and declared risks.
+AI-GovernanceKit implements `governancekit context inspect` and
+`governancekit context build`; see `.docs/context-optimization.md`.
+
 <!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
      Project-specific rules  -> docs/project-rules.md (never overwritten)
-     Operator values ({{…}}) -> .gk/identity.json    (never overwritten) -->
+     Operator values ({{…}}) -> .credentials/identity.json (untracked, per-programmer) -->
 
 ![AI-Agents Logo](./.docs/icons/logo.png)
 
@@ -90,11 +97,11 @@ Kit files also say so in their first lines: a short banner naming them kit-owned
 pointing at `docs/project-rules.md`. The release gate asserts the banner is present,
 so an edit cannot quietly remove the one thing that tells the next agent where to write.
 
-### Operator values: `{{…}}` slots and `.gk/identity.json`
+### Operator values: `{{…}}` slots and `.credentials/identity.json`
 
 Kit files never contain the operator's real name or account — they carry `{{…}}` slots
 (double braces around an UPPERCASE name), because personal data must not sit in tracked
-kit source. The values live in **`.gk/identity.json`**:
+kit source. The values live in **`.credentials/identity.json`**:
 
 ```json
 {
@@ -104,11 +111,17 @@ kit source. The values live in **`.gk/identity.json`**:
 ```
 
 `values` holds literals; `refs` holds **paths** to credential files — never a secret
-inline, since this file is tracked so the whole team renders the same text. The
-installer re-applies both on every install and every `--upgrade`, so a filled slot is
-not drift: the file on disk and the incoming kit version match byte for byte, and the
-upgrade neither burns the value nor asks you to merge one. `.gk/identity.json` is
-absent from the kit manifest, and that absence is what guarantees no upgrade touches it.
+inline. The file is **never tracked**: `.credentials/.gitignore` keeps it out of git, so
+each programmer on a project establishes their own identity rather than inheriting a
+colleague's name from the repository. That is the point — the operator's name and
+account are the personal data the slot scheme exists to keep out of the repo, and
+sharing one file would only move the leak from `AGENTS.md` into a JSON.
+
+The installer re-applies the values on every install and every `--upgrade`, so a filled
+slot is not drift: the file on disk and the incoming kit version match byte for byte,
+and the upgrade neither burns the value nor asks you to merge one. `.credentials/` is
+the one directory no upgrade path touches, so the file is safe by construction rather
+than by an entry in a list.
 
 Only *declared* tokens are substituted, so a GitHub Actions `${{ … }}` expression or a
 mustache template you ship as an example is left alone. Braces are used rather than
@@ -133,7 +146,7 @@ separates them mechanically, once:
 
 `--migrate` reads operator values back out of the target — using the template's own
 slots as the probe, so a value is only recorded when the surrounding line still matches
-exactly — and writes them to `.gk/identity.json`. A file whose only difference from the
+exactly — and writes them to `.credentials/identity.json`. A file whose only difference from the
 kit is *inserted* lines is unambiguous, so those lines move to `docs/project-rules.md`
 and the file returns to the kit version. Anything else — a kit line rewritten or
 deleted — is reported and left untouched: the kit does not guess what an edit meant.

@@ -1,0 +1,16 @@
+{
+  "state_version": 1,
+  "_readme": [
+    "Operator values for the {{...}} slots in kit-owned files. Copy to identity.json.",
+    "This file is per-programmer and NEVER tracked: .credentials/.gitignore keeps it out",
+    "of git, so each person on the project establishes their own identity.",
+    "'values' holds literals. 'refs' holds PATHS to credential files — never the secret.",
+    "install-agents-kit.sh re-applies these on every install/--upgrade, and no upgrade",
+    "path touches this file."
+  ],
+  "values": {
+    "OPERATOR_NAME": "",
+    "SMTP_ACCOUNT": ""
+  },
+  "refs": {}
+}

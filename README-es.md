@@ -1,8 +1,15 @@
 # AI-Agents Universal Kit
 
+## Presupuesto determinista de contexto
+
+El kit distribuye `.docs/context-manifest.yaml`, validado con JSON Schema, para que
+los runtimes compatibles carguen solamente los contratos requeridos por la tarea y
+los riesgos declarados. AI-GovernanceKit implementa `governancekit context inspect`
+y `governancekit context build`; consulte `.docs/context-optimization.md`.
+
 <!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
      Project-specific rules  -> docs/project-rules.md (never overwritten)
-     Operator values ({{…}}) -> .gk/identity.json    (never overwritten) -->
+     Operator values ({{…}}) -> .credentials/identity.json (untracked, per-programmer) -->
 
 ![Logo AI-Agents](./.docs/icons/logo.png)
 
@@ -92,12 +99,12 @@ que son kit-owned y apunta a `docs/project-rules.md`. El gate de release verific
 el banner esté presente, para que una edición cualquiera no borre justamente la única
 línea que le dice al siguiente agente dónde escribir.
 
-### Valores del operador: slots `{{…}}` y `.gk/identity.json`
+### Valores del operador: slots `{{…}}` y `.credentials/identity.json`
 
 Los archivos del kit nunca contienen el nombre ni la cuenta real del operador — llevan
 slots `{{…}}` (llaves dobles alrededor de un nombre en MAYÚSCULAS), porque un dato
 personal no puede quedar en fuente versionada. Los valores viven en
-**`.gk/identity.json`**:
+**`.credentials/identity.json`**:
 
 ```json
 {
@@ -107,12 +114,18 @@ personal no puede quedar en fuente versionada. Los valores viven en
 ```
 
 `values` guarda literales; `refs` guarda **rutas** a archivos de credenciales — nunca
-un secreto inline, ya que este archivo se versiona para que todo el equipo renderice el
-mismo texto. El instalador los reaplica en cada install y en cada `--upgrade`, así que
-un slot completado no es deriva: el archivo en disco y la versión nueva del kit quedan
-byte a byte iguales, y el upgrade ni quema el valor ni pide una fusión por él.
-`.gk/identity.json` está ausente del manifiesto, y esa ausencia es lo que garantiza que
-ningún upgrade lo toca.
+un secreto inline. El archivo **nunca se versiona**: `.credentials/.gitignore` lo
+mantiene fuera de git, así que cada programador del proyecto establece su propia
+identidad en vez de heredar el nombre de un colega desde el repositorio. Ese es el
+punto — el nombre y la cuenta del operador son justamente el dato personal que el
+esquema de slots existe para mantener fuera del repo, y compartir un archivo solo
+movería la fuga de `AGENTS.md` a un JSON.
+
+El instalador reaplica los valores en cada install y en cada `--upgrade`, así que un
+slot completado no es deriva: el archivo en disco y la versión nueva del kit quedan byte
+a byte iguales, y el upgrade ni quema el valor ni pide una fusión por él.
+`.credentials/` es el único directorio que ningún camino de upgrade toca, así que el
+archivo está protegido por construcción, no por una entrada en una lista.
 
 Solo se sustituyen los tokens *declarados*, así que una expresión `${{ … }}` de GitHub
 Actions o una plantilla mustache de ejemplo queda intacta. Llaves en vez de corchetes
@@ -137,7 +150,7 @@ los placeholders. `--migrate` los separa mecánicamente, una vez:
 
 `--migrate` lee los valores del operador de vuelta desde el target — usando los propios
 slots de la plantilla como sonda, de modo que un valor solo se registra cuando la línea
-que lo rodea aún coincide exactamente — y los escribe en `.gk/identity.json`. Un archivo
+que lo rodea aún coincide exactamente — y los escribe en `.credentials/identity.json`. Un archivo
 cuya única diferencia con el kit son líneas *insertadas* es inequívoco: esas líneas pasan
 a `docs/project-rules.md` y el archivo vuelve a la versión del kit. Cualquier otra cosa
 — una línea del kit reescrita o borrada — se reporta y se deja intacta: el kit no

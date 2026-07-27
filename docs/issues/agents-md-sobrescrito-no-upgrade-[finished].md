@@ -289,16 +289,17 @@ acusar o arquivo para sempre. A documentação agora grafa a convenção como `{
 proíbe `{{TOKEN}}`/`{{PLACEHOLDER}}`/`{{NAME}}`/`{{VALUE}}` literais em `AGENTS.md` e
 `.docs/`.
 
-### Mecanismo: `.gk/identity.json` + render-antes-de-comparar
+### Mecanismo: `.credentials/identity.json` + render-antes-de-comparar
 
 `values` (literais) e `refs` (caminhos para arquivos de credencial — nunca segredo
-inline; o arquivo é rastreado). `apply_identity()` renderiza a fonte que está entrando
+inline). `apply_identity()` renderiza a fonte que está entrando
 para um diretório temporário e aponta `SRC_ROOT` para ele; daí todo o resto do script
 funciona sem alteração. Só tokens **declarados** são substituídos, então `${{ … }}` do
 GitHub Actions passa intacto (verificado ponta a ponta). Sem `python3` ou sem
 `identity.json`, nada é substituído e o Start Gate trava — degradação graciosa, igual ao
 resto do script. `identity.json` está fora de `KIT_OWNED_PATHS`, e o `run-checks.sh`
-afirma essa ausência.
+afirma essa ausência. (A localização final do arquivo mudou no mesmo dia — ver a
+seção seguinte.)
 
 Efeito: um slot preenchido deixa de ser deriva. O arquivo em disco e a versão nova do
 kit ficam byte a byte iguais, o manifesto grava o hash renderizado, e o `.kit-new` do
@@ -331,7 +332,7 @@ valores (tamanho e primeira letra), porque ele pode acabar colado numa issue.
 ### Contrato read-only
 
 Banner nas primeiras linhas de todo `KIT_ROOT_FILES` ("kit-owned, não edite, suas regras
-vão em `docs/project-rules.md`, valores em `.gk/identity.json`"), mais uma seção no topo
+vão em `docs/project-rules.md`, valores em `.credentials/identity.json`"), mais uma seção no topo
 do `AGENTS.md` com a tabela de "isto vai em tal arquivo". O `run-checks.sh` afirma que o
 banner está presente em todos os 13 — um banner é trivialmente perdido numa edição
 qualquer, e ele é a única linha que diz ao próximo agente onde escrever.
@@ -346,3 +347,66 @@ a ponta. `run-checks.sh` verde com as checagens novas; `shellcheck -S error` lim
 
 **Não aplicado aos 33 alvos reais** — isso é trabalho cross-repo e continua gateado por
 aprovação do operador.
+
+---
+
+## Levantamento nos 36 alvos (2026-07-24) e as três decisões que ele forçou
+
+Levantamento read-only sobre todo projeto com o kit instalado (36 diretórios,
+17 repositórios distintos; o resto são worktrees, clones e backups). Nenhum byte
+escrito em nenhum alvo.
+
+**Correção de método.** O dry-run de 2026-07-23 comparava cada `AGENTS.md` com o
+template **de hoje** e por isso reportava 300–800 linhas por alvo. A maior parte disso
+era **evolução do kit**, não conteúdo de projeto: um alvo instalado na v0.9 difere do
+template atual por tudo o que o kit mudou desde então. Comparando cada arquivo com a
+versão do kit **da qual ele foi instalado** (entre as 16 versões históricas no git), com
+os valores do operador dobrados de volta em slots, os números caem para dezenas — e o
+que sobra é acionável. Maior caso fora do `jk-structure`: +110 linhas.
+
+### 1. O kit distribuía o próprio README — e destruía o do projeto
+
+`README.md`, `README-ptbr.md` e `README-es.md` estavam em `KIT_ROOT_FILES` sem
+proteção: o `--upgrade` trocava o README do projeto pelo README do kit. Não é
+hipótese — o `README.md` do `Lumina/lumina` hoje abre com `# IA-Agents Universal
+Kit`. Outro alvo tinha um README de 447 linhas a um upgrade do mesmo destino.
+
+Um kit que sobrescreve a capa dos projetos que ele serve está quebrado. Os três
+saíram de `KIT_ROOT_FILES` e do install. Para os alvos onde a cópia do kit já está,
+`retire_root_file()` a remove — **nunca às cegas**: só quando o manifesto prova que o
+kit a escreveu **e** os bytes ainda batem, com cópia em `.gk/pre-upgrade/` antes.
+Qualquer outra coisa é preservada e reportada, porque o motivo da retirada é
+justamente que esse caminho colide com um arquivo que os projetos possuem.
+
+### 2. `identity.json` é por programador, não por equipe
+
+A decisão anterior (arquivo rastreado em `.gk/`) estava errada pelo próprio critério
+que originou os slots: nome e conta do operador são dado pessoal (LGPD Art. 46), e
+compartilhar um arquivo rastreado apenas mudaria o vazamento do `AGENTS.md` para um
+JSON. O arquivo passa para `.credentials/identity.json`, **nunca rastreado** —
+`seed_identity()` garante a regra no `.credentials/.gitignore` de alvos antigos antes de
+escrever o arquivo, porque `.credentials/` nunca é sincronizado por upgrade e ninguém
+mais adicionaria a regra. Cada programador estabelece a própria identidade.
+
+Bônus: `.credentials/` já era o único diretório que nenhum caminho de upgrade toca, então
+a proteção passa a ser por construção em vez de por ausência numa lista. O
+`run-checks.sh` afirma as três coisas: fora de `KIT_OWNED_PATHS`, gitignored, e não
+rastreado.
+
+### 3. `copy_path ".credentials"` abortava o install
+
+Descoberto ao testar o item 2: `copy_path` recusa quando o destino existe, então um
+programador que escrevesse `.credentials/identity.json` **antes** de instalar recebia
+"Target already has '.credentials'" e um install abortado — e `--force`, a única saída,
+teria apagado as credenciais dele. `.credentials/` passa a ser semeado arquivo a arquivo
+(`seed_dir_missing`), sem nunca tocar no que já existe.
+
+### Fato transversal
+
+Nome do operador e/ou conta SMTP aparecem dentro de arquivos rastreados em **29 dos 36
+alvos**. A migração os converte em slots renderizados a partir de um `identity.json`
+local e não rastreado — é o gate do §1a funcionando pela primeira vez.
+
+A lista de trabalho por alvo (bloco 0 a 4, itens 1–21) foi entregue ao operador
+separadamente; `jk-structure`, `GovernanceKit`, `VGaspar` e a pasta `ZeeCred2-APAGAR`
+ficaram fora por decisão dele.
