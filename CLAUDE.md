@@ -9,6 +9,7 @@ Read and follow:
 - AGENTS.md
 - .docs/software-overview.md
 - .docs/limits.md
+- docs/required-reading.md — complete reading index
 - docs/project-rules.md — project-specific rules (project-owned; never overwritten)
 
 ## User Profile

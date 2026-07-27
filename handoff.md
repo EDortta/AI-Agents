@@ -1,5 +1,15 @@
 # Handoff
 
+## [2026-07-27] WK-20260727-context-hardening - finished
+
+- Manifest/schema now separate task and risk contracts, enforce a real reserve, and
+  use honest `max_sections` / `max_section_tokens` names.
+- GovernanceKit runtime hardening and `--version` implemented on the companion branch.
+- Validation: AI-Agents `scripts/run-checks.sh` PASS; GovernanceKit 136 tests PASS.
+- Added Amazon Q Developer adapter and release enforcement that all adapters load the
+  same five-document baseline. Both landing pages document the expanded compatibility.
+- Version, merge, push, and tag authorized by the operator.
+
 ## [2026-07-27] WK-20260727-context-optimization - finished
 
 - Branch: `feature/uc-006/context-optimization` in AI-Agents and AI-GovernanceKit.

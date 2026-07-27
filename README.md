@@ -38,10 +38,13 @@ This kit was designed to be portable across well-known coding agents and IDE ass
 - Cursor (using `.cursorrules`)
 - Windsurf/Cascade (using `.windsurfrules`)
 - Gemini-based assistants (using `GEMINI.md`)
+- Amazon Q Developer (using `.amazonq/rules/ai-agents.md`)
 
 Core rule:
 - `AGENTS.md` is the global contract.
 - Tool-specific files adapt that same contract to each ecosystem.
+- Every adapter loads the same five-document baseline; the release gate checks this
+  and upgrades restore kit-owned adapters so projects cannot silently weaken them.
 
 ## How to Use in Another Project
 

@@ -38,10 +38,13 @@ Este kit foi pensado para ser portátil entre agentes e assistentes de código c
 - Cursor (usando `.cursorrules`)
 - Windsurf/Cascade (usando `.windsurfrules`)
 - Assistentes baseados em Gemini (usando `GEMINI.md`)
+- Amazon Q Developer (usando `.amazonq/rules/ai-agents.md`)
 
 Regra central:
 - `AGENTS.md` é o contrato global.
 - Os arquivos específicos por ferramenta adaptam esse mesmo contrato para cada ecossistema.
+- Todos os adaptadores carregam a mesma base de cinco documentos; o gate de release
+  verifica isso e upgrades restauram adaptadores do kit para impedir enfraquecimento silencioso.
 
 ## Como usar em outro projeto
 

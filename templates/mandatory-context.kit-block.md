@@ -1,0 +1,5 @@
+- `AGENTS.md`
+- `.docs/software-overview.md`
+- `.docs/limits.md`
+- `docs/required-reading.md`
+- `docs/project-rules.md`

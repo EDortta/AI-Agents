@@ -8,6 +8,7 @@ Use this repository contract as source of truth:
 - AGENTS.md
 - .docs/software-overview.md
 - .docs/limits.md
+- docs/required-reading.md — complete reading index
 - docs/project-rules.md — project-specific rules (project-owned; never overwritten)
 
 Optional: if `~/.config/USER.md` exists, read it to adapt communication style to the user profile (tone, depth, decision framing). Governance behavior is unchanged.

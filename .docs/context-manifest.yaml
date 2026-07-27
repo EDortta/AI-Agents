@@ -63,14 +63,16 @@ budgets:
   total_input_tokens: 22000
   categories:
     base_contracts: 8000
-    project_context: 12500
+    task_contracts: 8500
+    risk_contracts: 4500
+    project_context: 1000
     active_work: 3500
     retrieved_evidence: 1000
     reserve: 1000
 
 retrieval:
-  max_chunks: 4
-  max_chunk_tokens: 500
+  max_sections: 4
+  max_section_tokens: 500
 
 exclude_by_default:
   - handoff.md
