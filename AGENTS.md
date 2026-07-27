@@ -410,8 +410,10 @@ appear: two hosts commit on the same branch unaware of each other, ports and
 local runtime artifacts collide, and it becomes impossible to audit "which host
 did what" from the shared docs.
 
-Every governed project must carry a per-instance identity file (e.g.
-`WORKSPACE.md`) with at least this minimum schema:
+Every governed project must carry the GovernanceKit per-instance identity file
+`.governancekit-identity.json`, created by `governancekit configure`, with at
+least this minimum schema. `WORKSPACE.md` is not required and does not satisfy
+the executable identity gate:
 
 - `operator_name` — human operator (also used as the message prefix)
 - `host_id` — machine/instance identifier
@@ -527,4 +529,3 @@ echo "Corpo" | python3 ~/.config/email/send.py --to dest@example.com --subject "
 ```
 
 Never hardcode or commit credentials. Always read from `~/.config/email/credentials.conf`.
-

@@ -48,10 +48,13 @@ Core rule:
 
 ## How to Use in Another Project
 
+For every installer parameter, identity files, exit codes, migration paths, and
+CI examples, see [Advanced usage details](https://edortta.github.io/AI-Agents/advanced-usage.html).
+
 Preferred: clone and inspect before running, especially the first time:
 
 ```bash
-git clone --branch v1.1.5 https://github.com/EDortta/AI-Agents.git
+git clone --branch v1.1.6 https://github.com/EDortta/AI-Agents.git
 less AI-Agents/scripts/install-agents-kit.sh
 ./AI-Agents/scripts/install-agents-kit.sh --target /path/to/your-project
 ```
@@ -60,7 +63,7 @@ Shortcut, if you accept running a script straight from GitHub (pinned to a
 release tag, not the mutable `main` branch):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \
   --target /path/to/your-project
 ```
 
