@@ -48,10 +48,14 @@ Regla central:
 
 ## Cómo usar en otro proyecto
 
+Para todos los parámetros del instalador, archivos de identidad, códigos de salida,
+migraciones y ejemplos de CI, consulta los
+[Detalles avanzados de uso](https://edortta.github.io/AI-Agents/advanced-usage-es.html).
+
 Preferido: clona e inspecciona antes de ejecutar, sobre todo la primera vez:
 
 ```bash
-git clone --branch v1.1.5 https://github.com/EDortta/AI-Agents.git
+git clone --branch v1.1.6 https://github.com/EDortta/AI-Agents.git
 less AI-Agents/scripts/install-agents-kit.sh
 ./AI-Agents/scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto
 ```
@@ -60,7 +64,7 @@ Atajo, si aceptas ejecutar un script directo desde GitHub (fijado a una tag
 de release, no a la rama mutable `main`):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \
   --target /ruta/de/tu-proyecto
 ```
 

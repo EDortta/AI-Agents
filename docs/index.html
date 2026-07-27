@@ -46,7 +46,7 @@
       padding: 0 24px;
     }
     .nav-inner {
-      max-width: 1100px;
+      max-width: 1400px;
       margin: auto;
       display: flex;
       align-items: center;
@@ -58,6 +58,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-shrink: 0;
+      white-space: nowrap;
       font-weight: 700;
       font-size: 1rem;
       color: var(--text);
@@ -66,9 +68,10 @@
     .nav-logo img { height: 28px; width: auto; }
     .nav-links {
       display: flex;
-      gap: 24px;
+      gap: 20px;
       list-style: none;
       font-size: 0.9rem;
+      white-space: nowrap;
     }
     .nav-links a { color: var(--text-dim); }
     .nav-links a:hover { color: var(--text); text-decoration: none; }
@@ -107,6 +110,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
       padding: 8px 18px;
       border-radius: var(--radius);
       font-size: 0.9rem;
@@ -344,6 +348,7 @@
     .code-block .st { color: var(--accent2); }
     .code-tabs { display: flex; gap: 2px; margin-bottom: -1px; }
     .code-tab {
+      appearance: none;
       padding: 8px 16px;
       font-size: 0.82rem;
       font-family: var(--font-mono);
@@ -355,6 +360,7 @@
       cursor: pointer;
     }
     .code-tab.active { background: #010409; color: var(--text); border-bottom-color: #010409; }
+    .install-panel[hidden] { display: none; }
 
     /* ── PERSONAL TOUCH ───────────────────────────────────── */
     .personal-block {
@@ -519,11 +525,12 @@
       AI-Agents
     </a>
     <ul class="nav-links">
-      <li><a href="#products">Products</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#install">Install</a></li>
-      <li><a href="#compatibility">Compatibility</a></li>
-      <li><a href="./concepts.html">Concepts</a></li>
+      <li><a href="#products" data-i18n="nav.products">Products</a></li>
+      <li><a href="#features" data-i18n="nav.features">Features</a></li>
+      <li><a href="#install" data-i18n="nav.install">Install</a></li>
+      <li><a href="./advanced-usage.html" data-advanced-link data-i18n="nav.advanced">Advanced</a></li>
+      <li><a href="#compatibility" data-i18n="nav.compatibility">Compatibility</a></li>
+      <li><a href="./concepts.html" data-i18n="nav.concepts">Concepts</a></li>
       <li><a href="https://github.com/EDortta/AI-Agents">GitHub</a></li>
     
       <li><a href="#support" data-i18n="nav.support">Support</a></li>
@@ -533,8 +540,8 @@
       <li><button id="tab-ptbr" onclick="setLang('ptbr')" aria-selected="false">PT-BR</button></li>
       <li><button id="tab-es"   onclick="setLang('es')"   aria-selected="false">ES</button></li>
     </ul>
-    <a href="https://github.com/EDortta/AI-Agents" class="btn btn-primary">
-      ★ Star on GitHub
+    <a href="https://github.com/EDortta/AI-Agents" class="btn btn-primary" data-i18n="nav.star">
+      ★ GitHub
     </a>
   </div>
 </nav>
@@ -563,7 +570,7 @@
     </div>
     <div>
       <span class="term-prompt">$</span>
-      <span class="term-cmd"> bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \</span>
+      <span class="term-cmd"> bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \</span>
     </div>
     <div style="padding-left:16px">
       <span class="term-cmd">--target /path/to/your-project</span>
@@ -758,12 +765,12 @@
     <p class="section-sub" data-i18n="inst.sub">No configuration manager needed — plain files you can read and edit.</p>
 
     <div class="code-tabs">
-      <div class="code-tab active" data-i18n="inst.tab1">Fresh install</div>
-      <div class="code-tab" style="opacity:0.5" data-i18n="inst.tab2">Upgrade existing</div>
+      <button type="button" class="code-tab active" data-install-tab="fresh" aria-selected="true" aria-controls="install-fresh" data-i18n="inst.tab1">Fresh install</button>
+      <button type="button" class="code-tab" data-install-tab="upgrade" aria-selected="false" aria-controls="install-upgrade" data-i18n="inst.tab2">Upgrade existing</button>
     </div>
-    <div class="code-block">
+    <div class="code-block install-panel" id="install-fresh" data-install-panel="fresh">
 <span class="cm" data-i18n="inst.c1"># 1 — Install AI-Agents; the terminal asks for operator identity first</span>
-<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
+<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \
   --target /path/to/your-project
 
 <span class="cm" data-i18n="inst.c2"># 2 — Install GovernanceKit CLI</span>
@@ -775,15 +782,20 @@
 <span class="kw">governancekit</span> doctor
     </div>
 
-    <br />
-
-    <p style="color:var(--muted); font-size:0.875rem" data-i18n="inst.upgrade">
-      To upgrade an existing installation without overwriting project context:
-    </p>
-    <div class="code-block" style="margin-top:10px">
-<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
+    <div class="code-block install-panel" id="install-upgrade" data-install-panel="upgrade" hidden>
+<span class="cm" data-i18n="inst.upgrade"># Upgrade without overwriting project context</span>
+<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \
   --target /path/to/your-project <span class="st">--upgrade</span>
+
+<span class="cm" data-i18n="inst.upgrade_check"># Confirm the installed and available versions</span>
+<span class="kw">governancekit</span> --version
+
+<span class="cm" data-i18n="inst.upgrade_doctor"># Validate the updated project</span>
+<span class="kw">governancekit</span> doctor
     </div>
+    <p style="margin-top:22px">
+      <a href="./advanced-usage.html" data-advanced-link class="btn btn-outline" data-i18n="inst.advanced">Advanced usage details →</a>
+    </p>
   </div>
 </section>
 
@@ -954,7 +966,10 @@
       'inst.c3':      '# 3 — Fill the two required context files, then validate',
       'inst.c4':      '#     .docs/software-overview.md  →  set project_context_ready: yes',
       'inst.c5':      '#     .docs/limits.md             →  set limits_ready: yes',
-      'inst.upgrade': 'To upgrade an existing installation without overwriting project context:',
+      'inst.advanced':'Advanced usage details →',
+      'inst.upgrade': '# Upgrade without overwriting project context',
+      'inst.upgrade_check': '# Confirm the installed and available versions',
+      'inst.upgrade_doctor': '# Validate the updated project',
       'pers.label':   'Personal Touch',
       'pers.title':   'Governance that knows you.',
       'pers.p':       'Drop a <code>~/.config/USER.md</code> in your home config directory. Agents read your profile at session start and adapt communication style — tone, depth, language, and decision framing — to match how you think. Governance rules and quality gates are completely unchanged.',
@@ -968,6 +983,14 @@
       'cta.btn2':     'Get GovernanceKit',
       'cta.btn3':     'Read the story',
       'nav.support': "Support",
+      'nav.advanced': "Advanced",
+      'nav.products': "Products",
+      'nav.features': "Features",
+      'nav.install': "Install",
+      'nav.compatibility': "Compatibility",
+      'nav.concepts': "Concepts",
+      'nav.star': "★ GitHub",
+      'page.title': "AI-Agents · Universal Agent Governance Kit",
       'don.eyebrow': "Support",
       'don.title': "If this project helped you, chip in",
       'don.sub': "No fees, no middlemen. PIX straight to my key, or ETH on mainnet.",
@@ -1036,7 +1059,10 @@
       'inst.c3':      '# 3 — Preencha os dois arquivos de contexto obrigatórios e valide',
       'inst.c4':      '#     .docs/software-overview.md  →  defina project_context_ready: yes',
       'inst.c5':      '#     .docs/limits.md             →  defina limits_ready: yes',
-      'inst.upgrade': 'Para atualizar uma instalação existente sem sobrescrever o contexto do projeto:',
+      'inst.advanced':'Detalhes avançados de uso →',
+      'inst.upgrade': '# Atualize sem sobrescrever o contexto do projeto',
+      'inst.upgrade_check': '# Confira as versões instalada e disponível',
+      'inst.upgrade_doctor': '# Valide o projeto atualizado',
       'pers.label':   'Toque Pessoal',
       'pers.title':   'Governança que te conhece.',
       'pers.p':       'Coloque um <code>~/.config/USER.md</code> no seu diretório de configuração home. Agentes leem seu perfil ao iniciar a sessão e adaptam o estilo de comunicação — tom, profundidade, idioma e enquadramento de decisão — para combinar com a sua forma de pensar. Regras de governança e quality gates permanecem completamente inalterados.',
@@ -1050,6 +1076,14 @@
       'cta.btn2':     'Obter GovernanceKit',
       'cta.btn3':     'Leia a história',
       'nav.support': "Apoiar",
+      'nav.advanced': "Avançado",
+      'nav.products': "Produtos",
+      'nav.features': "Recursos",
+      'nav.install': "Instalar",
+      'nav.compatibility': "Compatibilidade",
+      'nav.concepts': "Conceitos",
+      'nav.star': "★ GitHub",
+      'page.title': "AI-Agents · Kit Universal de Governança para Agentes",
       'don.eyebrow': "Apoiar",
       'don.title': "Se este projeto te ajudou, contribua",
       'don.sub': "Sem taxas, sem intermediários. PIX direto na minha chave ou ETH na rede principal.",
@@ -1118,7 +1152,10 @@
       'inst.c3':      '# 3 — Rellena los dos archivos de contexto requeridos y valida',
       'inst.c4':      '#     .docs/software-overview.md  →  establece project_context_ready: yes',
       'inst.c5':      '#     .docs/limits.md             →  establece limits_ready: yes',
-      'inst.upgrade': 'Para actualizar una instalación existente sin sobrescribir el contexto del proyecto:',
+      'inst.advanced':'Detalles avanzados de uso →',
+      'inst.upgrade': '# Actualiza sin sobrescribir el contexto del proyecto',
+      'inst.upgrade_check': '# Comprueba las versiones instalada y disponible',
+      'inst.upgrade_doctor': '# Valida el proyecto actualizado',
       'pers.label':   'Toque Personal',
       'pers.title':   'Gobernanza que te conoce.',
       'pers.p':       'Coloca un <code>~/.config/USER.md</code> en tu directorio de configuración home. Los agentes leen tu perfil al inicio de la sesión y adaptan el estilo de comunicación — tono, profundidad, idioma y enfoque de decisión — para que coincida con tu forma de pensar. Las reglas de gobernanza y quality gates permanecen completamente sin cambios.',
@@ -1132,6 +1169,14 @@
       'cta.btn2':     'Obtener GovernanceKit',
       'cta.btn3':     'Lee la historia',
       'nav.support': "Apoyar",
+      'nav.advanced': "Avanzado",
+      'nav.products': "Productos",
+      'nav.features': "Funciones",
+      'nav.install': "Instalar",
+      'nav.compatibility': "Compatibilidad",
+      'nav.concepts': "Conceptos",
+      'nav.star': "★ GitHub",
+      'page.title': "AI-Agents · Kit Universal de Gobernanza para Agentes",
       'don.eyebrow': "Apoyar",
       'don.title': "Si este proyecto te ayudó, contribuye",
       'don.sub': "Sin comisiones, sin intermediarios. PIX directo a mi clave o ETH en la red principal.",
@@ -1144,6 +1189,9 @@
   };
 
   function setLang(lang) {
+    if (T[lang] && T[lang]['page.title']) {
+      document.title = T[lang]['page.title'];
+    }
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
       var key = el.getAttribute('data-i18n');
       if (T[lang] && T[lang][key] !== undefined) {
@@ -1158,8 +1206,27 @@
       }
     });
     document.documentElement.lang = lang === 'ptbr' ? 'pt-BR' : lang === 'es' ? 'es' : 'en';
+    var advancedHref = lang === 'ptbr' ? './advanced-usage-ptbr.html' :
+      lang === 'es' ? './advanced-usage-es.html' : './advanced-usage.html';
+    document.querySelectorAll('[data-advanced-link]').forEach(function(link) {
+      link.setAttribute('href', advancedHref);
+    });
     try { localStorage.setItem('ai-agents-lang', lang); } catch(e) {}
   }
+
+  document.querySelectorAll('[data-install-tab]').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var selected = tab.getAttribute('data-install-tab');
+      document.querySelectorAll('[data-install-tab]').forEach(function(candidate) {
+        var active = candidate.getAttribute('data-install-tab') === selected;
+        candidate.classList.toggle('active', active);
+        candidate.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      document.querySelectorAll('[data-install-panel]').forEach(function(panel) {
+        panel.hidden = panel.getAttribute('data-install-panel') !== selected;
+      });
+    });
+  });
 
   (function init() {
     var saved;

@@ -16,19 +16,19 @@ Usage:
   # Directly from GitHub (curl | bash) — pins to a release tag, not the
   # mutable "main" branch; verify the printed sha256 against the release
   # notes if you want an extra check before running.
-  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
+  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \
     --target /path/to/project
 
 Prefer over the one-liner: clone the repo and inspect it before running,
 especially the first time:
-  git clone --branch v1.1.5 https://github.com/EDortta/AI-Agents.git
+  git clone --branch v1.1.6 https://github.com/EDortta/AI-Agents.git
   less AI-Agents/scripts/install-agents-kit.sh
   ./AI-Agents/scripts/install-agents-kit.sh --target /path/to/project
 
 Options:
   --target <dir>     Target project directory (default: current dir)
   --repo <name>      GitHub repo in owner/repo format (default: EDortta/AI-Agents)
-  --ref <ref>        Git ref/branch/tag for download (default: v1.1.5 — pin to a
+  --ref <ref>        Git ref/branch/tag for download (default: v1.1.6 — pin to a
                       release tag; passing a mutable ref like "main" is your choice,
                       not the kit's)
   --checksum <sha256> Expected sha256 of the downloaded tarball; aborts on mismatch
@@ -80,7 +80,7 @@ USAGE
 
 TARGET_DIR="$(pwd)"
 REPO="EDortta/AI-Agents"
-REF="v1.1.5"
+REF="v1.1.6"
 CHECKSUM=""
 FORCE="0"
 UPGRADE="0"
@@ -1848,6 +1848,9 @@ upgrade_kit() {
   # Kit-owned reference pages.
   copy_file_replace ".docs/index.html"
   copy_file_replace ".docs/concepts.html"
+  copy_file_replace ".docs/advanced-usage.html"
+  copy_file_replace ".docs/advanced-usage-ptbr.html"
+  copy_file_replace ".docs/advanced-usage-es.html"
 
   # Keep the issues index current without touching project issue folders.
   copy_file_replace ".docs/issues/README.md"
@@ -1896,6 +1899,7 @@ KIT_OWNED_PATHS=(
   ".docs/context-manifest.yaml" ".docs/context-optimization.md" ".docs/schemas"
   ".docs/issues/templates" ".docs/issues/README.md"
   ".docs/index.html" ".docs/concepts.html"
+  ".docs/advanced-usage.html" ".docs/advanced-usage-ptbr.html" ".docs/advanced-usage-es.html"
 )
 
 if [[ "$CHECK" == "1" ]]; then

@@ -352,12 +352,82 @@ trap - EXIT
 echo "== 10d. Landing page is publishable and release-safe =="
 landing="docs/index.html"
 landing_copy=".docs/index.html"
+advanced_usage="docs/advanced-usage.html"
+advanced_usage_copy=".docs/advanced-usage.html"
+advanced_usage_ptbr="docs/advanced-usage-ptbr.html"
+advanced_usage_es="docs/advanced-usage-es.html"
 pages_workflow=".github/workflows/pages.yml"
 if [[ -f "$landing" && -f "$landing_copy" ]] && cmp -s "$landing" "$landing_copy"; then
   ok "public landing and distributed landing are byte-identical"
 else
   err "$landing and $landing_copy differ or one is missing"
 fi
+translated_nav_ok=1
+for key in products features install advanced compatibility concepts support star; do
+  if [[ "$(grep -c "'nav\\.${key}':" "$landing")" != "3" ]] ||
+     ! grep -qF "data-i18n=\"nav.${key}\"" "$landing"; then
+    err "landing navigation key is not complete in EN, PT-BR, and ES: nav.${key}"
+    translated_nav_ok=0
+  fi
+done
+if [[ "$translated_nav_ok" == "1" ]]; then
+  ok "landing navigation is fully translated in EN, PT-BR, and ES"
+fi
+multilingual_guides_ok=1
+for guide in "$advanced_usage" "$advanced_usage_ptbr" "$advanced_usage_es"; do
+  distributed=".docs/${guide#docs/}"
+  if [[ ! -f "$guide" || ! -f "$distributed" ]] || ! cmp -s "$guide" "$distributed"; then
+    err "advanced usage language copy is missing or unsynchronized: $guide"
+    multilingual_guides_ok=0
+  fi
+  if [[ "$(grep -c 'install-agents-kit.sh)' "$guide")" -lt 2 ]] ||
+     ! grep -qF -- '--target "$PWD"' "$guide" ||
+     ! grep -qF -- '--target "$PWD" --upgrade' "$guide"; then
+    err "advanced usage does not show separate fresh-install and upgrade commands: $guide"
+    multilingual_guides_ok=0
+  fi
+done
+if [[ "$multilingual_guides_ok" == "1" ]] &&
+   grep -qF 'advanced-usage-ptbr.html' "$landing" &&
+   grep -qF 'advanced-usage-es.html' "$landing"; then
+  ok "advanced usage is available and routed in EN, PT-BR, and ES"
+else
+  err "landing does not route all three advanced usage languages"
+fi
+if grep -qF 'data-install-tab="upgrade"' "$landing" &&
+   grep -qF "tab.addEventListener('click'" "$landing" &&
+   grep -qF 'data-install-panel="upgrade"' "$landing"; then
+  ok "fresh/upgrade installation tabs have interactive behavior"
+else
+  err "installation tabs are present without a working upgrade interaction"
+fi
+if [[ -f "$advanced_usage" && -f "$advanced_usage_copy" ]] &&
+   cmp -s "$advanced_usage" "$advanced_usage_copy" &&
+   grep -qF './advanced-usage.html' "$landing"; then
+  ok "advanced usage guide is linked and its distributed copy is synchronized"
+else
+  err "advanced usage guide is missing, unlinked, or differs from its distributed copy"
+fi
+if grep -qF '.governancekit-identity.json' "$advanced_usage" &&
+   grep -qF '.credentials/identity.json' "$advanced_usage" &&
+   grep -qF 'WORKSPACE.md' "$advanced_usage" &&
+   ! grep -q 'e.g.[[:space:]]*`WORKSPACE.md`' AGENTS.md; then
+  ok "identity documentation names both canonical files and rejects WORKSPACE.md ambiguity"
+else
+  err "identity documentation is incomplete or still makes WORKSPACE.md look mandatory"
+fi
+installer_options=(
+  --target --repo --ref --checksum --force --upgrade --strict --check
+  --migrate --dry-run --help
+)
+advanced_options_ok=1
+for option in "${installer_options[@]}"; do
+  if ! grep -qF -- "$option" "$advanced_usage"; then
+    err "advanced usage guide does not document installer parameter: $option"
+    advanced_options_ok=0
+  fi
+done
+[[ "$advanced_options_ok" == "1" ]] && ok "advanced usage guide documents every installer parameter"
 if grep -qF 'github.com/EDortta/AI-Agents' "$landing" &&
    grep -qF 'github.com/EDortta/AI-GovernanceKit' "$landing" &&
    ! grep -q 'GITHUB_OWNER' "$landing"; then

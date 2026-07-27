@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI-Agents — Detalles avanzados de uso</title>
+  <meta name="description" content="Instalación, actualización, identidad, parámetros y archivos de AI-Agents." />
+  <style>
+    :root{--bg:#0b1020;--panel:#131b31;--text:#edf2ff;--muted:#aab5cf;--line:#293653;--accent:#79a8ff;--code:#080d19}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,sans-serif}
+    main,nav{width:min(1080px,calc(100% - 32px));margin:auto} nav{display:flex;justify-content:space-between;gap:18px;padding:22px 0;flex-wrap:wrap}
+    a{color:var(--accent)} nav a{text-decoration:none}.hero{padding:54px 0 32px}.eyebrow{color:var(--accent);font-weight:700}
+    h1{font-size:clamp(2.2rem,6vw,4.5rem);line-height:1.03;margin:.25em 0} h2{margin-top:2.2em} h3{margin-top:1.6em}
+    p,li{color:var(--muted)} strong,th{color:var(--text)} code,pre{font-family:ui-monospace,SFMono-Regular,monospace}
+    code{color:#c9d9ff} pre{background:var(--code);border:1px solid var(--line);padding:18px;overflow:auto;border-radius:10px;color:#dce7ff}
+    table{width:100%;border-collapse:collapse;margin:18px 0 28px} th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+    .note{background:var(--panel);border-left:4px solid var(--accent);padding:14px 18px;border-radius:6px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:10px}.card h3{margin-top:0}
+    footer{border-top:1px solid var(--line);margin-top:64px;padding:28px 0;color:var(--muted)}
+  </style>
+</head>
+<body>
+<nav>
+  <a href="./index.html">← AI-Agents</a>
+  <span><a href="./advanced-usage.html" onclick="localStorage.setItem('ai-agents-lang','en')">EN</a> · <a href="./advanced-usage-ptbr.html" onclick="localStorage.setItem('ai-agents-lang','ptbr')">PT-BR</a> · <strong>ES</strong></span>
+  <a href="https://github.com/EDortta/AI-Agents">GitHub</a>
+</nav>
+<main>
+  <header class="hero"><div class="eyebrow">Guía de referencia</div><h1>Detalles avanzados de uso</h1><p>Instala, actualiza y configura AI-Agents sin perder contenido del proyecto y entiende cómo se integra la identidad local con AI-GovernanceKit.</p></header>
+
+  <section>
+    <h2>Flujo recomendado</h2>
+    <pre><code># 1a. Instalación nueva
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \
+  --target "$PWD"
+
+# 1b. Actualización de una instalación existente
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.6/scripts/install-agents-kit.sh) \
+  --target "$PWD" --upgrade
+
+# 2. Configura la identidad de esta máquina/checkout
+governancekit configure
+
+# 3. Completa el contexto y los límites; cambia ambas flags a yes
+# .docs/software-overview.md → project_context_ready: yes
+# .docs/limits.md            → limits_ready: yes
+
+# 4. Valida y consulta las versiones
+governancekit doctor
+governancekit --version</code></pre>
+    <p class="note"><strong>No necesitas crear <code>WORKSPACE.md</code>.</strong> La identidad de runtime vive en <code>.governancekit-identity.json</code>. Los valores del operador usados en los contratos viven por separado en <code>.credentials/identity.json</code>.</p>
+  </section>
+
+  <section>
+    <h2>Los dos archivos de identidad local</h2>
+    <table><thead><tr><th>Archivo</th><th>Responsabilidad</th><th>Creado por</th><th>Git</th></tr></thead><tbody>
+      <tr><td><code>.credentials/identity.json</code></td><td>Valores de los slots <code>OPERATOR_NAME</code> y <code>SMTP_ACCOUNT</code>.</td><td><code>install-agents-kit.sh</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
+      <tr><td><code>.governancekit-identity.json</code></td><td>Identidad de máquina y checkout: host, ruta, puertos, hermanos y propiedad de branches.</td><td><code>governancekit configure</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
+    </tbody></table>
+  </section>
+
+  <section>
+    <h2>Parámetros de <code>install-agents-kit.sh</code></h2>
+    <table><thead><tr><th>Parámetro</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead><tbody>
+      <tr><td><code>--target &lt;dir&gt;</code></td><td>Selecciona el proyecto destino; por defecto, el directorio actual.</td><td>Al ejecutar fuera del proyecto.</td></tr>
+      <tr><td><code>--repo &lt;owner/repo&gt;</code></td><td>Selecciona otro repositorio de origen.</td><td>Forks o distribuciones internas.</td></tr>
+      <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selecciona tag, branch o commit; por defecto <code>v1.1.6</code>.</td><td>Fijar o probar un origen específico.</td></tr>
+      <tr><td><code>--checksum &lt;sha256&gt;</code></td><td>Valida el tarball y aborta si el hash no coincide.</td><td>Instalaciones sensibles y CI.</td></tr>
+      <tr><td><code>--upgrade</code></td><td>Actualiza archivos del kit preservando contexto, reglas, identidad, handoff e issues.</td><td>Actualización normal.</td></tr>
+      <tr><td><code>--force</code></td><td>Sobrescribe archivos; incompatible con <code>--upgrade</code>.</td><td>Solo después de revisar un reemplazo intencional.</td></tr>
+      <tr><td><code>--strict</code></td><td>Con <code>--upgrade</code>, sale con error si un archivo protegido necesita merge humano.</td><td>Pipelines de CI.</td></tr>
+      <tr><td><code>--check</code></td><td>Informe de solo lectura sobre lo que se reemplazaría o preservaría.</td><td>Antes de migrar instalaciones antiguas.</td></tr>
+      <tr><td><code>--migrate</code></td><td>Extrae identidad y separa contenido del proyecto escrito en archivos del kit. Exige TTY y confirmación.</td><td>Instalaciones heredadas o personalizadas.</td></tr>
+      <tr><td><code>--dry-run</code></td><td>Con <code>--migrate</code>, informa sin escribir.</td><td>Auditoría segura y automatización.</td></tr>
+      <tr><td><code>--help</code></td><td>Muestra la ayuda incluida en la versión ejecutada.</td><td>Confirmar opciones disponibles.</td></tr>
+    </tbody></table>
+    <p><code>--check</code> no se combina con modos de escritura; <code>--dry-run</code> solo se aplica a <code>--migrate</code>; <code>--strict</code> solo se aplica a <code>--upgrade</code>.</p>
+  </section>
+
+  <section>
+    <h2>Instalación, actualización y migración</h2>
+    <div class="cards">
+      <article class="card"><h3>Nueva</h3><pre><code>install-agents-kit.sh --target /proyecto</code></pre><p>Crea los archivos ausentes, solicita la identidad y deja los gates de contexto en no.</p></article>
+      <article class="card"><h3>Actualización</h3><pre><code>install-agents-kit.sh --target /proyecto --upgrade</code></pre><p>Reemplaza solo contenido del kit y reaplica la identidad local.</p></article>
+      <article class="card"><h3>Heredada</h3><pre><code>install-agents-kit.sh --target /proyecto --check
+install-agents-kit.sh --target /proyecto --migrate
+install-agents-kit.sh --target /proyecto --upgrade</code></pre><p>Separa el contenido mezclado antes de actualizar.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Parámetros de identidad de GovernanceKit</h2>
+    <pre><code>governancekit configure \
+  --operator-name "Nombre" --host-id "maquina-01" \
+  --instance-path "/ruta/absoluta/proyecto" \
+  --sibling-path "/otro/checkout" \
+  --assigned-ports "3000,8000" \
+  --branch-ownership "feature/mi-branch"</code></pre>
+    <table><thead><tr><th>Parámetro</th><th>Obligatorio</th><th>Significado</th></tr></thead><tbody>
+      <tr><td><code>--operator-name</code></td><td>Sí</td><td>Operador humano de esta instancia.</td></tr>
+      <tr><td><code>--host-id</code></td><td>Sí</td><td>Identificador estable de máquina o entorno.</td></tr>
+      <tr><td><code>--instance-path</code></td><td>Sí</td><td>Ruta absoluta de este checkout.</td></tr>
+      <tr><td><code>--sibling-path</code></td><td>No</td><td>Otro checkout que puede disputar branches o recursos.</td></tr>
+      <tr><td><code>--assigned-ports</code></td><td>No</td><td>Puertos reservados, separados por coma.</td></tr>
+      <tr><td><code>--branch-ownership</code></td><td>No</td><td>Branches operadas por esta instancia.</td></tr>
+      <tr><td><code>--set KEY=VALUE</code></td><td>No</td><td>Completa un placeholder heredado; repetible.</td></tr>
+    </tbody></table>
+    <p>Sin flags, <code>governancekit configure</code> pregunta de forma interactiva. Con flags, proporciona los tres campos obligatorios.</p>
+  </section>
+
+  <section>
+    <h2>Propiedad de archivos y códigos de salida</h2>
+    <p>El kit posee <code>AGENTS.md</code>, adaptadores, contratos de rol, workflows y plantillas. El proyecto posee overview, limits, <code>docs/</code>, handoff, identidades e issues. Un <code>AGENTS.md</code> modificado se preserva y la nueva versión queda en <code>AGENTS.md.kit-new</code>.</p>
+    <table><tbody>
+      <tr><td><code>0</code></td><td>Operación finalizada.</td></tr><tr><td><code>2</code></td><td>Opciones inválidas o incompatibles.</td></tr>
+      <tr><td><code>6</code></td><td><code>--strict</code> encontró un archivo protegido que requiere merge.</td></tr>
+      <tr><td><code>7</code></td><td>Checksum de descarga divergente.</td></tr><tr><td><code>8</code></td><td>Identidad obligatoria ausente o inválida.</td></tr>
+      <tr><td><code>30</code></td><td>Archivos instalados, pero contexto o límites aún no están listos.</td></tr>
+    </tbody></table>
+  </section>
+  <section><h2>Siguiente paso</h2><p>Consulta la <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">guía avanzada de GovernanceKit</a> para todos los comandos del CLI, selección de contexto, diagnóstico y CI.</p></section>
+</main>
+<footer><main>AI-Agents · documentación avanzada · <a href="./index.html">volver a la landing page</a></main></footer>
+</body>
+</html>
