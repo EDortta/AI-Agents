@@ -16,19 +16,19 @@ Usage:
   # Directly from GitHub (curl | bash) — pins to a release tag, not the
   # mutable "main" branch; verify the printed sha256 against the release
   # notes if you want an extra check before running.
-  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.1/scripts/install-agents-kit.sh) \
+  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
     --target /path/to/project
 
 Prefer over the one-liner: clone the repo and inspect it before running,
 especially the first time:
-  git clone --branch v1.1.1 https://github.com/EDortta/AI-Agents.git
+  git clone --branch v1.1.5 https://github.com/EDortta/AI-Agents.git
   less AI-Agents/scripts/install-agents-kit.sh
   ./AI-Agents/scripts/install-agents-kit.sh --target /path/to/project
 
 Options:
   --target <dir>     Target project directory (default: current dir)
   --repo <name>      GitHub repo in owner/repo format (default: EDortta/AI-Agents)
-  --ref <ref>        Git ref/branch/tag for download (default: v1.1.1 — pin to a
+  --ref <ref>        Git ref/branch/tag for download (default: v1.1.5 — pin to a
                       release tag; passing a mutable ref like "main" is your choice,
                       not the kit's)
   --checksum <sha256> Expected sha256 of the downloaded tarball; aborts on mismatch
@@ -62,7 +62,9 @@ Operator values:
   Kit files carry {{TOKEN}} slots. Values live in .credentials/identity.json ("values" for
   literals, "refs" for paths to credential files — never a secret inline) and are
   re-applied on every install/upgrade, so an upgrade cannot burn them. No upgrade
-  path touches .credentials/identity.json.
+  path touches .credentials/identity.json. On install/upgrade, a terminal prompts
+  for required empty values before touching kit files. Non-interactive runs fail
+  early and name the values that must be configured.
 
 Protected files:
   AGENTS.md is kit-owned but never replaced once it differs from what the kit
@@ -78,7 +80,7 @@ USAGE
 
 TARGET_DIR="$(pwd)"
 REPO="EDortta/AI-Agents"
-REF="v1.1.1"
+REF="v1.1.5"
 CHECKSUM=""
 FORCE="0"
 UPGRADE="0"
@@ -462,13 +464,112 @@ seed_identity() {
     echo "updated: .credentials/.gitignore now ignores identity.json"
   fi
 
-  [[ -e "$dst" ]] && return 0
-  if [[ -f "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" ]]; then
-    cp -a "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" "$dst"
-  else
-    printf '{\n  "state_version": 1,\n  "values": { "OPERATOR_NAME": "", "SMTP_ACCOUNT": "" },\n  "refs": {}\n}\n' > "$dst"
+  if [[ ! -e "$dst" ]]; then
+    if [[ -f "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" ]]; then
+      cp -a "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" "$dst"
+    else
+      printf '{\n  "state_version": 1,\n  "values": { "OPERATOR_NAME": "", "SMTP_ACCOUNT": "" },\n  "refs": {}\n}\n' > "$dst"
+    fi
+    echo "created programmer-owned file (untracked): $IDENTITY_REL"
   fi
-  echo "created programmer-owned file (untracked): $IDENTITY_REL"
+  chmod 600 "$dst"
+}
+
+# Required operator identity is an installation precondition, not an agent-time
+# surprise. Resolve it before copying any kit file so a successful install can never
+# leave the target with an immediately blocking Start Gate.
+ensure_required_identity() {
+  local identity="$TARGET_DIR/$IDENTITY_REL"
+  local required=("OPERATOR_NAME" "SMTP_ACCOUNT")
+
+  if ! have_python; then
+    echo "ERROR: python3 is required to validate and configure $IDENTITY_REL." >&2
+    exit 8
+  fi
+
+  local missing_output
+  if ! missing_output="$(python3 - "$identity" "${required[@]}" <<'PY'
+import json
+import sys
+
+path, *required = sys.argv[1:]
+try:
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+except (OSError, json.JSONDecodeError) as exc:
+    print("ERROR:%s" % exc)
+    raise SystemExit(2)
+
+if not isinstance(data, dict):
+    print("ERROR:root must be a JSON object")
+    raise SystemExit(2)
+
+values = data.get("values") if isinstance(data.get("values"), dict) else {}
+refs = data.get("refs") if isinstance(data.get("refs"), dict) else {}
+for name in required:
+    value = values.get(name)
+    ref = refs.get(name)
+    if not (
+        (isinstance(value, str) and value.strip())
+        or (isinstance(ref, str) and ref.strip())
+    ):
+        print(name)
+PY
+  )"; then
+    echo "ERROR: invalid $IDENTITY_REL" >&2
+    [[ -n "$missing_output" ]] && printf '  %s\n' "$missing_output" >&2
+    exit 8
+  fi
+
+  local missing=()
+  if [[ -n "$missing_output" ]]; then
+    mapfile -t missing <<<"$missing_output"
+  fi
+  [[ ${#missing[@]} -eq 0 ]] && return 0
+
+  if [[ ! -t 0 ]]; then
+    echo "ERROR: required operator identity is not configured: ${missing[*]}" >&2
+    echo "Fill $IDENTITY_REL, then run the installer again." >&2
+    echo "Interactive terminals prompt for these values automatically." >&2
+    exit 8
+  fi
+
+  echo "Required operator identity is incomplete."
+  echo "Values are stored only in the gitignored $IDENTITY_REL."
+
+  local name value
+  for name in "${missing[@]}"; do
+    value=""
+    while [[ -z "${value//[[:space:]]/}" ]]; do
+      if ! IFS= read -r -p "$name: " value; then
+        echo >&2
+        echo "ERROR: input ended before $name was configured." >&2
+        exit 8
+      fi
+    done
+
+    if ! printf '%s\n' "$value" | python3 -c '
+import json
+import sys
+
+path, name = sys.argv[1:]
+value = sys.stdin.read().rstrip("\n")
+with open(path, encoding="utf-8") as fh:
+    data = json.load(fh)
+values = data.setdefault("values", {})
+if not isinstance(values, dict):
+    raise SystemExit("identity values must be a JSON object")
+values[name] = value
+with open(path, "w", encoding="utf-8") as fh:
+    json.dump(data, fh, indent=2, ensure_ascii=False)
+    fh.write("\n")
+' "$identity" "$name"; then
+      echo "ERROR: could not update $IDENTITY_REL" >&2
+      exit 8
+    fi
+  done
+
+  echo "Operator identity configured."
 }
 
 # Render the incoming kit source with this project's identity, then point SRC_ROOT at
@@ -1718,6 +1819,7 @@ upgrade_kit() {
   # compared or copied. A filled slot then reads as "identical to the kit", not as
   # drift, so the upgrade neither burns the value nor demands a merge for it.
   seed_identity
+  ensure_required_identity
   apply_identity
 
   # The backup holds the state before THIS upgrade; accumulating runs would make
@@ -1823,8 +1925,9 @@ elif [[ "$UPGRADE" == "1" ]]; then
   fi
 else
   # An identity file present before a fresh install is honoured; otherwise a starter is
-  # seeded (empty, so nothing is substituted and the Start Gate still catches the slots).
+  # seeded and completed before any kit file is copied.
   seed_identity
+  ensure_required_identity
   apply_identity
 
   # Core files/directories to install

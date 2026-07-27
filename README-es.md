@@ -51,7 +51,7 @@ Regla central:
 Preferido: clona e inspecciona antes de ejecutar, sobre todo la primera vez:
 
 ```bash
-git clone --branch v1.1.1 https://github.com/EDortta/AI-Agents.git
+git clone --branch v1.1.5 https://github.com/EDortta/AI-Agents.git
 less AI-Agents/scripts/install-agents-kit.sh
 ./AI-Agents/scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto
 ```
@@ -60,7 +60,7 @@ Atajo, si aceptas ejecutar un script directo desde GitHub (fijado a una tag
 de release, no a la rama mutable `main`):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.1/scripts/install-agents-kit.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.5/scripts/install-agents-kit.sh) \
   --target /ruta/de/tu-proyecto
 ```
 
@@ -124,11 +124,13 @@ punto — el nombre y la cuenta del operador son justamente el dato personal que
 esquema de slots existe para mantener fuera del repo, y compartir un archivo solo
 movería la fuga de `AGENTS.md` a un JSON.
 
-El instalador reaplica los valores en cada install y en cada `--upgrade`, así que un
-slot completado no es deriva: el archivo en disco y la versión nueva del kit quedan byte
-a byte iguales, y el upgrade ni quema el valor ni pide una fusión por él.
-`.credentials/` es el único directorio que ningún camino de upgrade toca, así que el
-archivo está protegido por construcción, no por una entrada en una lista.
+En cada install y `--upgrade`, el instalador resuelve primero estos valores obligatorios.
+En una terminal interactiva pregunta por los valores vacíos de `OPERATOR_NAME` y
+`SMTP_ACCOUNT`; en una ejecución no interactiva, falla antes de copiar archivos del kit
+e informa qué debe configurarse. Mantiene el archivo con modo `0600` y reaplica los
+valores, así que un slot completado no es deriva: el archivo en disco y la versión nueva
+del kit quedan byte a byte iguales, y el upgrade ni quema el valor ni pide una fusión.
+`.credentials/` es el único directorio que ningún camino de upgrade toca.
 
 Solo se sustituyen los tokens *declarados*, así que una expresión `${{ … }}` de GitHub
 Actions o una plantilla mustache de ejemplo queda intacta. Llaves en vez de corchetes
@@ -136,8 +138,8 @@ porque `[MANDATORY]`, `[PROHIBITED]` y `[DEFAULT]` son vocabulario de contenido 
 estos documentos: un token entre corchetes no se distingue de la prosa sin una
 allowlist mantenida a mano; `{{…}}` siempre se distingue.
 
-Sin `python3`, o sin `identity.json`, no se sustituye nada — los slots quedan vacíos y
-el Start Gate de `AGENTS.md` detiene a los agentes hasta que un humano los complete.
+`python3` es obligatorio para validar y aplicar la identidad. El instalador falla
+pronto si no está disponible o si no puede obtener los valores obligatorios.
 
 ### Migrar un target existente: `--check` → `--migrate` → `--upgrade`
 
