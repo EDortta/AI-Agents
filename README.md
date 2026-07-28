@@ -73,6 +73,11 @@ Upgrade an existing installation without overwriting project-local context/state
 ./scripts/install-agents-kit.sh --target /path/to/your-project --upgrade
 ```
 
+If you just cloned a project that already has AI-Agents installed, run that
+`--upgrade` before the first task in the clone. It refreshes kit-owned files and
+prompts for any missing or newly introduced local operator values instead of letting
+you inherit another programmer's identity or stale slot state.
+
 Upgrade mode updates kit-owned files and preserves:
 - `.docs/software-overview.md`
 - `.docs/limits.md`

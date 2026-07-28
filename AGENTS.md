@@ -150,6 +150,13 @@ Documentation ownership:
   is a safety net for rules already written here — not a licence to keep writing them
   here.
 
+After cloning a repository that already carries this kit, do not assume the local
+operator identity is configured yet. Before the first issue or code change, run
+`governancekit install-agents --upgrade` (or `install-agents-kit.sh --target . --upgrade`
+from an inspected `AI-Agents` checkout) so the kit refreshes its managed files and
+asks for any missing or newly introduced local `{{...}}` values such as
+`{{OPERATOR_NAME}}` and `{{SMTP_ACCOUNT}}`.
+
 Which role contract to load for which kind of work is in the index, not duplicated
 here — one list, one place to keep current.
 

@@ -74,6 +74,11 @@ Actualiza una instalación existente sin sobrescribir contexto/estado local del 
 ./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto --upgrade
 ```
 
+Si acabas de clonar un proyecto que ya tiene AI-Agents instalado, ejecuta ese
+`--upgrade` antes de la primera tarea en el clon. Actualiza los archivos gestionados
+por el kit y pregunta por los valores locales faltantes o nuevos, en lugar de dejarte
+heredar la identidad de otro programador o un estado antiguo de los slots.
+
 El modo upgrade actualiza archivos propios del kit y preserva:
 - `.docs/software-overview.md`
 - `.docs/limits.md`
