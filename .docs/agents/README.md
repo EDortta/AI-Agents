@@ -12,6 +12,12 @@ contracts, not instead of them):
 - [design standards](./design-standards.md) — seams, invariant placement, additive
   contracts, fail direction; why SOLID alone does not stop regressions
 - [security standards](./security-standards.md)
+- [domains and capabilities](./domains-and-capabilities.md) — model the governed
+  project before structural work
+- [architecture classification](./architecture-classification.md) — classify
+  structural changes before implementation
+- [credentials operations](./credentials-operations.md) — configure providers
+  without exposing secrets
 
 Shared references:
 - [shared references](./_shared.md)
