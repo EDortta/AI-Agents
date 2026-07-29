@@ -1751,7 +1751,7 @@ migrate_legacy_layout() {
     rm -rf "$TARGET_DIR/.docs/issues/templates"
     mv "$TARGET_DIR/docs/issues/templates" "$TARGET_DIR/.docs/issues/templates"
   fi
-  local kit_files=(software-overview.md limits.md index.html concepts.html issues/README.md)
+  local kit_files=(software-overview.md limits.md index.html concepts.html governancekit-integration.json issues/README.md)
   local f
   for f in "${kit_files[@]}"; do
     if [[ -f "$TARGET_DIR/docs/$f" ]]; then
@@ -1851,6 +1851,7 @@ upgrade_kit() {
   copy_file_replace ".docs/advanced-usage.html"
   copy_file_replace ".docs/advanced-usage-ptbr.html"
   copy_file_replace ".docs/advanced-usage-es.html"
+  copy_file_replace ".docs/governancekit-integration.json"
 
   # Keep the issues index current without touching project issue folders.
   copy_file_replace ".docs/issues/README.md"
@@ -1896,6 +1897,7 @@ KIT_OWNED_PATHS=(
   "${KIT_ROOT_FILES[@]}"
   "templates"
   ".docs/agents" ".docs/workflows" ".docs/articles" ".docs/icons"
+  ".docs/governancekit-integration.json"
   ".docs/context-manifest.yaml" ".docs/context-optimization.md" ".docs/schemas"
   ".docs/issues/templates" ".docs/issues/README.md"
   ".docs/index.html" ".docs/concepts.html"
