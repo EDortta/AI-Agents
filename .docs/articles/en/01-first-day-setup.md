@@ -15,24 +15,17 @@ Lia is a junior developer. She wants AI speed without losing control. On day one
 
 ## Step by step
 
-**1. Copy the policy pack into your project.**
-
-```bash
-git clone https://github.com/EDortta/AI-Agents.git
-cp -r AI-Agents/AGENTS.md AI-Agents/.docs AI-Agents/docs AI-Agents/handoff.md AI-Agents/CLAUDE.md ./
-```
-
-Or copy only the files you need. At minimum you need `AGENTS.md`, `.docs/software-overview.md`, `.docs/limits.md`, and `handoff.md`.
-
-**2. Install GovernanceKit (the CLI companion).**
+**1. Install the policy pack with GovernanceKit.**
 
 ```bash
 pip install git+https://github.com/EDortta/AI-GovernanceKit.git
+governancekit --root "$PWD" install-agents
 ```
 
-Python 3.10+ required. No other dependencies.
+This keeps kit files and project-owned documentation separate. Do not copy a kit
+directory into a project by hand.
 
-**3. Validate the setup.**
+**2. Validate the setup.**
 
 ```bash
 governancekit doctor
@@ -40,9 +33,11 @@ governancekit doctor
 
 You will see a list of checks. Most will fail on a fresh install — that is expected. Fix each `[FAIL]` line before moving on.
 
-**4. Fill `.docs/software-overview.md`** with your product purpose, tech stack, and main modules.
+**3. Fill `.docs/software-overview.md`** with your product purpose, tech stack, and main modules.
 
-**5. Fill `.docs/limits.md`** with what agents are allowed and not allowed to do in this project.
+**4. Fill `.docs/limits.md`** with what agents are allowed and not allowed to do in this project.
+
+**5. Fill `docs/project-rules.md` and list every required project contract in `docs/required-reading.md`.**
 
 **6. Set the readiness flags.**
 
