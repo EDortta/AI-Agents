@@ -28,6 +28,8 @@ importa na hora de **escrever**, não de ler.
 | tratar dado pessoal | `.docs/agents/privacy-compliance.md` | kit |
 | retomar / fechar sessão | `.docs/workflows/session-restore.md`, `.docs/workflows/session-close.md` | kit |
 | implementar seleção/orçamento de contexto | `.docs/context-optimization.md` | kit |
+| adotar, inicializar ou definir o escopo do projeto | `.docs/agents/domains-and-capabilities.md` + `.docs/agents/credentials-operations.md` | kit |
+| classificar mudança estrutural | `.docs/agents/architecture-classification.md` | kit |
 <!-- AI-AGENTS:END -->
 
 ## Deste projeto
