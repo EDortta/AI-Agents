@@ -25,13 +25,14 @@ governancekit --root "$PWD" install-agents
 This keeps kit files and project-owned documentation separate. Do not copy a kit
 directory into a project by hand.
 
-**2. Validate the setup.**
+**2. Configure this machine and checkout.**
 
 ```bash
-governancekit doctor
+governancekit configure
 ```
 
-You will see a list of checks. Most will fail on a fresh install — that is expected. Fix each `[FAIL]` line before moving on.
+This records the local host identity separately from the operator values used by
+the installed contracts.
 
 **3. Fill `.docs/software-overview.md`** with your product purpose, tech stack, and main modules.
 
@@ -47,9 +48,17 @@ project_context_ready: yes
 limits_ready: yes
 ```
 
-Run `governancekit doctor` again — it should pass now.
+**7. Validate the setup.**
 
-**7. Generate the code map.**
+```bash
+governancekit doctor
+```
+
+Most checks fail on a fresh install — that is expected. Fix each `[FAIL]` line
+before continuing. Once the context, limits, and rules are complete, doctor
+should pass.
+
+**8. Generate the code map.**
 
 ```bash
 governancekit map
@@ -57,7 +66,7 @@ governancekit map
 
 This creates `docs/codemap.md` — a Markdown index of your files and symbols. Commit it. Agents read this at session start instead of scanning files one by one.
 
-**8. Only then request implementation.**
+**9. Only then request implementation.**
 
 ## Prompt starter
 "Run `governancekit resume` first, then read AGENTS.md, software-overview, and limits. Confirm constraints and propose a short plan before coding."
