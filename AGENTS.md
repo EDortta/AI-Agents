@@ -410,9 +410,10 @@ session-close (`handoff.md`, `docs/napkin-lessons.md`); it does not replace it.
 ## 8b. Individual identity (MANDATORY)
 
 Kit docs (`AGENTS.md`, role guides, `RESUME.md`, `handoff.md`) are **shared** by
-several programmers/agents/hosts. On shared-branch projects (e.g. the jk-structure
-simulator) multiple hosts may run on the same branch and the same governance
-files. Without data that **individualizes** each host/instance, silent failures
+several programmers/agents/hosts. On shared-branch projects multiple hosts may run
+on the same branch and the same governance files — a simulator or an integration
+environment driven by more than one operator is the typical case. Without data
+that **individualizes** each host/instance, silent failures
 appear: two hosts commit on the same branch unaware of each other, ports and
 local runtime artifacts collide, and it becomes impossible to audit "which host
 did what" from the shared docs.
