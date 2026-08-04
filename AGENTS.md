@@ -124,6 +124,32 @@ Optional user profile:
 
 ---
 
+### 1c. Concorrência declarada [MANDATORY]
+
+Um checkout que parece único pode ser uma de várias *worktrees* sobre o mesmo `.git`,
+cada uma na sua branch. Uma operação orçada para um repositório está orçada errado no
+instante em que existem quatro. Antecedente: em 2026-08-04 uma reescrita de histórico
+foi abortada no último segundo por essa descoberta.
+
+- [MANDATORY] **Na abertura da sessão, antes de qualquer leitura de código**, reporte
+  ao operador quantas branches e worktrees estão abertas ao mesmo tempo neste
+  repositório, e o que cada uma guarda. Uma frente aberta é uma worktree viva **ou**
+  uma branch local com commits que a branch de integração ainda não tem.
+- [MANDATORY] **Peça autorização antes de trabalhar além de uma frente.** Se o
+  trabalho pedido exigir abrir, assumir ou trocar para uma segunda branch/worktree,
+  **pare**, informe quantas já estão abertas e o que cada uma guarda, e aguarde a
+  decisão explícita do operador. A autorização vale para esta sessão e não se
+  presume na seguinte.
+- Sempre que o inventário apontar worktrees **sem nada por mesclar**, diga isso: elas
+  podem ser removidas hoje sem perder um commit, e é a informação que mais encurta a
+  lista.
+
+Runtime: `governancekit --root <projeto> concurrency` produz o inventário; `resume` o
+inclui no bloco de abertura e `doctor` o traz como advisory. Sem git no diretório, o
+comando não imprime nada e não falha — a ausência de inventário nunca bloqueia a sessão.
+
+---
+
 ## 2. Load Only What Is Needed
 
 **`docs/required-reading.md` is the single index.** Open it right after this file: it
@@ -299,6 +325,8 @@ stop and report; do not create the branch.
 
 Rules:
 - Obtain explicit human permission before creating a branch.
+- Before creating or switching to a **second** concurrent branch/worktree, apply §1c:
+  report what is already open and wait for the operator's authorization.
 - Create/switch branch before first code change.
 - Work only on that branch.
 - Default PR base is `development` unless explicitly required otherwise.
@@ -472,8 +500,10 @@ local wall-clock time (e.g. `date +%H:%M`) at the start of each response.**
 Mandatory rules:
 
 - [MANDATORY] At or after `session_winddown_hour`, **before doing anything else**,
-  warn the operator that it is time to begin closing the sessions, and state how
-  much runway remains until the hard stop.
+  warn the operator that it is time to begin closing the sessions, state how much
+  runway remains until the hard stop, **and include the concurrency inventory of §1c**
+  — how many branches/worktrees are open. The runway is meaningless without knowing
+  how many fronts have to be closed inside it.
 - [MANDATORY] Re-issue the warning at the **top of every subsequent response**
   until the operator acknowledges or closes — never once-and-forget.
 - [MANDATORY] From `session_winddown_hour` onward, **prioritize session-close over
@@ -482,9 +512,11 @@ Mandatory rules:
 - [MANDATORY] At the hard stop, do not start any new work — drive only
   session-close (handoff / RESUME / napkin) to completion.
 
-Enforcement companion: **AI-GovernanceKit** `resume`/`doctor` can surface the
-active `session_winddown_hour` and the current runway (the runtime "how"); this
-contract owns the "what and why".
+Enforcement companion: **AI-GovernanceKit** implements this. `governancekit
+concurrency` prints the phase (`normal` / `winddown` / `hard-stop`), the runway in
+minutes, and the open-front inventory in one call; `resume` carries the same block.
+Settings are read from `.governancekit-identity.json`, defaulting to the values above.
+This contract owns the "what and why"; the kit owns the "how".
 
 ---
 
