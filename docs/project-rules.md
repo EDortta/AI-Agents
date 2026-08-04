@@ -26,8 +26,8 @@ but that is a safety net, not a filing system.
 ## What does not belong here
 
 - Secrets, tokens, passwords, private keys — see `.docs/agents/security.md`
-- Product/stack description — that is `.docs/software-overview.md`
-- Agent boundaries and prohibitions — that is `.docs/limits.md`
+- Product/stack description — that is `docs/software-overview.md`
+- Agent boundaries and prohibitions — that is `docs/limits.md`
 - Universal agent governance — that is `AGENTS.md`, and it is kit-owned
 
 ## Rules

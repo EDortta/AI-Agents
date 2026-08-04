@@ -19,8 +19,8 @@ echo "== 1. Required kit files present =="
 required=(
   "AGENTS.md"
   "README.md"
-  ".docs/software-overview.md"
-  ".docs/limits.md"
+  "docs/software-overview.md"
+  "docs/limits.md"
   ".docs/agents/security.md"
   ".docs/agents/security-standards.md"
   ".docs/agents/design-standards.md"
@@ -263,8 +263,8 @@ adapters=(
 )
 mandatory=(
   "AGENTS.md"
-  ".docs/software-overview.md"
-  ".docs/limits.md"
+  "docs/software-overview.md"
+  "docs/limits.md"
   "docs/required-reading.md"
   "docs/project-rules.md"
 )

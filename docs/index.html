@@ -665,7 +665,7 @@
       <div class="feature-card">
         <div class="feature-icon">🛡️</div>
         <h4 data-i18n="f3.h">Hard Scope Limits</h4>
-        <p data-i18n="f3.p"><code>.docs/limits.md</code> defines what agents may never do — prohibited actions, security boundaries, and branch/approval gates that override any other instruction.</p>
+        <p data-i18n="f3.p"><code>docs/limits.md</code> defines what agents may never do — prohibited actions, security boundaries, and branch/approval gates that override any other instruction.</p>
       </div>
 
       <div class="feature-card">
@@ -722,7 +722,7 @@
       </div>
       <div class="step">
         <h4 data-i18n="s2.h">Fill two files</h4>
-        <p data-i18n="s2.p">Describe your product in <code>.docs/software-overview.md</code> and set hard boundaries in <code>.docs/limits.md</code>. Mark both as ready.</p>
+        <p data-i18n="s2.p">Describe your product in <code>docs/software-overview.md</code> and set hard boundaries in <code>docs/limits.md</code>. Mark both as ready.</p>
       </div>
       <div class="step">
         <h4 data-i18n="s3.h">Validate with doctor</h4>
@@ -777,8 +777,8 @@
 <span class="kw">pip</span> install git+https://github.com/EDortta/AI-GovernanceKit.git
 
 <span class="cm" data-i18n="inst.c3"># 3 — Fill the two required context files, then validate</span>
-<span class="cm" data-i18n="inst.c4">#     .docs/software-overview.md  →  set project_context_ready: yes</span>
-<span class="cm" data-i18n="inst.c5">#     .docs/limits.md             →  set limits_ready: yes</span>
+<span class="cm" data-i18n="inst.c4">#     docs/software-overview.md  →  set project_context_ready: yes</span>
+<span class="cm" data-i18n="inst.c5">#     docs/limits.md             →  set limits_ready: yes</span>
 <span class="kw">governancekit</span> doctor
     </div>
 
@@ -929,7 +929,7 @@
       'f2.h':         'Role-Based Contracts',
       'f2.p':         'Separate contracts for programmer, reviewer, security, issue automation, and privacy compliance — agents load only what they need.',
       'f3.h':         'Hard Scope Limits',
-      'f3.p':         '<code>.docs/limits.md</code> defines what agents may never do — prohibited actions, security boundaries, and branch/approval gates that override any other instruction.',
+      'f3.p':         '<code>docs/limits.md</code> defines what agents may never do — prohibited actions, security boundaries, and branch/approval gates that override any other instruction.',
       'f4.h':         'Resumable Sessions',
       'f4.p':         'Every session closes with an updated <code>handoff.md</code> and <code>RESUME.md</code> so any agent — or human — can pick up exactly where the last session ended.',
       'f5.h':         'Structured Issue Workflow',
@@ -948,7 +948,7 @@
       's1.h':         'Install the kit',
       's1.p':         'Run the one-liner installer. It copies all contracts and templates into your project directory.',
       's2.h':         'Fill two files',
-      's2.p':         'Describe your product in <code>.docs/software-overview.md</code> and set hard boundaries in <code>.docs/limits.md</code>. Mark both as ready.',
+      's2.p':         'Describe your product in <code>docs/software-overview.md</code> and set hard boundaries in <code>docs/limits.md</code>. Mark both as ready.',
       's3.h':         'Validate with doctor',
       's3.p':         'Run <code>governancekit doctor</code> to confirm the structure is complete. Agents will refuse to start if it isn\'t.',
       's4.h':         'Start your first issue',
@@ -964,8 +964,8 @@
       'inst.c1':      '# 1 — Install AI-Agents; the terminal asks for operator identity first',
       'inst.c2':      '# 2 — Install GovernanceKit CLI',
       'inst.c3':      '# 3 — Fill the two required context files, then validate',
-      'inst.c4':      '#     .docs/software-overview.md  →  set project_context_ready: yes',
-      'inst.c5':      '#     .docs/limits.md             →  set limits_ready: yes',
+      'inst.c4':      '#     docs/software-overview.md  →  set project_context_ready: yes',
+      'inst.c5':      '#     docs/limits.md             →  set limits_ready: yes',
       'inst.advanced':'Advanced usage details →',
       'inst.upgrade': '# Upgrade without overwriting project context',
       'inst.upgrade_check': '# Confirm the installed and available versions',
@@ -1022,7 +1022,7 @@
       'f2.h':         'Contratos por Papel',
       'f2.p':         'Contratos separados para programador, revisor, segurança, automação de issues e conformidade de privacidade — agentes carregam apenas o que precisam.',
       'f3.h':         'Limites de Escopo Rígidos',
-      'f3.p':         '<code>.docs/limits.md</code> define o que agentes nunca podem fazer — ações proibidas, fronteiras de segurança e gates de branch/aprovação que sobrepõem qualquer outra instrução.',
+      'f3.p':         '<code>docs/limits.md</code> define o que agentes nunca podem fazer — ações proibidas, fronteiras de segurança e gates de branch/aprovação que sobrepõem qualquer outra instrução.',
       'f4.h':         'Sessões Recuperáveis',
       'f4.p':         'Cada sessão encerra com <code>handoff.md</code> e <code>RESUME.md</code> atualizados — para que qualquer agente (ou humano) retome exatamente onde a sessão anterior parou.',
       'f5.h':         'Fluxo Estruturado de Issues',
@@ -1041,7 +1041,7 @@
       's1.h':         'Instale o kit',
       's1.p':         'Execute o instalador em uma linha. Ele copia todos os contratos e templates para o diretório do seu projeto.',
       's2.h':         'Preencha dois arquivos',
-      's2.p':         'Descreva seu produto em <code>.docs/software-overview.md</code> e defina limites rígidos em <code>.docs/limits.md</code>. Marque ambos como prontos.',
+      's2.p':         'Descreva seu produto em <code>docs/software-overview.md</code> e defina limites rígidos em <code>docs/limits.md</code>. Marque ambos como prontos.',
       's3.h':         'Valide com doctor',
       's3.p':         'Execute <code>governancekit doctor</code> para confirmar que a estrutura está completa. Agentes se recusarão a iniciar se não estiver.',
       's4.h':         'Inicie seu primeiro issue',
@@ -1057,8 +1057,8 @@
       'inst.c1':      '# 1 — Instale o AI-Agents; o terminal pergunta primeiro a identidade do operador',
       'inst.c2':      '# 2 — Instale o CLI GovernanceKit',
       'inst.c3':      '# 3 — Preencha os dois arquivos de contexto obrigatórios e valide',
-      'inst.c4':      '#     .docs/software-overview.md  →  defina project_context_ready: yes',
-      'inst.c5':      '#     .docs/limits.md             →  defina limits_ready: yes',
+      'inst.c4':      '#     docs/software-overview.md  →  defina project_context_ready: yes',
+      'inst.c5':      '#     docs/limits.md             →  defina limits_ready: yes',
       'inst.advanced':'Detalhes avançados de uso →',
       'inst.upgrade': '# Atualize sem sobrescrever o contexto do projeto',
       'inst.upgrade_check': '# Confira as versões instalada e disponível',
@@ -1115,7 +1115,7 @@
       'f2.h':         'Contratos por Rol',
       'f2.p':         'Contratos separados para programador, revisor, seguridad, automatización de issues y conformidad de privacidad — los agentes cargan solo lo que necesitan.',
       'f3.h':         'Límites de Alcance Estrictos',
-      'f3.p':         '<code>.docs/limits.md</code> define lo que los agentes nunca pueden hacer — acciones prohibidas, fronteras de seguridad y gates de branch/aprobación que anulan cualquier otra instrucción.',
+      'f3.p':         '<code>docs/limits.md</code> define lo que los agentes nunca pueden hacer — acciones prohibidas, fronteras de seguridad y gates de branch/aprobación que anulan cualquier otra instrucción.',
       'f4.h':         'Sesiones Recuperables',
       'f4.p':         'Cada sesión cierra con <code>handoff.md</code> y <code>RESUME.md</code> actualizados — para que cualquier agente (o persona) retome exactamente donde terminó la última sesión.',
       'f5.h':         'Flujo de Issues Estructurado',
@@ -1134,7 +1134,7 @@
       's1.h':         'Instala el kit',
       's1.p':         'Ejecuta el instalador en una línea. Copia todos los contratos y plantillas en el directorio de tu proyecto.',
       's2.h':         'Rellena dos archivos',
-      's2.p':         'Describe tu producto en <code>.docs/software-overview.md</code> y define límites estrictos en <code>.docs/limits.md</code>. Márcalos como listos.',
+      's2.p':         'Describe tu producto en <code>docs/software-overview.md</code> y define límites estrictos en <code>docs/limits.md</code>. Márcalos como listos.',
       's3.h':         'Valida con doctor',
       's3.p':         'Ejecuta <code>governancekit doctor</code> para confirmar que la estructura está completa. Los agentes se negarán a iniciar si no lo está.',
       's4.h':         'Inicia tu primer issue',
@@ -1150,8 +1150,8 @@
       'inst.c1':      '# 1 — Instala AI-Agents; la terminal pregunta primero la identidad del operador',
       'inst.c2':      '# 2 — Instala el CLI de GovernanceKit',
       'inst.c3':      '# 3 — Rellena los dos archivos de contexto requeridos y valida',
-      'inst.c4':      '#     .docs/software-overview.md  →  establece project_context_ready: yes',
-      'inst.c5':      '#     .docs/limits.md             →  establece limits_ready: yes',
+      'inst.c4':      '#     docs/software-overview.md  →  establece project_context_ready: yes',
+      'inst.c5':      '#     docs/limits.md             →  establece limits_ready: yes',
       'inst.advanced':'Detalles avanzados de uso →',
       'inst.upgrade': '# Actualiza sin sobrescribir el contexto del proyecto',
       'inst.upgrade_check': '# Comprueba las versiones instalada y disponible',
