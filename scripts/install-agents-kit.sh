@@ -290,9 +290,9 @@ BACKED_UP=()
 # README*.md are deliberately ABSENT. They are the kit's own documentation — the
 # page you read to decide whether to install it — not a file a consuming project
 # should receive. Shipping them meant --upgrade replaced the project's README with
-# the kit's: Lumina/lumina's README.md today opens with "# IA-Agents Universal Kit",
-# and a 447-line project README in another target was one upgrade from the same
-# fate. A kit that overwrites the front page of the projects it serves is broken.
+# the kit's: a target's README.md was found opening with "# IA-Agents Universal
+# Kit", and a 447-line project README in another target was one upgrade from the
+# same fate. A kit that overwrites the front page of the projects it serves is broken.
 KIT_ROOT_FILES=(
   "AGENTS.md"
   ".cursorrules" "CLAUDE.md" ".windsurfrules" "GEMINI.md"
@@ -955,8 +955,8 @@ check_drift() {
 }
 
 # Conditions in the TARGET that make an upgrade lose more than the drift report shows.
-# All three came from a real migration (wa-hub, 2026-07-24) rather than from imagining
-# failure modes: each had already happened somewhere.
+# All three came from a real migration (2026-07-24) rather than from imagining
+# failure modes: each had already happened in a target project.
 HAZARD_SHOWN="0"
 hazard() {
   if [[ "$HAZARD_SHOWN" == "0" ]]; then
@@ -1012,7 +1012,7 @@ report_target_hazards() {
 
   # 3. A kit path that is a symlink. cp writes THROUGH a symlink, so replacing
   #    .docs/limits.md would overwrite whatever it points at — often a file in docs/,
-  #    which the kit promises never to touch. Seen in production (wa-hub).
+  #    which the kit promises never to touch. Seen in a production target.
   # The readiness files are not kit-owned (the project fills them) but the installer
   # still edits them in place, so they belong in this scan.
   local p
@@ -1446,7 +1446,7 @@ for rel in doc_files:
         normalized.append(rel)
 
 # Six substantial rules in one file is a file nobody re-reads. A real migration
-# (wa-hub) settled on docs/project-rules.md as an INDEX plus a docs/project-rules/
+# settled on docs/project-rules.md as an INDEX plus a docs/project-rules/
 # folder holding one rule per file, which reads far better. Honour that layout when
 # the target already has the folder — the kit blesses the pattern instead of letting
 # every target invent its own — and keep the single file otherwise, so nothing changes
@@ -1814,7 +1814,7 @@ migrate_legacy_layout() {
 
 # `sed -i` writes a temp file and renames it over the target, which REPLACES a symlink
 # with a regular file and leaves the file it pointed at untouched. A target that
-# symlinks .docs/limits.md -> ../docs/limits.md (a real arrangement, seen in wa-hub)
+# symlinks .docs/limits.md -> ../docs/limits.md (a real arrangement, seen in a target)
 # would silently end up with two divergent copies and no link. Resolve first, edit the
 # real file.
 sed_in_place() {
