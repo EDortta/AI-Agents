@@ -126,27 +126,19 @@ Optional user profile:
 
 ### 1c. Concorrência declarada [MANDATORY]
 
-Um checkout que parece único pode ser uma de várias *worktrees* sobre o mesmo `.git`,
-cada uma na sua branch. Uma operação orçada para um repositório está orçada errado no
-instante em que existem quatro. Antecedente: em 2026-08-04 uma reescrita de histórico
-foi abortada no último segundo por essa descoberta.
+Um checkout que parece único pode ser uma de várias *worktrees* sobre o mesmo `.git`.
+Uma operação orçada para um repositório está errada quando existem quatro.
 
-- [MANDATORY] **Na abertura da sessão, antes de qualquer leitura de código**, reporte
-  ao operador quantas branches e worktrees estão abertas ao mesmo tempo neste
-  repositório, e o que cada uma guarda. Uma frente aberta é uma worktree viva **ou**
-  uma branch local com commits que a branch de integração ainda não tem.
-- [MANDATORY] **Peça autorização antes de trabalhar além de uma frente.** Se o
-  trabalho pedido exigir abrir, assumir ou trocar para uma segunda branch/worktree,
-  **pare**, informe quantas já estão abertas e o que cada uma guarda, e aguarde a
-  decisão explícita do operador. A autorização vale para esta sessão e não se
-  presume na seguinte.
-- Sempre que o inventário apontar worktrees **sem nada por mesclar**, diga isso: elas
-  podem ser removidas hoje sem perder um commit, e é a informação que mais encurta a
-  lista.
+Frente aberta = worktree viva **ou** branch local com commits fora da branch de integração.
 
-Runtime: `governancekit --root <projeto> concurrency` produz o inventário; `resume` o
-inclui no bloco de abertura e `doctor` o traz como advisory. Sem git no diretório, o
-comando não imprime nada e não falha — a ausência de inventário nunca bloqueia a sessão.
+- [MANDATORY] Na abertura da sessão, antes de ler código, reporte quantas frentes
+  estão abertas e o que cada uma guarda.
+- [MANDATORY] Para trabalhar **além de uma frente**, pare, informe o que já está
+  aberto e aguarde autorização explícita. Vale só para esta sessão.
+- Aponte as worktrees sem nada por mesclar: podem ser removidas hoje sem perda.
+
+Runtime: `governancekit --root <projeto> concurrency`; `resume` inclui o bloco e
+`doctor` o traz como advisory. Sem git, nada é impresso e nada falha.
 
 ---
 
