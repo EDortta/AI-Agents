@@ -13,6 +13,16 @@
 #   scripts/merge-to-main.sh [--from <branch>] [--dry-run]
 set -euo pipefail
 
+# `git checkout main` below can remove this file from the worktree mid-run — main
+# does not carry it until the first merge lands — and bash reads a script
+# incrementally, so it would fail halfway. Re-exec from a copy that no branch owns.
+if [[ "${MERGE_TO_MAIN_REEXEC:-}" != "1" ]]; then
+  _self_copy="$(mktemp)"
+  cat "$0" > "$_self_copy"
+  MERGE_TO_MAIN_REEXEC=1 exec bash "$_self_copy" "$@"
+fi
+rm -f -- "$0"   # unlinked but still open: the copy cannot outlive this run
+
 FROM="development"
 DRY_RUN="0"
 
