@@ -1,5 +1,33 @@
 # Handoff
 
+## [2026-08-04] WK-20260804-home-shadow-and-ownership - ready-for-review
+
+- branch: `development` (três feature branches mescladas; `main` intocada)
+
+### Estado
+
+- Instalador recusa `$HOME`, ancestral de `$HOME` e `/` como `--target`.
+- Texto distribuído sem nome de projeto concreto: `AGENTS.md` e
+  `install-agents-kit.sh` iam para todo alvo citando dois projetos do operador.
+- `docs/{limits,software-overview}.md` voltaram de `.docs/` para `docs/`: são
+  project-owned. Migração reversa (`migrate_readiness_files_to_docs`) cobre alvo
+  simples, o symlink que projetos usaram como gambiarra, e conflito real.
+- `templates/handoff.template.md` e `templates/napkin-lessons.template.md`: o
+  instalador semeava a memória de sessão DESTE repo (31 KB + 15 KB) em cada alvo.
+- `scripts/merge-to-main.sh` + regra em `docs/project-rules.md`.
+
+### Validação e pendências
+
+- `run-checks.sh`: all checks passed, shellcheck limpo.
+- Instalação nova em alvo temporário: `handoff.md` de 355 B (era 31.864 B),
+  readiness em `docs/` com flags resetadas, `.docs/` sem eles.
+- Três casos de migração reversa validados; nada de conteúdo perdido.
+- **`main` real não foi tocada.** Sem push.
+
+### Próximo passo
+
+Operador testa no CodexBridge; depois `scripts/merge-to-main.sh` e decisão de push.
+
 ## [2026-07-27] WK-20260727-restore-landing - finished
 
 - Restored `docs/index.html`, matching GitHub Pages `main:/docs`.
