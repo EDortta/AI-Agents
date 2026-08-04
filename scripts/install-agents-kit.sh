@@ -1749,10 +1749,10 @@ migrate_legacy_layout() {
 
   # Move file by file, and only files THIS kit version ships. Moving the whole
   # directory would sweep project content into kit territory: since docs/agents/ was
-  # freed for projects, real targets keep their own personas there (GCF has tatu.md,
-  # inovacaoSistemas has quati-bento.md). Those belong to docs/, and their own docs
-  # link to them by that path — relocating them under .docs/ would both misfile them
-  # and break the links, for no gain.
+  # freed for projects, real targets keep their own personas there — agent persona
+  # files the project wrote and links to by that path. Those belong to docs/;
+  # relocating them under .docs/ would both misfile them and break the links, for no
+  # gain.
   for d in "${kit_dirs[@]}"; do
     [[ -d "$TARGET_DIR/docs/$d" ]] || continue
     mkdir -p "$TARGET_DIR/.docs/$d"

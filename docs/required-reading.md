@@ -46,7 +46,7 @@ Leitura escopada: só quem for mexer na área precisa.
 
 <!-- Exemplo:
 - `docs/architecture.md` — ao tocar na camada de orquestração
-- `clara-definitions/00-index.md` — ao trabalhar em Clara / WhatsApp / comprovantes
+- `docs/integracoes/pagamentos.md` — ao trabalhar no fluxo de pagamento
 -->
 
 - (none)
