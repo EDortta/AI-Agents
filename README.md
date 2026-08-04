@@ -26,8 +26,8 @@ It provides:
 - role contracts: `.docs/agents/`
 - issue templates/workflow: `docs/issues/`
 - two mandatory context files for each target project:
-  - `.docs/software-overview.md`
-  - `.docs/limits.md`
+  - `docs/software-overview.md`
+  - `docs/limits.md`
 
 ## Designed For Which AI Agents/Tools
 
@@ -79,8 +79,8 @@ prompts for any missing or newly introduced local operator values instead of let
 you inherit another programmer's identity or stale slot state.
 
 Upgrade mode updates kit-owned files and preserves:
-- `.docs/software-overview.md`
-- `.docs/limits.md`
+- `docs/software-overview.md`
+- `docs/limits.md`
 - `docs/project-rules.md`
 - `handoff.md`
 - `docs/napkin-lessons.md`
@@ -178,19 +178,19 @@ In CI, make an unmerged protected file fail the run (the upgrade still completes
 
 Important:
 - the installer uses a readiness gate and exits with non-zero until:
-  - `.docs/software-overview.md` has `project_context_ready: yes`
-  - `.docs/limits.md` has `limits_ready: yes`
+  - `docs/software-overview.md` has `project_context_ready: yes`
+  - `docs/limits.md` has `limits_ready: yes`
 
 1. Copy (or symlink) these assets into the target project:
 - `AGENTS.md`
 - `.docs/agents/`
 - `docs/issues/`
-- `.docs/software-overview.md`
-- `.docs/limits.md`
+- `docs/software-overview.md`
+- `docs/limits.md`
 
 2. Adapt only what is project-specific:
-- Fill `.docs/software-overview.md` with product context, architecture, and objectives.
-- Fill `.docs/limits.md` with hard boundaries (in/out-of-scope, prohibited actions, approval gates).
+- Fill `docs/software-overview.md` with product context, architecture, and objectives.
+- Fill `docs/limits.md` with hard boundaries (in/out-of-scope, prohibited actions, approval gates).
 - These two files are mandatory and must be edited by the programmer so the agents-kit can correctly recognize what to do in the project.
 
 3. Keep core contracts generic:
@@ -200,10 +200,10 @@ Important:
 ## Programmer Workflow (Required)
 
 Before coding in a target project:
-1. Read `.docs/software-overview.md` to understand what is being built.
-2. Read `.docs/limits.md` to understand what is allowed/prohibited.
+1. Read `docs/software-overview.md` to understand what is being built.
+2. Read `docs/limits.md` to understand what is allowed/prohibited.
 3. Plan and implement only within those boundaries.
-4. If a request conflicts with `.docs/limits.md`, stop and request explicit human approval.
+4. If a request conflicts with `docs/limits.md`, stop and request explicit human approval.
 
 During issue work:
 1. Organize work under epic folders in `docs/issues/`.
@@ -223,8 +223,8 @@ Work identifier convention:
 ## Suggested Minimal Project Setup
 
 When adopting this kit, update first:
-- `.docs/software-overview.md`: product description, architecture, key modules, dependencies.
-- `.docs/limits.md`: scope boundaries, security boundaries, branch/approval rules, forbidden operations.
+- `docs/software-overview.md`: product description, architecture, key modules, dependencies.
+- `docs/limits.md`: scope boundaries, security boundaries, branch/approval rules, forbidden operations.
 
 Then run a pilot issue using `.docs/issues/templates/task.template.md` to validate the process.
 

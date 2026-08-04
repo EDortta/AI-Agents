@@ -26,8 +26,8 @@ Incluye:
 - contratos por rol: `.docs/agents/`
 - flujo/plantillas de issues: `docs/issues/`
 - dos archivos obligatorios de contexto para cada proyecto destino:
-  - `.docs/software-overview.md`
-  - `.docs/limits.md`
+  - `docs/software-overview.md`
+  - `docs/limits.md`
 
 ## Pensado Para Qué Agentes/Herramientas de IA
 
@@ -80,8 +80,8 @@ por el kit y pregunta por los valores locales faltantes o nuevos, en lugar de de
 heredar la identidad de otro programador o un estado antiguo de los slots.
 
 El modo upgrade actualiza archivos propios del kit y preserva:
-- `.docs/software-overview.md`
-- `.docs/limits.md`
+- `docs/software-overview.md`
+- `docs/limits.md`
 - `docs/project-rules.md`
 - `handoff.md`
 - `docs/napkin-lessons.md`
@@ -185,19 +185,19 @@ igualmente se completa):
 
 Importante:
 - el instalador usa un readiness gate y termina con código distinto de cero hasta que:
-  - `.docs/software-overview.md` tenga `project_context_ready: yes`
-  - `.docs/limits.md` tenga `limits_ready: yes`
+  - `docs/software-overview.md` tenga `project_context_ready: yes`
+  - `docs/limits.md` tenga `limits_ready: yes`
 
 1. Copia (o usa symlink) estos artefactos en el proyecto destino:
 - `AGENTS.md`
 - `.docs/agents/`
 - `docs/issues/`
-- `.docs/software-overview.md`
-- `.docs/limits.md`
+- `docs/software-overview.md`
+- `docs/limits.md`
 
 2. Adapta solo lo específico del proyecto:
-- Completa `.docs/software-overview.md` con contexto del producto, arquitectura y objetivos.
-- Completa `.docs/limits.md` con límites estrictos (in/out-of-scope, acciones prohibidas, gates de aprobación).
+- Completa `docs/software-overview.md` con contexto del producto, arquitectura y objetivos.
+- Completa `docs/limits.md` con límites estrictos (in/out-of-scope, acciones prohibidas, gates de aprobación).
 - Estos dos archivos son obligatorios y deben ser editados por el programador para que el agents-kit reconozca correctamente qué hacer en el proyecto.
 
 3. Mantén el núcleo genérico:
@@ -207,10 +207,10 @@ Importante:
 ## Flujo del Programador (Obligatorio)
 
 Antes de programar en el proyecto destino:
-1. Leer `.docs/software-overview.md` para entender qué se está desarrollando.
-2. Leer `.docs/limits.md` para entender qué está permitido/prohibido.
+1. Leer `docs/software-overview.md` para entender qué se está desarrollando.
+2. Leer `docs/limits.md` para entender qué está permitido/prohibido.
 3. Planificar e implementar solo dentro de esos límites.
-4. Si una solicitud entra en conflicto con `.docs/limits.md`, detenerse y pedir aprobación humana explícita.
+4. Si una solicitud entra en conflicto con `docs/limits.md`, detenerse y pedir aprobación humana explícita.
 
 Durante el trabajo con issues:
 1. Organizar el trabajo en carpetas de épica dentro de `docs/issues/`.
@@ -230,8 +230,8 @@ Convención de identificador de trabajo:
 ## Setup mínimo recomendado del proyecto
 
 Al adoptar este kit, actualiza primero:
-- `.docs/software-overview.md`: descripción del producto, arquitectura, módulos clave, dependencias.
-- `.docs/limits.md`: límites de alcance, límites de seguridad, reglas de branch/aprobación, operaciones prohibidas.
+- `docs/software-overview.md`: descripción del producto, arquitectura, módulos clave, dependencias.
+- `docs/limits.md`: límites de alcance, límites de seguridad, reglas de branch/aprobación, operaciones prohibidas.
 
 Luego ejecuta una issue piloto usando `.docs/issues/templates/task.template.md` para validar el proceso.
 

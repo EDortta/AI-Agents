@@ -6,8 +6,8 @@
 
 Use this repository contract as source of truth:
 - AGENTS.md
-- .docs/software-overview.md
-- .docs/limits.md
+- docs/software-overview.md
+- docs/limits.md
 - docs/required-reading.md — complete reading index
 - docs/project-rules.md — project-specific rules (project-owned; never overwritten)
 

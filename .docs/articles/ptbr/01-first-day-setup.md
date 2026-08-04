@@ -4,8 +4,8 @@
 Lia é programadora júnior. Ela quer usar agentes sem perder controle do projeto. No primeiro dia, ela não começa codando. Primeiro, prepara o terreno: contexto, limites e regras. O agente passa a trabalhar a favor dela, não no escuro.
 
 ## O que é seu (programador)
-- Escrever o contexto real em `.docs/software-overview.md`.
-- Definir limites reais em `.docs/limits.md`.
+- Escrever o contexto real em `docs/software-overview.md`.
+- Definir limites reais em `docs/limits.md`.
 - Decidir o que pode e o que não pode ser feito.
 - Validar se os readiness flags viraram `yes`.
 
@@ -34,9 +34,9 @@ governancekit configure
 Isso registra a identidade local da máquina separadamente dos valores do operador
 usados pelos contratos instalados.
 
-**3. Preencha `.docs/software-overview.md`** com o propósito do produto, stack tecnológico e módulos principais.
+**3. Preencha `docs/software-overview.md`** com o propósito do produto, stack tecnológico e módulos principais.
 
-**4. Preencha `.docs/limits.md`** com o que os agentes podem e não podem fazer neste projeto.
+**4. Preencha `docs/limits.md`** com o que os agentes podem e não podem fazer neste projeto.
 
 **5. Preencha `docs/project-rules.md` e liste cada contrato obrigatório em `docs/required-reading.md`.**
 

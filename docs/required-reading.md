@@ -12,8 +12,8 @@ importa na hora de **escrever**, não de ler.
 | Documento | Dono | O que é |
 |---|---|---|
 | `AGENTS.md` | kit | contrato universal de operação |
-| `.docs/software-overview.md` | kit semeia, **projeto preenche** | produto, stack, módulos, comportamento |
-| `.docs/limits.md` | kit semeia, **projeto preenche** | fronteiras duras do agente |
+| `docs/software-overview.md` | kit semeia, **projeto preenche** | produto, stack, módulos, comportamento |
+| `docs/limits.md` | kit semeia, **projeto preenche** | fronteiras duras do agente |
 | `docs/project-rules.md` | **projeto** | regras que valem só aqui |
 
 ## Conforme o papel do trabalho

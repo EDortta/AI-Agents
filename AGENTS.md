@@ -37,7 +37,7 @@ está deliberadamente fora do manifesto do kit, e nenhum caminho de upgrade o al
 |---|---|
 | regra que vale só neste projeto | `docs/project-rules.md` |
 | nome/conta do operador (slot `{{…}}`) | `.credentials/identity.json` |
-| contexto e limites do projeto | `.docs/software-overview.md`, `.docs/limits.md` |
+| contexto e limites do projeto | `docs/software-overview.md`, `docs/limits.md` |
 | estado da sessão, lições, issues | `handoff.md`, `docs/napkin-lessons.md`, `docs/issues/` |
 
 Editar um arquivo do kit é aceitável apenas quando a mudança é do **próprio kit** e vai
@@ -96,8 +96,8 @@ Before implementation, identify the target repository.
 
 Required target-project files:
 - `docs/required-reading.md` — **the single reading index**; it lists the rest
-- `.docs/software-overview.md`
-- `.docs/limits.md`
+- `docs/software-overview.md`
+- `docs/limits.md`
 - `docs/project-rules.md` — project-specific rules
 
 Required readiness flags:
@@ -110,10 +110,10 @@ If either file is missing or not ready:
 2. Do not inspect, refactor, edit, branch, or run project checks.
 3. Tell the programmer to configure the missing file(s).
 4. Briefly explain:
-   - `.docs/software-overview.md`: product, stack, users, modules, key behavior.
-   - `.docs/limits.md`: allowed/prohibited agent actions, security boundaries, workflow constraints.
+   - `docs/software-overview.md`: product, stack, users, modules, key behavior.
+   - `docs/limits.md`: allowed/prohibited agent actions, security boundaries, workflow constraints.
 
-Every task must stay within `.docs/limits.md` unless a human explicitly approves a boundary update.
+Every task must stay within `docs/limits.md` unless a human explicitly approves a boundary update.
 
 Source-kit exception: when maintaining this reusable kit itself, a human may approve edits to these gates/templates before implementation starts.
 
@@ -143,7 +143,7 @@ Documentation ownership:
 - `.docs/` plus `AGENTS.md` and per-tool rule files are kit-owned and overwritten
   by `install-agents --upgrade`. Never hand-edit kit-owned files in a target
   project; **project rules go in `docs/project-rules.md`**, not in this file.
-  Exception: `.docs/software-overview.md` and `.docs/limits.md` are seeded by the
+  Exception: `docs/software-overview.md` and `docs/limits.md` are seeded by the
   kit but filled and preserved per project.
 - `AGENTS.md` is protected: once it differs from what the kit installed, `--upgrade`
   keeps your version and leaves `AGENTS.md.kit-new` beside it for a manual merge. That
