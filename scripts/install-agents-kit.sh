@@ -175,6 +175,28 @@ fi
 
 TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
 
+# Refuse targets that are not projects. Agent tooling resolves AGENTS.md/CLAUDE.md
+# and .docs/limits.md by walking up from the working directory, so a kit installed
+# in $HOME — or in any ancestor of it — is inherited by every directory below:
+# an unconfigured project stops failing closed and silently resolves to that copy.
+HOME_DIR="$(cd "$HOME" 2>/dev/null && pwd || echo "$HOME")"
+if [[ "$TARGET_DIR" == "/" ]]; then
+  echo "ERROR: refusing to install into the filesystem root." >&2
+  exit 2
+fi
+if [[ "$TARGET_DIR" == "$HOME_DIR" ]]; then
+  echo "ERROR: refusing to install into \$HOME ($TARGET_DIR)." >&2
+  echo "       A kit installed here is inherited by every directory below it, so an" >&2
+  echo "       unconfigured project resolves to it instead of stopping." >&2
+  echo "       Run this from the project directory, or pass --target <project>." >&2
+  exit 2
+fi
+if [[ "$HOME_DIR/" == "$TARGET_DIR"/* ]]; then
+  echo "ERROR: refusing to install into $TARGET_DIR: it contains \$HOME ($HOME_DIR)," >&2
+  echo "       so every project below would inherit the kit installed here." >&2
+  exit 2
+fi
+
 SRC_ROOT=""
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd 2>/dev/null || true)"
 if [[ -n "$SELF_DIR" && -f "$SELF_DIR/../AGENTS.md" ]]; then
