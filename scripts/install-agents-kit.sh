@@ -2016,7 +2016,17 @@ else
   # identity.json, which may well predate the install.
   seed_dir_missing ".credentials"
   copy_path ".docs"
-  copy_path "handoff.md"
+  # handoff.md is session memory, not kit content: seeding the kit's own handoff
+  # would hand every project this repository's session history as if it were theirs.
+  # Seed an empty template instead, and only when the target has none.
+  if [[ ! -e "$TARGET_DIR/handoff.md" ]]; then
+    if [[ -f "$SRC_ROOT/templates/handoff.template.md" ]]; then
+      cp -a "$SRC_ROOT/templates/handoff.template.md" "$TARGET_DIR/handoff.md"
+    else
+      printf '# Handoff\n\nSession memory for this project.\n' > "$TARGET_DIR/handoff.md"
+    fi
+    echo "created project-owned file: handoff.md"
+  fi
   copy_path "scripts/agent-worktree.sh"
   copy_path "scripts/git-bare-remote.sh"
   copy_path "templates"
@@ -2025,8 +2035,11 @@ else
   # These are project-owned once created; --upgrade never overwrites them.
   mkdir -p "$TARGET_DIR/docs/issues"
   sync_reading_index
-  if [[ -f "$SRC_ROOT/docs/napkin-lessons.md" && ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
-    cp -a "$SRC_ROOT/docs/napkin-lessons.md" "$TARGET_DIR/docs/napkin-lessons.md"
+  # Same reasoning as handoff.md: the kit's own lessons are not this project's.
+  if [[ ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
+    if [[ -f "$SRC_ROOT/templates/napkin-lessons.template.md" ]]; then
+      cp -a "$SRC_ROOT/templates/napkin-lessons.template.md" "$TARGET_DIR/docs/napkin-lessons.md"
+    fi
   fi
   # The readiness files: the kit ships a template, the project owns the content and
   # the flags. Seeded once into docs/, never overwritten afterwards.

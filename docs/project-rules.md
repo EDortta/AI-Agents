@@ -32,4 +32,25 @@ but that is a safety net, not a filing system.
 
 ## Rules
 
-- (none yet)
+### Session memory stays out of `main`
+
+Work starts from `development` and returns to `development`. `main` receives only
+what the product is, never how it was built.
+
+These paths must never reach `main`:
+
+- `docs/issues/` — epics, tasks, RESUME files
+- `docs/napkin-lessons.md`
+- `handoff.md`
+
+They record what happened in THIS repository — including the names of the projects a
+lesson came from — and they grow every session. `main` is what gets tagged and what an
+installer downloads, so it carries the product only.
+
+Merge with `scripts/merge-to-main.sh` (`--dry-run` first). It re-applies the exclusion
+on every run, so a merge that reintroduces the files resolves by removing them again.
+Never merge `development` into `main` by hand.
+
+Related: the installer seeds targets with EMPTY `handoff.md` and `docs/napkin-lessons.md`
+templates from `templates/`, never with this repository's own copies. Same principle,
+one level out: session memory does not travel.
