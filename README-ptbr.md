@@ -55,7 +55,7 @@ migrações e exemplos de CI, veja
 Preferido: clone e inspecione antes de rodar, principalmente na primeira vez:
 
 ```bash
-git clone --branch v1.1.7 https://github.com/EDortta/AI-Agents.git
+git clone --branch v1.1.8 https://github.com/EDortta/AI-Agents.git
 less AI-Agents/scripts/install-agents-kit.sh
 ./AI-Agents/scripts/install-agents-kit.sh --target /caminho/do/seu-projeto
 ```
@@ -64,7 +64,7 @@ Atalho, se você aceita rodar um script direto do GitHub (fixado numa tag de
 release, não na branch mutável `main`):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.7/scripts/install-agents-kit.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
   --target /caminho/do/seu-projeto
 ```
 

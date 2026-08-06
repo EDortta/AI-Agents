@@ -35,11 +35,11 @@
   <section>
     <h2>Recommended flow</h2>
     <pre><code># 1a. Fresh install
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.7/scripts/install-agents-kit.sh) \
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
   --target "$PWD"
 
 # 1b. Update an existing installation
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.7/scripts/install-agents-kit.sh) \
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
   --target "$PWD" --upgrade
 
 # 2. Configure this machine/checkout identity
@@ -73,7 +73,7 @@ governancekit --version</code></pre>
       <tbody>
         <tr><td><code>--target &lt;dir&gt;</code></td><td>Selects the target project; defaults to the current directory.</td><td>When running outside the project.</td></tr>
         <tr><td><code>--repo &lt;owner/repo&gt;</code></td><td>Selects another source repository.</td><td>Forks or internal distributions.</td></tr>
-        <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selects a tag, branch, or commit; default is <code>v1.1.7</code>.</td><td>Pinning or testing a specific source.</td></tr>
+        <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selects a tag, branch, or commit; default is <code>v1.1.8</code>.</td><td>Pinning or testing a specific source.</td></tr>
         <tr><td><code>--checksum &lt;sha256&gt;</code></td><td>Validates the downloaded tarball and aborts on mismatch.</td><td>Integrity-sensitive installs and CI.</td></tr>
         <tr><td><code>--upgrade</code></td><td>Updates kit-owned files while preserving project context, rules, identity, handoff, and issues.</td><td>Normal updates.</td></tr>
         <tr><td><code>--force</code></td><td>Overwrites existing files; incompatible with <code>--upgrade</code>.</td><td>Only after reviewing an intentional full replacement.</td></tr>
