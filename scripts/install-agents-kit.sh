@@ -16,19 +16,19 @@ Usage:
   # Directly from GitHub (curl | bash) — pins to a release tag, not the
   # mutable "main" branch; verify the printed sha256 against the release
   # notes if you want an extra check before running.
-  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.7/scripts/install-agents-kit.sh) \
+  bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
     --target /path/to/project
 
 Prefer over the one-liner: clone the repo and inspect it before running,
 especially the first time:
-  git clone --branch v1.1.7 https://github.com/EDortta/AI-Agents.git
+  git clone --branch v1.1.8 https://github.com/EDortta/AI-Agents.git
   less AI-Agents/scripts/install-agents-kit.sh
   ./AI-Agents/scripts/install-agents-kit.sh --target /path/to/project
 
 Options:
   --target <dir>     Target project directory (default: current dir)
   --repo <name>      GitHub repo in owner/repo format (default: EDortta/AI-Agents)
-  --ref <ref>        Git ref/branch/tag for download (default: v1.1.7 — pin to a
+  --ref <ref>        Git ref/branch/tag for download (default: v1.1.8 — pin to a
                       release tag; passing a mutable ref like "main" is your choice,
                       not the kit's)
   --checksum <sha256> Expected sha256 of the downloaded tarball; aborts on mismatch
@@ -73,14 +73,14 @@ Protected files:
 
 Readiness gate:
   Installation exits with non-zero until both are set:
-  - .docs/software-overview.md -> project_context_ready: yes
-  - .docs/limits.md            -> limits_ready: yes
+  - docs/software-overview.md -> project_context_ready: yes
+  - docs/limits.md            -> limits_ready: yes
 USAGE
 }
 
 TARGET_DIR="$(pwd)"
 REPO="EDortta/AI-Agents"
-REF="v1.1.7"
+REF="v1.1.8"
 CHECKSUM=""
 FORCE="0"
 UPGRADE="0"
@@ -175,6 +175,28 @@ fi
 
 TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
 
+# Refuse targets that are not projects. Agent tooling resolves AGENTS.md/CLAUDE.md
+# and docs/limits.md by walking up from the working directory, so a kit installed
+# in $HOME — or in any ancestor of it — is inherited by every directory below:
+# an unconfigured project stops failing closed and silently resolves to that copy.
+HOME_DIR="$(cd "$HOME" 2>/dev/null && pwd || echo "$HOME")"
+if [[ "$TARGET_DIR" == "/" ]]; then
+  echo "ERROR: refusing to install into the filesystem root." >&2
+  exit 2
+fi
+if [[ "$TARGET_DIR" == "$HOME_DIR" ]]; then
+  echo "ERROR: refusing to install into \$HOME ($TARGET_DIR)." >&2
+  echo "       A kit installed here is inherited by every directory below it, so an" >&2
+  echo "       unconfigured project resolves to it instead of stopping." >&2
+  echo "       Run this from the project directory, or pass --target <project>." >&2
+  exit 2
+fi
+if [[ "$HOME_DIR/" == "$TARGET_DIR"/* ]]; then
+  echo "ERROR: refusing to install into $TARGET_DIR: it contains \$HOME ($HOME_DIR)," >&2
+  echo "       so every project below would inherit the kit installed here." >&2
+  exit 2
+fi
+
 SRC_ROOT=""
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd 2>/dev/null || true)"
 if [[ -n "$SELF_DIR" && -f "$SELF_DIR/../AGENTS.md" ]]; then
@@ -268,9 +290,9 @@ BACKED_UP=()
 # README*.md are deliberately ABSENT. They are the kit's own documentation — the
 # page you read to decide whether to install it — not a file a consuming project
 # should receive. Shipping them meant --upgrade replaced the project's README with
-# the kit's: Lumina/lumina's README.md today opens with "# IA-Agents Universal Kit",
-# and a 447-line project README in another target was one upgrade from the same
-# fate. A kit that overwrites the front page of the projects it serves is broken.
+# the kit's: a target's README.md was found opening with "# IA-Agents Universal
+# Kit", and a 447-line project README in another target was one upgrade from the
+# same fate. A kit that overwrites the front page of the projects it serves is broken.
 KIT_ROOT_FILES=(
   "AGENTS.md"
   ".cursorrules" "CLAUDE.md" ".windsurfrules" "GEMINI.md"
@@ -726,8 +748,10 @@ write_gk_gitignore() {
   cat > "$TARGET_DIR/$STATE_DIR/.gitignore" <<'IGN'
 # Managed by the AI-Agents installer.
 # manifest.json is intentionally NOT ignored — the team must share it.
+operator.json
 secrets.json
 context-telemetry.jsonl
+council/
 overwritten/
 pre-upgrade/
 pre-migrate/
@@ -933,8 +957,8 @@ check_drift() {
 }
 
 # Conditions in the TARGET that make an upgrade lose more than the drift report shows.
-# All three came from a real migration (wa-hub, 2026-07-24) rather than from imagining
-# failure modes: each had already happened somewhere.
+# All three came from a real migration (2026-07-24) rather than from imagining
+# failure modes: each had already happened in a target project.
 HAZARD_SHOWN="0"
 hazard() {
   if [[ "$HAZARD_SHOWN" == "0" ]]; then
@@ -988,13 +1012,13 @@ report_target_hazards() {
     fi
   fi
 
-  # 3. A kit path that is a symlink. cp writes THROUGH a symlink, so replacing
-  #    .docs/limits.md would overwrite whatever it points at — often a file in docs/,
-  #    which the kit promises never to touch. Seen in production (wa-hub).
-  # The readiness files are not kit-owned (the project fills them) but the installer
-  # still edits them in place, so they belong in this scan.
+  # 3. A kit path that is a symlink. cp writes THROUGH a symlink, so replacing it
+  #    would overwrite whatever it points at — often a file in docs/, which the kit
+  #    promises never to touch. Seen in a production target.
+  # The readiness files are project-owned (the project fills them) but the installer
+  # still resets their flags in place, so they belong in this scan.
   local p
-  for p in "${KIT_OWNED_PATHS[@]}" ".docs/software-overview.md" ".docs/limits.md"; do
+  for p in "${KIT_OWNED_PATHS[@]}" "docs/software-overview.md" "docs/limits.md"; do
     [[ -e "$TARGET_DIR/$p" ]] || continue
     if [[ -L "$TARGET_DIR/$p" ]]; then
       hazard
@@ -1045,8 +1069,9 @@ migrate_project_content() {
 
   # A target still on the legacy layout keeps the kit under docs/ instead of .docs/.
   # Every kit file that names a path then differs from the template on those lines —
-  # "- docs/limits.md" against "- .docs/limits.md" — and the whole file is reported as
-  # rewritten by hand when nothing of the sort happened. The layout has to move first.
+  # "- docs/agents/programmer.md" against "- .docs/agents/programmer.md" — and the whole
+  # file is reported as rewritten by hand when nothing of the sort happened. The layout
+  # has to move first.
   local legacy="0"
   if [[ ! -d "$TARGET_DIR/.docs/agents" ]] &&
      { [[ -d "$TARGET_DIR/docs/agents" ]] || [[ -d "$TARGET_DIR/docs/project" ]]; }; then
@@ -1091,6 +1116,7 @@ migrate_project_content() {
 
     # Before anything is compared: put the kit where the template says it is.
     migrate_legacy_layout
+    migrate_readiness_files_to_docs
     seed_identity
     seed_project_rules
     write_gk_gitignore
@@ -1424,7 +1450,7 @@ for rel in doc_files:
         normalized.append(rel)
 
 # Six substantial rules in one file is a file nobody re-reads. A real migration
-# (wa-hub) settled on docs/project-rules.md as an INDEX plus a docs/project-rules/
+# settled on docs/project-rules.md as an INDEX plus a docs/project-rules/
 # folder holding one rule per file, which reads far better. Honour that layout when
 # the target already has the folder — the kit blesses the pattern instead of letting
 # every target invent its own — and keep the single file otherwise, so nothing changes
@@ -1725,10 +1751,10 @@ migrate_legacy_layout() {
 
   # Move file by file, and only files THIS kit version ships. Moving the whole
   # directory would sweep project content into kit territory: since docs/agents/ was
-  # freed for projects, real targets keep their own personas there (GCF has tatu.md,
-  # inovacaoSistemas has quati-bento.md). Those belong to docs/, and their own docs
-  # link to them by that path — relocating them under .docs/ would both misfile them
-  # and break the links, for no gain.
+  # freed for projects, real targets keep their own personas there — agent persona
+  # files the project wrote and links to by that path. Those belong to docs/;
+  # relocating them under .docs/ would both misfile them and break the links, for no
+  # gain.
   for d in "${kit_dirs[@]}"; do
     [[ -d "$TARGET_DIR/docs/$d" ]] || continue
     mkdir -p "$TARGET_DIR/.docs/$d"
@@ -1751,7 +1777,10 @@ migrate_legacy_layout() {
     rm -rf "$TARGET_DIR/.docs/issues/templates"
     mv "$TARGET_DIR/docs/issues/templates" "$TARGET_DIR/.docs/issues/templates"
   fi
-  local kit_files=(software-overview.md limits.md index.html concepts.html governancekit-integration.json issues/README.md)
+  # software-overview.md and limits.md are NOT here: they are project-owned (the
+  # project writes their content and owns their readiness flags), so they stay in
+  # docs/. Only files whose content the kit authors move to .docs/.
+  local kit_files=(index.html concepts.html governancekit-integration.json issues/README.md)
   local f
   for f in "${kit_files[@]}"; do
     if [[ -f "$TARGET_DIR/docs/$f" ]]; then
@@ -1791,10 +1820,10 @@ migrate_legacy_layout() {
 }
 
 # `sed -i` writes a temp file and renames it over the target, which REPLACES a symlink
-# with a regular file and leaves the file it pointed at untouched. A target that
-# symlinks .docs/limits.md -> ../docs/limits.md (a real arrangement, seen in wa-hub)
-# would silently end up with two divergent copies and no link. Resolve first, edit the
-# real file.
+# with a regular file and leaves the file it pointed at untouched. Targets that
+# symlinked .docs/limits.md -> ../docs/limits.md (a real arrangement, seen while the
+# readiness files were misfiled under .docs/) would silently end up with two divergent
+# copies and no link. Resolve first, edit the real file.
 sed_in_place() {
   local file="$1" expr="$2" real
   [[ -e "$file" ]] || return 0
@@ -1804,16 +1833,57 @@ sed_in_place() {
 }
 
 reset_target_readiness_flags() {
-  sed_in_place "$TARGET_DIR/.docs/software-overview.md" \
+  sed_in_place "$TARGET_DIR/docs/software-overview.md" \
     's/^- project_context_ready:[[:space:]]*yes$/- project_context_ready: no/'
-  sed_in_place "$TARGET_DIR/.docs/limits.md" \
+  sed_in_place "$TARGET_DIR/docs/limits.md" \
     's/^- limits_ready:[[:space:]]*yes$/- limits_ready: no/'
+}
+
+# The readiness files were misfiled under .docs/ between 2026-07-01 and 2026-08-04.
+# They are project-owned — the project writes their content and owns their flags —
+# so they belong in docs/, which the kit never overwrites. Bring back the ones that
+# were moved. Idempotent, and it never destroys content: a target that already has
+# both keeps the docs/ copy and gets the .docs/ one set aside for review.
+migrate_readiness_files_to_docs() {
+  local name src dst aside
+  for name in software-overview.md limits.md; do
+    src="$TARGET_DIR/.docs/$name"
+    dst="$TARGET_DIR/docs/$name"
+    [[ -e "$src" || -L "$src" ]] || continue
+    mkdir -p "$TARGET_DIR/docs"
+
+    # A symlink into docs/ was the workaround for this very misfiling: the real file
+    # is already where it belongs, so dropping the link completes the migration.
+    if [[ -L "$src" ]]; then
+      rm -f "$src"
+      echo "readiness file: removed .docs/$name symlink; docs/$name is authoritative"
+      continue
+    fi
+
+    if [[ -e "$dst" ]]; then
+      if cmp -s "$src" "$dst"; then
+        rm -f "$src"
+        echo "readiness file: .docs/$name was identical to docs/$name; removed the duplicate"
+        continue
+      fi
+      aside="$TARGET_DIR/$STATE_DIR/readiness-migration"
+      mkdir -p "$aside"
+      mv "$src" "$aside/$name"
+      echo "readiness file: CONFLICT on $name — docs/$name kept as authoritative;"
+      echo "                the .docs/ copy is at ${aside#"$TARGET_DIR"/}/$name for review."
+      continue
+    fi
+
+    mv "$src" "$dst"
+    echo "readiness file: moved .docs/$name -> docs/$name (project-owned)"
+  done
 }
 
 upgrade_kit() {
   echo "Upgrading kit-owned files in: $TARGET_DIR"
 
   migrate_legacy_layout
+  migrate_readiness_files_to_docs
 
   # Render the incoming source with this project's operator values BEFORE anything is
   # compared or copied. A filled slot then reads as "identical to the kit", not as
@@ -1827,7 +1897,7 @@ upgrade_kit() {
   rm -rf "$TARGET_DIR/$STATE_DIR/pre-upgrade"
 
   # Root kit files. Project-specific context is supposed to live in
-  # .docs/software-overview.md, .docs/limits.md, docs/project-rules.md, handoff,
+  # docs/software-overview.md, docs/limits.md, docs/project-rules.md, handoff,
   # issues, and lessons — but "supposed to" is not a guarantee, so copy_file_replace
   # checks the manifest before it overwrites, and refuses outright for AGENTS.md.
   local root_file
@@ -1864,9 +1934,9 @@ upgrade_kit() {
   sync_reading_index
 
   # Preserve project-local files/state.
-  echo "preserved project-local: .docs/software-overview.md"
+  echo "preserved project-local: docs/software-overview.md"
   echo "preserved project-local: docs/project-rules.md"
-  echo "preserved project-local: .docs/limits.md"
+  echo "preserved project-local: docs/limits.md"
   echo "preserved project-local: docs/ (project territory, never overwritten)"
   echo "preserved project-local: docs/required-reading.md"
   echo "preserved project-local: handoff.md"
@@ -1948,7 +2018,17 @@ else
   # identity.json, which may well predate the install.
   seed_dir_missing ".credentials"
   copy_path ".docs"
-  copy_path "handoff.md"
+  # handoff.md is session memory, not kit content: seeding the kit's own handoff
+  # would hand every project this repository's session history as if it were theirs.
+  # Seed an empty template instead, and only when the target has none.
+  if [[ ! -e "$TARGET_DIR/handoff.md" ]]; then
+    if [[ -f "$SRC_ROOT/templates/handoff.template.md" ]]; then
+      cp -a "$SRC_ROOT/templates/handoff.template.md" "$TARGET_DIR/handoff.md"
+    else
+      printf '# Handoff\n\nSession memory for this project.\n' > "$TARGET_DIR/handoff.md"
+    fi
+    echo "created project-owned file: handoff.md"
+  fi
   copy_path "scripts/agent-worktree.sh"
   copy_path "scripts/git-bare-remote.sh"
   copy_path "templates"
@@ -1957,12 +2037,22 @@ else
   # These are project-owned once created; --upgrade never overwrites them.
   mkdir -p "$TARGET_DIR/docs/issues"
   sync_reading_index
-  if [[ -f "$SRC_ROOT/docs/napkin-lessons.md" && ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
-    cp -a "$SRC_ROOT/docs/napkin-lessons.md" "$TARGET_DIR/docs/napkin-lessons.md"
+  # Same reasoning as handoff.md: the kit's own lessons are not this project's.
+  if [[ ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
+    if [[ -f "$SRC_ROOT/templates/napkin-lessons.template.md" ]]; then
+      cp -a "$SRC_ROOT/templates/napkin-lessons.template.md" "$TARGET_DIR/docs/napkin-lessons.md"
+    fi
   fi
+  # The readiness files: the kit ships a template, the project owns the content and
+  # the flags. Seeded once into docs/, never overwritten afterwards.
+  for seed_doc in software-overview.md limits.md; do
+    if [[ -f "$SRC_ROOT/docs/$seed_doc" && ! -e "$TARGET_DIR/docs/$seed_doc" ]]; then
+      cp -a "$SRC_ROOT/docs/$seed_doc" "$TARGET_DIR/docs/$seed_doc"
+    fi
+  done
   seed_project_rules
   if [[ ! -e "$TARGET_DIR/docs/README.md" ]]; then
-    printf '# Project Documentation\n\nThis folder (docs/) is 100%%%% project territory; the installer never overwrites it.\nKit-owned docs live under .docs/ and are replaced on --upgrade.\nList mandatory pre-issue reading in docs/required-reading.md.\n' \
+    printf '# Project Documentation\n\nThis folder (docs/) is 100%%%% project territory; the installer never overwrites it.\nKit-owned docs live under .docs/ and are replaced on --upgrade; docs/software-overview.md\nand docs/limits.md are seeded once and are yours from then on.\nList mandatory pre-issue reading in docs/required-reading.md.\n' \
       > "$TARGET_DIR/docs/README.md"
   fi
 
@@ -1977,8 +2067,8 @@ fi
 
 echo "Kit files ready in: $TARGET_DIR"
 
-SO_FILE="$TARGET_DIR/.docs/software-overview.md"
-LIM_FILE="$TARGET_DIR/.docs/limits.md"
+SO_FILE="$TARGET_DIR/docs/software-overview.md"
+LIM_FILE="$TARGET_DIR/docs/limits.md"
 
 check_ready_flag() {
   local file="$1"

@@ -4,8 +4,8 @@
 Lia is a junior developer. She wants AI speed without losing control. On day one, she does not start coding. She first prepares context and boundaries, so the agent works with clarity.
 
 ## What is yours (programmer)
-- Write real project context in `.docs/software-overview.md`.
-- Define hard boundaries in `.docs/limits.md`.
+- Write real project context in `docs/software-overview.md`.
+- Define hard boundaries in `docs/limits.md`.
 - Set readiness flags to `yes`.
 
 ## What is the agent's
@@ -34,9 +34,9 @@ governancekit configure
 This records the local host identity separately from the operator values used by
 the installed contracts.
 
-**3. Fill `.docs/software-overview.md`** with your product purpose, tech stack, and main modules.
+**3. Fill `docs/software-overview.md`** with your product purpose, tech stack, and main modules.
 
-**4. Fill `.docs/limits.md`** with what agents are allowed and not allowed to do in this project.
+**4. Fill `docs/limits.md`** with what agents are allowed and not allowed to do in this project.
 
 **5. Fill `docs/project-rules.md` and list every required project contract in `docs/required-reading.md`.**
 

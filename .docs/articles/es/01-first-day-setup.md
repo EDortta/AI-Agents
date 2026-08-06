@@ -4,8 +4,8 @@
 Lia es desarrolladora junior. Quiere velocidad con IA sin perder control. En su primer día no empieza programando: primero define contexto y límites para que el agente trabaje con claridad.
 
 ## Qué es tuyo (programador)
-- Escribir contexto real en `.docs/software-overview.md`.
-- Definir límites duros en `.docs/limits.md`.
+- Escribir contexto real en `docs/software-overview.md`.
+- Definir límites duros en `docs/limits.md`.
 - Decidir qué puede y qué no puede hacer el agente.
 - Confirmar que los readiness flags estén en `yes`.
 
@@ -34,9 +34,9 @@ governancekit configure
 Esto registra la identidad local de la máquina por separado de los valores del
 operador usados por los contratos instalados.
 
-**3. Completa `.docs/software-overview.md`** con el propósito del producto, stack tecnológico y módulos principales.
+**3. Completa `docs/software-overview.md`** con el propósito del producto, stack tecnológico y módulos principales.
 
-**4. Completa `.docs/limits.md`** con lo que los agentes pueden y no pueden hacer en este proyecto.
+**4. Completa `docs/limits.md`** con lo que los agentes pueden y no pueden hacer en este proyecto.
 
 **5. Completa `docs/project-rules.md` y lista cada contrato requerido en `docs/required-reading.md`.**
 

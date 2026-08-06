@@ -2,7 +2,7 @@
   "schema_version": 1,
   "ai_agents": {
     "repo": "EDortta/AI-Agents",
-    "ref": "v1.1.7"
+    "ref": "v1.1.8"
   },
   "governancekit": {
     "version_range": ">=0.2.2,<0.3.0",

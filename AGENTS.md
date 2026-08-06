@@ -37,7 +37,7 @@ está deliberadamente fora do manifesto do kit, e nenhum caminho de upgrade o al
 |---|---|
 | regra que vale só neste projeto | `docs/project-rules.md` |
 | nome/conta do operador (slot `{{…}}`) | `.credentials/identity.json` |
-| contexto e limites do projeto | `.docs/software-overview.md`, `.docs/limits.md` |
+| contexto e limites do projeto | `docs/software-overview.md`, `docs/limits.md` |
 | estado da sessão, lições, issues | `handoff.md`, `docs/napkin-lessons.md`, `docs/issues/` |
 
 Editar um arquivo do kit é aceitável apenas quando a mudança é do **próprio kit** e vai
@@ -96,8 +96,8 @@ Before implementation, identify the target repository.
 
 Required target-project files:
 - `docs/required-reading.md` — **the single reading index**; it lists the rest
-- `.docs/software-overview.md`
-- `.docs/limits.md`
+- `docs/software-overview.md`
+- `docs/limits.md`
 - `docs/project-rules.md` — project-specific rules
 
 Required readiness flags:
@@ -110,10 +110,10 @@ If either file is missing or not ready:
 2. Do not inspect, refactor, edit, branch, or run project checks.
 3. Tell the programmer to configure the missing file(s).
 4. Briefly explain:
-   - `.docs/software-overview.md`: product, stack, users, modules, key behavior.
-   - `.docs/limits.md`: allowed/prohibited agent actions, security boundaries, workflow constraints.
+   - `docs/software-overview.md`: product, stack, users, modules, key behavior.
+   - `docs/limits.md`: allowed/prohibited agent actions, security boundaries, workflow constraints.
 
-Every task must stay within `.docs/limits.md` unless a human explicitly approves a boundary update.
+Every task must stay within `docs/limits.md` unless a human explicitly approves a boundary update.
 
 Source-kit exception: when maintaining this reusable kit itself, a human may approve edits to these gates/templates before implementation starts.
 
@@ -121,6 +121,24 @@ Optional user profile:
 - If `~/.config/USER.md` exists, read it to adapt communication style (tone, depth, decision framing) to the user's profile.
 - This satisfies precedence level 4 (local user preferences).
 - Only communication is adapted; governance behavior and quality gates are unchanged.
+
+---
+
+### 1c. Concorrência declarada [MANDATORY]
+
+Um checkout que parece único pode ser uma de várias *worktrees* sobre o mesmo `.git`.
+Uma operação orçada para um repositório está errada quando existem quatro.
+
+Frente aberta = worktree viva **ou** branch local com commits fora da branch de integração.
+
+- [MANDATORY] Na abertura da sessão, antes de ler código, reporte quantas frentes
+  estão abertas e o que cada uma guarda.
+- [MANDATORY] Para trabalhar **além de uma frente**, pare, informe o que já está
+  aberto e aguarde autorização explícita. Vale só para esta sessão.
+- Aponte as worktrees sem nada por mesclar: podem ser removidas hoje sem perda.
+
+Runtime: `governancekit --root <projeto> concurrency`; `resume` inclui o bloco e
+`doctor` o traz como advisory. Sem git, nada é impresso e nada falha.
 
 ---
 
@@ -143,7 +161,7 @@ Documentation ownership:
 - `.docs/` plus `AGENTS.md` and per-tool rule files are kit-owned and overwritten
   by `install-agents --upgrade`. Never hand-edit kit-owned files in a target
   project; **project rules go in `docs/project-rules.md`**, not in this file.
-  Exception: `.docs/software-overview.md` and `.docs/limits.md` are seeded by the
+  Exception: `docs/software-overview.md` and `docs/limits.md` are seeded by the
   kit but filled and preserved per project.
 - `AGENTS.md` is protected: once it differs from what the kit installed, `--upgrade`
   keeps your version and leaves `AGENTS.md.kit-new` beside it for a manual merge. That
@@ -299,10 +317,17 @@ stop and report; do not create the branch.
 
 Rules:
 - Obtain explicit human permission before creating a branch.
+- Before creating or switching to a **second** concurrent branch/worktree, apply §1c:
+  report what is already open and wait for the operator's authorization.
 - Create/switch branch before first code change.
 - Work only on that branch.
 - Default PR base is `development` unless explicitly required otherwise.
 - Commit only after applicable checks are green, unless impossible and documented.
+- [MANDATORY] No **commit de entrega** — o que fecha o trabalho antes de devolver ao
+  operador — se o diff toca contrato compartilhado, declara `not validated:` ou varre
+  muitos arquivos: rode e registre o council de `.docs/agents/council.md` (depois do
+  `reviewer.md`, nunca no lugar dele). `governancekit --root <projeto> council`; sem
+  registro o `doctor` reprova, e o `pre-commit` também onde `install-hooks` rodou.
 - Do not commit caches, local runtime data, backups, credentials, `.env*`, or token files.
 
 #### `development` vs `main` (branch consolidation)
@@ -410,9 +435,10 @@ session-close (`handoff.md`, `docs/napkin-lessons.md`); it does not replace it.
 ## 8b. Individual identity (MANDATORY)
 
 Kit docs (`AGENTS.md`, role guides, `RESUME.md`, `handoff.md`) are **shared** by
-several programmers/agents/hosts. On shared-branch projects (e.g. the jk-structure
-simulator) multiple hosts may run on the same branch and the same governance
-files. Without data that **individualizes** each host/instance, silent failures
+several programmers/agents/hosts. On shared-branch projects multiple hosts may run
+on the same branch and the same governance files — a simulator or an integration
+environment driven by more than one operator is the typical case. Without data
+that **individualizes** each host/instance, silent failures
 appear: two hosts commit on the same branch unaware of each other, ports and
 local runtime artifacts collide, and it becomes impossible to audit "which host
 did what" from the shared docs.
@@ -471,8 +497,10 @@ local wall-clock time (e.g. `date +%H:%M`) at the start of each response.**
 Mandatory rules:
 
 - [MANDATORY] At or after `session_winddown_hour`, **before doing anything else**,
-  warn the operator that it is time to begin closing the sessions, and state how
-  much runway remains until the hard stop.
+  warn the operator that it is time to begin closing the sessions, state how much
+  runway remains until the hard stop, **and include the concurrency inventory of §1c**
+  — how many branches/worktrees are open. The runway is meaningless without knowing
+  how many fronts have to be closed inside it.
 - [MANDATORY] Re-issue the warning at the **top of every subsequent response**
   until the operator acknowledges or closes — never once-and-forget.
 - [MANDATORY] From `session_winddown_hour` onward, **prioritize session-close over
@@ -481,9 +509,11 @@ Mandatory rules:
 - [MANDATORY] At the hard stop, do not start any new work — drive only
   session-close (handoff / RESUME / napkin) to completion.
 
-Enforcement companion: **AI-GovernanceKit** `resume`/`doctor` can surface the
-active `session_winddown_hour` and the current runway (the runtime "how"); this
-contract owns the "what and why".
+Enforcement companion: **AI-GovernanceKit** implements this. `governancekit
+concurrency` prints the phase (`normal` / `winddown` / `hard-stop`), the runway in
+minutes, and the open-front inventory in one call; `resume` carries the same block.
+Settings are read from `.governancekit-identity.json`, defaulting to the values above.
+This contract owns the "what and why"; the kit owns the "how".
 
 ---
 
