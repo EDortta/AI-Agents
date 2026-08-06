@@ -1,0 +1,46 @@
+{
+  "fingerprint": "1341791c44b9770a154facd32315af3b2e74b54841c76872c852bf0e836ccc68",
+  "round": 1,
+  "triggers": [
+    "shared-contract",
+    "not-validated"
+  ],
+  "lenses": [
+    "sweep skeptic",
+    "claim auditor",
+    "second caller"
+  ],
+  "findings": [
+    {
+      "lens": "second caller",
+      "trigger": "instalar o kit pelo `scripts/install-agents-kit.sh` em vez de `governancekit install-agents`",
+      "wrong_outcome": "o `.gk/.gitignore` escrito pelo shell nao lista `council/`, entao os registros de council de cada commit entram no indice do projeto; a mesma lista tambem nao tinha `operator.json`, expondo identidade por maquina",
+      "location": "scripts/install-agents-kit.sh:746 write_gk_gitignore vs governancekit/install_agents.py:789",
+      "evidence": "reproduction: as duas funcoes escrevem o mesmo arquivo com listas diferentes; diff das duas listas mostra `operator.json` e `council/` ausentes so no shell",
+      "closure": "scripts/install-agents-kit.sh:746 — as duas listas passam a coincidir; `bash scripts/run-checks.sh` verde"
+    },
+    {
+      "lens": "claim auditor",
+      "trigger": "ler o gate novo em AGENTS.md §7 num projeto que instalou o kit mas nunca rodou `governancekit install-hooks`",
+      "wrong_outcome": "o contrato afirmava lisamente que o `pre-commit` reprova sem registro; `install-hooks` e opt-in e `install-agents` nao o chama, entao a afirmacao era falsa exatamente onde mais importa",
+      "location": "AGENTS.md:326 e governancekit/doctor.py _check_council_gate",
+      "evidence": "reproduction: `grep -n install_hook governancekit/install_agents.py` nao retorna nada; no repo de rascunho o hook so passou a existir apos `install-hooks` explicito",
+      "closure": "AGENTS.md passa a dizer `doctor` reprova e o `pre-commit` tambem onde install-hooks rodou; `_check_council_gate` acrescenta a linha que aponta o comando quando o hook falta"
+    },
+    {
+      "lens": "sweep skeptic",
+      "trigger": "um agente que abre `.docs/agents/README.md` para escolher que contrato ler, em vez de `docs/required-reading.md`",
+      "wrong_outcome": "esse indice continuava descrevendo o council so por topico — a mesma falha de descoberta que a issue D1 relata — enquanto o outro indice ja nomeava o momento",
+      "location": ".docs/agents/README.md:26",
+      "evidence": "reproduction: `grep -rn council .docs/agents/README.md docs/required-reading.md` mostrava os dois indices divergindo apos a alteracao",
+      "closure": ".docs/agents/README.md:26 nomeia o commit de entrega e o comando; os dois indices voltam a concordar"
+    }
+  ],
+  "questions": [
+    "O gate funciona antes do primeiro commit de um repositorio (verificado: `git diff --cached` responde contra a arvore vazia e o gatilho dispara). Nao virou achado por falta de resultado errado observavel.",
+    "`remove_agents.py` nao sabe de `.gk/council/`. Como `.gk/` inteiro esta fora do inventario que ele varre, nao ha efeito errado observavel hoje — mas se essa exclusao mudar, os registros viram lixo orfao.",
+    "O limiar de 12 arquivos que detecta `mechanical-sweep` e um chute declarado. So os registros de rodadas reais podem corrigi-lo, que e exatamente o que o §4 diz."
+  ],
+  "waiver": null,
+  "recorded_at": "2026-08-06T14:09:00"
+}

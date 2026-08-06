@@ -748,8 +748,10 @@ write_gk_gitignore() {
   cat > "$TARGET_DIR/$STATE_DIR/.gitignore" <<'IGN'
 # Managed by the AI-Agents installer.
 # manifest.json is intentionally NOT ignored — the team must share it.
+operator.json
 secrets.json
 context-telemetry.jsonl
+council/
 overwritten/
 pre-upgrade/
 pre-migrate/
