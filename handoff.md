@@ -1,5 +1,85 @@
 # Handoff
 
+## [2026-08-06] WK-20260806-council-commit-gate + crítica A1/G1/B1 - ready-for-review
+
+- branch: `development` (`feature/uc-012/council-commit-gate` mesclada); `main` intocada
+
+### Entregue
+
+- **Gate de council no commit de entrega.** `AGENTS.md` §7 ganha um bullet `[MANDATORY]`
+  que **nomeia** `.docs/agents/council.md` (não repete as regras dele) e o amarra ao
+  commit que fecha o trabalho. Lado ferramenta: `governancekit council`, registro
+  amarrado ao sha256 do diff staged, teto de 2 rodadas com escalação, waiver explícito
+  e registrado. Verificado ponta a ponta com `git commit` de verdade.
+- **`.docs/agents/council.md` §4** fixa o momento, o teto e a escalação; o
+  *Enforcement status* deixa de dizer que nada convoca o council.
+- **Primeira rodada de council desde 01/07** — contra a própria entrega. 2 rodadas,
+  5 achados, todos fechados (4 por correção, 1 por aceitação de risco escrita).
+
+### Crítica de A1, G1 e B1 (feita hoje, não implementada)
+
+- **A1 foi REABERTA.** O placar de hoje de manhã dizia "fechada na prática"; está errado.
+  O `AGENTS.md` do CodexBridge — reescrito hoje às 17:15, ref `v1.1.7` no manifest —
+  ainda nomeia `.docs/software-overview.md` nas linhas 40, 99, 100, 113, 114. O §1b segue
+  inoperante lá. A cadeia de publicação tem **quatro elos** e a A1 só cobre o primeiro:
+  fonte corrigida ✅ → tag publicada ❌ (não existe `v1.1.8`) → `install_agents.py:21`
+  `DEFAULT_REF = "v1.1.7"` + `KNOWN_TARBALL_SHA256` ❌ → upgrade no projeto ✅ (rodou, e
+  trouxe o texto velho). O elo 3 é do **GovernanceKit**: A1 não fecha dentro do repo em
+  que foi escrita.
+- **G1 sobe de prioridade** e o escopo cresce: além de caminhos, precisa ver **versão**.
+  `doctor` no CodexBridge diz `[PASS] contract v1.1.6 is compatible` enquanto o
+  `.gk/manifest.json` ao lado registra `ref: v1.1.7` — a ferramenta discordando dela
+  mesma. Entra como `HINT` nomeando o remédio; vira `FAIL` quando os quatro elos fecharem.
+- **B1 refutada pelo próprio incidente.** A §3b (`No external effect without explicit
+  confirmation`, cobrindo e-mail por nome) existe desde `bbf2871`, 27/07 — oito dias
+  antes do incidente — e está no `AGENTS.md` do `jk-structure` (kit v1.1.7), que o agente
+  leu inteiro. A B1 propõe criar a regra que já existia e falhou. Reduzida a um item: um
+  gate **incondicional** de entrega, que já é o bullet do council na §7.
+
+### Ordem proposta (substitui a do épico)
+
+1. A1 elos 2–3 (tag + `DEFAULT_REF` + checksum) — **bloqueado: exige push, decisão do
+   operador**. 2. B3 (índice não alcança `~/.config`; `contacts` não está em índice
+   nenhum do `jk-structure`). 3. G1 como `HINT`, absorvendo G2. 4. B2. 5. G1 vira `FAIL`.
+   6. B1 fechada ou reduzida.
+
+### Blockers/Risks
+
+- **Outro escritor nesta árvore.** `fb9f253` ("cut v1.1.8") foi commitado às 17:23:46 de
+  hoje, durante esta sessão, e `origin/development` já aponta para ele — **o repo foi
+  empurrado**, com todo o trabalho de hoje. Não foi esta sessão. É o cenário do C1
+  acontecendo ao vivo.
+- `fb9f253` declara `ref: v1.1.8` no `.docs/governancekit-integration.json` para uma tag
+  que **não existe** (nem local, nem no remoto). O pin de checksum faz isso falhar
+  fechado, o que é o comportamento certo — mas o parque não recebe a correção da A1.
+- Decisões pendentes do operador: (a) proibir `git add -A` — pela crítica da B1, **no
+  hook**, não na prosa; (b) `_unmerged_count` (`concurrency.py:127`) ainda transforma
+  falha de leitura em "pode ser removida".
+
+### Files changed
+
+- `AGENTS.md`, `.docs/agents/council.md`, `docs/required-reading.md`,
+  `templates/required-reading.kit-block.md`, `.gk/.gitignore`
+- `docs/issues/006-contract-vs-tool-reconciliation-[draft]/{RESUME.md,verification-*.md,issues/D1-*.md}`
+
+### Checks/Tests executed
+
+- `scripts/run-checks.sh` -> tudo verde (shellcheck incluso)
+- `doctor` read-only contra `AI/CodexBridge` -> reproduz G1, G2 e A3 em campo
+- `governancekit concurrency` -> AI/Agents 1 frente; GovernanceKit 4 worktrees, 2 removíveis
+
+### Related commits
+
+- `d35e36a`, `2cbd99d`, `08bdc66`, merge `998a32c` (não empurrados por esta sessão)
+
+### Suggested restart prompt
+
+- "Continue work_id WK-20260804-governancekit-contract-reassessment. Read AGENTS.md,
+  docs/software-overview.md, docs/limits.md e
+  `docs/issues/006-contract-vs-tool-reconciliation-[draft]/RESUME.md` antes de mexer.
+  A crítica de A1/G1/B1 está feita; o próximo passo é decidir os elos 2–3 da A1, que
+  exigem tag e push."
+
 ## [2026-08-04] WK-20260804-home-shadow-and-ownership - ready-for-review
 
 - branch: `development` (três feature branches mescladas; `main` intocada)
