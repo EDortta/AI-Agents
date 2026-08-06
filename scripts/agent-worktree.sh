@@ -38,7 +38,17 @@ set -euo pipefail
 # install/uninstall work from anywhere, not only inside a git repo.
 SELF="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)/$(basename "$(readlink -f "${BASH_SOURCE[0]}")")"
 CRED_STORE="${AWT_CRED_STORE:-$HOME/.config/credentials/personal}"
-STATUS_FILE="${AWT_STATUS_FILE:-$HOME/Sync/agent-status.json}"
+
+# AGENTS.md §8a owns this path. The registry says which agents are alive *on this
+# machine*, so it belongs in XDG state — never in a replicated directory, where a
+# copy would report sessions that were never running on the reader's box.
+# `~/Sync/agent-status.json` is the former location, still read when the canonical
+# one is absent so an unmigrated machine keeps working.
+AWT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ai-agents"
+STATUS_FILE="${AWT_STATUS_FILE:-$AWT_STATE_DIR/agent-status.json}"
+if [[ -z "${AWT_STATUS_FILE:-}" && ! -f "$STATUS_FILE" && -f "$HOME/Sync/agent-status.json" ]]; then
+  STATUS_FILE="$HOME/Sync/agent-status.json"
+fi
 
 # Lazily resolve the repo we are invoked from. Only worktree commands need it;
 # install/uninstall must run outside any repo.
