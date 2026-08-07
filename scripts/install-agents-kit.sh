@@ -758,6 +758,76 @@ pre-migrate/
 IGN
 }
 
+# The root .gitignore secret block, byte-identical to the one
+# `governancekit/install_agents.py::SECRET_IGNORE_PATTERNS` writes.
+#
+# This script used to touch only `.gk/.gitignore` and `.credentials/.gitignore`,
+# deliberately: "the installer never has to edit the project's own .gitignore".
+# The cost was that a shell-installed project had `.env` untracked-but-not-ignored and
+# failed `doctor`'s mandatory `gitignore secrets` gate from the moment it was created —
+# with a remediation message naming a Python command it had never run. A project's own
+# .gitignore is the only place a root-level `.env` rule can live, so the block goes
+# here, fenced by the same markers the Python installer uses so the two never write
+# two blocks. Keep this list and SECRET_IGNORE_PATTERNS in step; `run-checks.sh`
+# compares them.
+GITIGNORE_BEGIN="# AI-Agents kit — managed by governancekit install-agents"
+GITIGNORE_END="# end AI-Agents kit"
+
+write_root_gitignore_secrets() {
+  local target="$TARGET_DIR/.gitignore"
+  local tmp
+  tmp="$(mktemp)"
+
+  # Drop any previous managed block, then append the current one. Same shape as the
+  # Python side: the block always ends the file, so the kit's rules win over lines
+  # above it and an operator who needs an exception puts it in a separate file.
+  if [ -f "$target" ]; then
+    # The marker comparison ignores a trailing CR: a `.gitignore` with CRLF endings
+    # never matched an LF-only constant, so the old block survived and a second one
+    # was appended below it — permanently two blocks, stable across reruns. Only the
+    # comparison is normalised; the lines themselves are printed as they were found.
+    awk -v b="$GITIGNORE_BEGIN" -v e="$GITIGNORE_END" '
+      { line = $0; sub(/\r$/, "", line) }
+      line == b { skip = 1; next }
+      line == e { skip = 0; next }
+      !skip     { print }
+    ' "$target" > "$tmp"
+  else
+    : > "$tmp"
+  fi
+
+  {
+    printf '%s\n' "$GITIGNORE_BEGIN"
+    cat <<'IGN'
+.env
+.env.*
+.envrc
+.npmrc
+.pypirc
+.netrc
+*.pem
+*.key
+.credentials/*
+!.env.example
+!.env.sample
+!.env.template
+!.env.dist
+!.env-example
+!.env.missing
+!.credentials/.gitignore
+!.credentials/.keep
+!.credentials/README*
+!.credentials/*.example
+!.credentials/*.sample
+!.credentials/*.template
+!.credentials/*.dist
+IGN
+    printf '%s\n' "$GITIGNORE_END"
+  } >> "$tmp"
+
+  mv "$tmp" "$target"
+}
+
 # Record every kit file now on disk. Merges over the previous manifest: a narrower run
 # must not make the next upgrade forget that e.g. AGENTS.md is kit-owned.
 write_manifest() {
@@ -791,6 +861,7 @@ write_manifest() {
 
   mkdir -p "$TARGET_DIR/$STATE_DIR"
   write_gk_gitignore
+  write_root_gitignore_secrets
 
   python3 - "$TARGET_DIR/$MANIFEST_REL" "$tmp" "$REPO" "$REF" <<'PY'
 import json, sys
@@ -1120,6 +1191,7 @@ migrate_project_content() {
     seed_identity
     seed_project_rules
     write_gk_gitignore
+    write_root_gitignore_secrets
   fi
 
   # Fresh each run, for the same reason pre-upgrade/ is: a backup that accumulates
