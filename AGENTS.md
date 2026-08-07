@@ -324,7 +324,7 @@ Rules:
 - Default PR base is `development` unless explicitly required otherwise.
 - Commit only after applicable checks are green, unless impossible and documented.
 - [MANDATORY] No **commit de entrega** — o que fecha o trabalho antes de devolver ao
-  operador — se o diff toca contrato compartilhado, declara `not validated:` ou varre
+  operador — se o diff toca contrato compartilhado, **acrescenta** `not validated:` ou varre
   muitos arquivos: rode e registre o council de `.docs/agents/council.md` (depois do
   `reviewer.md`, nunca no lugar dele). `governancekit --root <projeto> council`; sem
   registro o `doctor` reprova, e o `pre-commit` também onde `install-hooks` rodou.

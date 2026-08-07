@@ -155,8 +155,17 @@ see Provenance. The registration rule below is what will eventually correct them
   files). This is the exact shape of the precedent.
 - [MANDATORY] After a change to a **kit-owned or shared contract** that propagates
   to other repositories — blast radius greater than one repo.
-- [MANDATORY] When the delivery's `Tests` section contains any `not validated:`
-  on a runtime path.
+- [MANDATORY] When the delivery **adds** a `not validated:` claim — in its
+  `Tests` section, or anywhere in the entry when it has no such section. Scope
+  matters twice here, and getting it wrong cost this gate three
+  false positives: "adds" means the staged diff's own lines, because `handoff.md`
+  is append-only and reading it whole makes every past entry part of today's
+  delivery; and the section keeps prose that *mentions* the marker from being
+  read as a claim, which quoting cannot do — a genuine claim is often written
+  `not validated:` in backticks too. The earlier wording said "on a runtime
+  path"; no gate ever implemented that, and a trigger cannot judge what a claim
+  is *about*. The words are gone rather than left promising a distinction the
+  tool does not make.
 - [MANDATORY] Before a release/tag that **changes a gate**.
 - [DEFAULT] Whenever the operator asks.
 - [PROHIBITED] Running a council **instead of** `./reviewer.md`. The council runs
