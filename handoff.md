@@ -1,5 +1,85 @@
 # Handoff
 
+## [2026-08-07] Epico 006 — A3, B3 e o fatiamento do AGENTS.md - ready-for-review
+
+- branch: `development`, 5 commits a frente de `origin/development`. `main` intocada.
+- **Nada empurrado.** Nenhum deploy, nenhuma tag.
+
+### Entregue
+
+Sete commits nos dois repos, **um por issue**, cada um revisto por council de duas
+rodadas antes do commit. Total: **30 achados — 21 fechados por teste ou correcao, 9 por
+aceitacao de risco escrita.**
+
+- **Pre-requisito** (`fff5907` GK · `8660853` aqui): o gatilho `not-validated` lia o
+  ARQUIVO `handoff.md` inteiro e nao distinguia mencao de declaracao. Sem isso, todo
+  commit desta sessao teria disparado falso positivo e eu teria waivado sete vezes. O
+  §4 do `council.md` ja dizia o escopo certo; a implementacao tinha largado as duas
+  qualificacoes.
+- **A3 FECHADA** (`79e16aa` GK · `9a34b57` aqui): o `_gitignore_entries` devolvia 18
+  entradas e nenhuma cobria `.env`, enquanto o `doctor` reprovava o repositorio por
+  isso — todo projeto instalado pelo kit nascia reprovando um gate obrigatorio num
+  arquivo escrito pelo proprio kit. Agora ha uma lista unica, e o instalador shell
+  passou a escrever o bloco raiz que nunca escreveu.
+- **B3 FECHADA** (`56ff8f0` GK · `889eabe` aqui): secao `Fontes locais` no indice
+  (caminho e proposito, nunca conteudo) mais dois checks no `doctor`. Os arquivos do
+  incidente de 04/08 estao indexados.
+- **Fatiamento do `AGENTS.md`** (`b8dec46`): quatro fatias em `.docs/workflows/`.
+  `base_contracts` de 7.999 para 6.010 de 8.000 — a folga era de UM token. O parque
+  carrega ~2.300 tokens a menos por sessao.
+
+### O que o council pegou contra mim
+
+Em **oito** dos trinta achados a minha correcao era pior que o defeito:
+
+- estreitar o gatilho para a secao `Tests` perdia TRES das quatro ocorrencias reais do
+  parque. Troquei alarme falso por omissao silenciosa;
+- o check da B3 derrubava o `doctor` INTEIRO com traceback num secret 0400 sob
+  diretorio de root — a forma normal em Docker/Kubernetes;
+- o detector da B3 exigia crases, e o `AGENTS.md` cita o arquivo do incidente quatro
+  vezes dentro de um bloco ```bash. So funcionava por coincidencia de formatacao;
+- o verificador de referencias `§N` que escrevi hoje agrupava todos os headings num
+  namespace unico: `§9` casava com o `## 9` de outro arquivo. Apagando o alvo real, ele
+  seguia verde — quebrado exatamente como os quatro detectores anteriores deste kit;
+- o stub do **deploy**, a unica regra com incidente real, saiu sem a clausula de
+  reforco que o stub de menor risco recebeu;
+- o `--upgrade` copiava o `AGENTS.md` antes de sincronizar `.docs/workflows/`, deixando
+  o contrato apontando para arquivos ausentes se interrompido.
+
+### Blockers/Risks
+
+- **A1 elos 2-3 seguem bloqueados**: exigem cortar a tag e empurrar. Decisao sua.
+- **A2** — aposentar o `install-agents-kit.sh` — decisao sua.
+- **Nada no parque avalia o orcamento de contexto.** Nem hook, nem `doctor`, nem
+  instalador chamam `build_context`; zero arquivos de telemetria em qualquer projeto. O
+  fatiamento reduziu o peso real, mas o gate segue cego la fora. Mesma forma da A1.
+- **`/opt/ZeeCred/jk-dashboard`** consta como diretorio desta sessao e nao existe nesta
+  maquina; so `jk-dashboard-ops`.
+
+### Files changed
+
+`AGENTS.md`, `.docs/workflows/{delivery-loop,git-delivery,session-memory,sending-email}.md`
+(novos), `.docs/agents/{council,security,privacy-compliance,README}.md`,
+`.docs/context-manifest.yaml`, `docs/required-reading.md`,
+`templates/required-reading.kit-block.md`, `scripts/{run-checks,install-agents-kit,agent-worktree}.sh`,
+`docs/napkin-lessons.md`.
+
+### Checks/Tests executed
+
+- `bash scripts/run-checks.sh` — verde, inclusive o check `10e` novo (toda referencia
+  `§N` resolve contra o arquivo que a cita).
+- GovernanceKit `pytest`: **382 verdes**, 6 subtests.
+- Instalacao ponta a ponta em repo temporario pelos dois instaladores: quatro fatias
+  entregues, todos os slots preenchidos, `doctor` `[PASS]` nos checks de gitignore.
+- Conteudo das fatias conferido linha a linha contra o `AGENTS.md` original: nada perdido.
+- Mutacao: cada teste novo confirmado falhando sem o seu fix.
+
+### Suggested restart prompt
+
+> Retoma o epico 006. Le o `RESUME.md` — a ordem revista de 2026-08-07 esta la. Proximo
+> item nao bloqueado: **G1 como `HINT`**, absorvendo a G2. A1 e A2 seguem esperando
+> decisao do operador.
+
 ## [2026-08-06] WK-20260806-council-commit-gate + crítica A1/G1/B1 - ready-for-review
 
 - branch: `development` (`feature/uc-012/council-commit-gate` mesclada); `main` intocada
