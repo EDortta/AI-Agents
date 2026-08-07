@@ -90,7 +90,7 @@ Precedence: for **decisions**, `./governance-precedence.md` wins. For
   keeps coming back across rounds is how the next council gets its lens.
 - [MANDATORY] Every surviving finding closes with either a test that fails without
   the fix (`./design-standards.md` §1) or a written risk acceptance
-  (`/AGENTS.md` §9). "Fixed" without one of those is a claim, and §1 forbids it.
+  (`../workflows/delivery-loop.md` §9). "Fixed" without one of those is a claim, and §1 forbids it.
 - [PROHIBITED] Reporting a finding whose evidence is that a model found it
   convincing. The council's members are agents; **an agent's confidence is not
   evidence**, and this file is the last place that should forget it.
@@ -283,7 +283,7 @@ the push — and the deferral was retired rather than satisfied.
 
 What convenes it now:
 
-- `/AGENTS.md` §7 names this file at the delivery commit. It **names**, and does not
+- `../workflows/git-delivery.md` §7 names this file at the delivery commit. It **names**, and does not
   restate, so it cannot fall out of date when the rules here change.
 - `governancekit doctor` carries a **non-advisory** `council gate` check, and the
   `pre-commit` hook the kit installs already refuses on exactly that. The check is

@@ -60,10 +60,10 @@ prosa seria substituído junto com os de verdade — colocando o dado pessoal do
 exatamente no texto que manda mantê-lo fora — e o grep abaixo o acusaria para sempre.
 
 Antes de qualquer outra ação, verifique se ainda existe slot não preenchido neste
-arquivo ou em `.docs/agents/*.md`:
+arquivo ou em `.docs/`:
 
 ```
-grep -rnE '\{\{[A-Z][A-Z0-9_]*\}\}' AGENTS.md .docs/agents/
+grep -rnE '\{\{[A-Z][A-Z0-9_]*\}\}' AGENTS.md .docs/
 ```
 
 Se o grep retornar qualquer linha:
@@ -221,7 +221,8 @@ This is about the agent's own behaviour in the session — distinct from
   e-mail, push, webhook), calling a third-party write API, moving money, or changing
   external state is never fired on the agent's own initiative or on model output alone.
   It waits for the operator's explicit go-ahead in this session. "Simulate" / "preview"
-  always means show it in chat — never send. (Deploy is the same rule, narrower: §7b.)
+  always means show it in chat — never send. (Deploy is the same rule, narrower:
+  `.docs/workflows/git-delivery.md` §7b.)
 - **Credentials are read only when the task requires it, and never echoed.** Do not
   read, display, or place in any output the contents of `.env*`, `.credentials/`, or
   `~/.config/` secrets. Ask before any operation that would expose them.
@@ -232,203 +233,30 @@ ceiling.
 
 ---
 
-## 4. Execution Loop
+## 4. Loop de entrega, gates e "done" — `.docs/workflows/delivery-loop.md`
 
-For implementation work:
-1. Restore active work context if one exists.
-2. State issue understanding, scope, risks, impacted files, and contract notes.
-3. Create/switch branch only after explicit human permission.
-4. Implement the smallest durable safe fix.
-5. Run impacted lint/typecheck/tests.
-6. Review diff for scope, duplication, clarity, contracts, and secrets.
-7. Close the session with handoff/resume updates.
-
-Never start implementation on `main` or `master`.
+[MANDATORY] §4 Execution Loop · §5 Quality Gates · §9 Security Decision · §10 Done.
+Load it when implementing, reviewing, or declaring a delivery ready. The rules bind
+whether or not the file is open.
 
 ---
 
-## 5. Quality Gates
+## 6. Branch, commit, PR, deploy — `.docs/workflows/git-delivery.md`
 
-For impacted modules only, unless shared tooling/contracts changed:
-- lint passes
-- typecheck/compilation passes
-- tests pass
-- no exposed secrets
-
-Tests are required for behavior, API, auth, persistence, shared-interface, or regression-prone changes.
-Tests may be N/A only for docs/comments/metadata with no runtime effect; justify N/A explicitly.
-
-A bug fix ships with a test that **fails without the fix** — if it passes on the
-unfixed code, it is not testing the fix. Design rules that keep a change from
-breaking the last one: `.docs/agents/design-standards.md`.
-
-When changing public contracts, report:
-- backward compatible: yes/no
-- contract changed: yes/no
-- migration required: yes/no
-- downstream consumers affected: yes/no
-
-If no persistence change, report: `No model/migration changes`.
+[MANDATORY] §6 GitHub/Jira Guard · §7 Branch, Commit, Artifacts (allowed characters,
+`development` vs `main`) · §7b Deploy autônomo é proibido. Load it before creating a
+branch, an issue/PR, **any commit**, a merge to `main`, or any action reaching a
+remote or a production host — including a one-line fix. The rules bind whether or
+not the file is open: **deploy, restart em host remoto e push para produção exigem
+aprovação explícita do operador, sempre**, e §3b já diz o mesmo em geral.
 
 ---
 
-## 6. GitHub/Jira Guard
+## 8. Memória de sessão — `.docs/workflows/session-memory.md`
 
-Prefer `jkctl.py` for issue/PR workflows when present.
-
-Never create an issue or PR with empty or placeholder-only title/body.
-Never run:
-- `gh issue create` without `--body` or `--body-file`
-- `gh pr create` without `--body` or `--body-file`
-
-Issue bodies must include context, objective, scope, ARO, test plan, and DoD.
-PR bodies must include summary, related issue, changed areas, tests, risks/rollback, security impact, and validation checklist.
-
----
-
-## 7. Branch, Commit, Artifacts
-
-Branch naming:
-- Jira: `feature/<JIRA-KEY>/<short-description>`
-- GitHub: `feature/gh-<issue-number>/<short-description>`
-- undercover/local: `feature/uc-<NNN>/<short-description>`
-
-#### Allowed characters (MANDATORY)
-
-Branch names must use only plain ASCII in the class `[a-z0-9/_-]`
-(uppercase permitted solely inside an issue/Jira key, e.g. `UBR-1027`).
-The final name must match `^[a-zA-Z0-9/_-]+$`.
-
-[PROHIBITED] in a branch name — they silently break tooling, prompts, and refs:
-- quotes of any kind (`"` `'` `` ` ``), even from a shell-escaping mistake;
-- whitespace (spaces, tabs);
-- shell/glob metacharacters: `$ & * ? ! ; | < > ( ) { } [ ] \ ^ ~ : @ = + , #`
-  and a leading `-`;
-- accented or non-ASCII letters and any Unicode symbol, homoglyph, or
-  invisible character;
-- `..`, a trailing `/`, a trailing `.lock`, or a trailing `.` (invalid git refs).
-
-[MANDATORY] When deriving a branch slug from an issue title/slug: transliterate
-to ASCII, lowercase, replace every disallowed character with `-`, collapse
-repeats, strip leading/trailing `-`. Verify the final name matches
-`^[a-zA-Z0-9/_-]+$` **before** `git checkout -b` (or `git worktree add -b`).
-Never pass an issue title verbatim to git branch/checkout. An invalid name →
-stop and report; do not create the branch.
-
-Rules:
-- Obtain explicit human permission before creating a branch.
-- Before creating or switching to a **second** concurrent branch/worktree, apply §1c:
-  report what is already open and wait for the operator's authorization.
-- Create/switch branch before first code change.
-- Work only on that branch.
-- Default PR base is `development` unless explicitly required otherwise.
-- Commit only after applicable checks are green, unless impossible and documented.
-- [MANDATORY] No **commit de entrega** — o que fecha o trabalho antes de devolver ao
-  operador — se o diff toca contrato compartilhado, **acrescenta** `not validated:` ou varre
-  muitos arquivos: rode e registre o council de `.docs/agents/council.md` (depois do
-  `reviewer.md`, nunca no lugar dele). `governancekit --root <projeto> council`; sem
-  registro o `doctor` reprova, e o `pre-commit` também onde `install-hooks` rodou.
-- Do not commit caches, local runtime data, backups, credentials, `.env*`, or token files.
-
-#### `development` vs `main` (branch consolidation)
-
-- `development` is the **working branch** — feature/fix branches land here and
-  work accumulates across cycles. **`main` is the consolidated/stable branch.**
-- **Stay on `development` most of the time.** Consolidating into `main` is a
-  deliberate, cycle-end act — not something done on every change. Let several
-  cycles close on `development` first.
-- **On a push request, the agent asks whether to also merge to `main`.** Default
-  is **no** (push `development`, keep `main` as-is). Merge to `main` only on an
-  explicit "yes". Merging to `main` never implies deploy (deploy stays gated,
-  §commit-only).
-
-### 7b. Deploy autônomo é proibido [MANDATORY]
-
-Nunca executar deploy, restart de serviço em host remoto, push para produção, ou
-qualquer ação que afete um ambiente de produção **sem aprovação explícita do
-operador (`{{OPERATOR_NAME}}`)**.
-
-Inclui — sem se limitar a:
-- scripts de deploy com `--yes`, `--force`, `--skip-confirm` ou equivalentes
-- `ssh` para host de produção para reiniciar serviço
-- `docker compose up` (ou equivalente) em host remoto
-- `git push` forçado para branch de produção
-
-O fluxo correto depois do commit é sempre: **parar, reportar, aguardar aprovação.**
-"Implementar a issue" **nunca inclui deploy** — deploy é um passo separado e gateado
-que exige um humano. Merge para `main` também não implica deploy (§7).
-
-Esta regra existe por incidente real: um agente rodou `deploy.sh --yes`
-automaticamente depois de um commit e empurrou para produção sem autorização.
-
----
-
-## 8. Session Memory
-
-Use session memory only for active work:
-- `docs/issues/<epic>/RESUME.md`
-- `handoff.md`
-- current issue/task file
-- `docs/napkin-lessons.md`
-
-`RESUME.md` is the source of truth for the immediate next action and must contain exactly one clear `Next Step (DO THIS FIRST)`.
-
-At session close, update:
-- `handoff.md`
-- active `RESUME.md`
-- `docs/napkin-lessons.md`
-
-Planning/development docs must include:
-- `work_id: WK-YYYYMMDD-<short-slug>`
-- `date: YYYY-MM-DD`
-
-### 8a. Activity monitor (cross-project, opt-in by presence)
-
-Cross-project session tracking, in the XDG state directory:
-
-```
-${XDG_STATE_HOME:-$HOME/.local/state}/ai-agents/agent-status.json   # live sessions
-${XDG_STATE_HOME:-$HOME/.local/state}/ai-agents/agent-log.md        # session log
-```
-
-**Only applies when `agent-status.json` already exists.** If it does not, skip this
-section entirely and do not create it — the feature is opt-in by the presence of the
-file, so a machine without the monitor is never blocked by it and no path has to be
-configured anywhere. Never invent a different location: an agent writing its status
-where the monitor does not look is worse than not writing it at all.
-
-**On session start** — read the file, merge your entry, write it back:
-
-```json
-{"sessions": [
-  {"agent": "<claude-code|codex|cursor>", "project": "<short, stable project path>",
-   "task": "<one sentence: what you are doing right now>",
-   "started": "<ISO-8601 UTC>", "heartbeat": "<ISO-8601 UTC>"}
-]}
-```
-
-- `agent` is exactly `claude-code`, `codex` or `cursor`.
-- Read first, merge, then write — **never overwrite another agent's entry**.
-- Update `task` and `heartbeat` when your focus changes significantly.
-- Working in a git worktree: add `worktree`, `branch` and `ports` so other agents
-  see who holds which worktree, branch and ports. Omit them in a main checkout.
-
-**On session end** — remove your entry from `agent-status.json` (a stale entry
-misleads the monitor), then append one block to `agent-log.md` beside it when the
-session did meaningful work:
-
-```
-## YYYY-MM-DD HH:MM · <agent> · <project>
-<what was done — 1 to 3 lines>
-
-**Next:** <one concrete next step, or —>
-
----
-```
-
-Append at the **bottom**; never edit an existing entry. The `**Next:**` line is
-required (use `—` when nothing is pending). This log complements the per-project
-session-close (`handoff.md`, `docs/napkin-lessons.md`); it does not replace it.
+[MANDATORY] §8 Session Memory · §8a Activity monitor. Load it when opening or closing
+a session, or when writing `handoff.md`, `RESUME.md` or `docs/napkin-lessons.md`.
+The rules bind whether or not the file is open.
 
 ---
 
@@ -517,52 +345,7 @@ This contract owns the "what and why"; the kit owns the "how".
 
 ---
 
-## 9. Security Decision
+## Enviar e-mail — `.docs/workflows/sending-email.md`
 
-For every delivery, classify security impact as:
-- `no security impact`
-- `mitigated security impact`
-- `known temporary risk requiring explicit human acceptance`
-
-If not `no security impact`, document affected surface, abuse path, mitigation, and residual risk.
-
----
-
-## 10. Done
-
-Done means:
-- scope respected
-- root cause handled or limitation documented
-- contracts preserved or declared changed
-- impacted checks/tests executed or justified
-- security impact classified
-- session handoff/resume updated
-- review-ready summary produced
-
-
----
-
-## Sending Email
-
-When a task requires sending email, credentials and mechanism live in `~/.config/email/` — **local-only, never tracked in any repo**.
-
-| File | Purpose |
-|------|---------|
-| `~/.config/email/credentials.conf` | SMTP account (`{{SMTP_ACCOUNT}}`) + app password |
-| `~/.config/email/send.py` | CLI/script helper — reads credentials automatically |
-
-```bash
-# Plain text
-python3 ~/.config/email/send.py --to dest@example.com --subject "Assunto" --body "Corpo"
-
-# HTML body
-python3 ~/.config/email/send.py --to dest@example.com --subject "Assunto" --body "<b>ok</b>" --html
-
-# Multiple recipients
-python3 ~/.config/email/send.py --to a@x.com --to b@x.com --subject "Assunto" --body "Corpo"
-
-# Body from stdin
-echo "Corpo" | python3 ~/.config/email/send.py --to dest@example.com --subject "Assunto"
-```
-
-Never hardcode or commit credentials. Always read from `~/.config/email/credentials.conf`.
+[MANDATORY] Credenciais e transporte moram em `~/.config/email/`, nunca no repositório.
+Load it only when a task requires sending email.

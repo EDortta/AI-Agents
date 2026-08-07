@@ -39,7 +39,7 @@ set -euo pipefail
 SELF="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)/$(basename "$(readlink -f "${BASH_SOURCE[0]}")")"
 CRED_STORE="${AWT_CRED_STORE:-$HOME/.config/credentials/personal}"
 
-# AGENTS.md §8a owns this path. The registry says which agents are alive *on this
+# .docs/workflows/session-memory.md §8a owns this path. The registry says which agents are alive *on this
 # machine*, so it belongs in XDG state — never in a replicated directory, where a
 # copy would report sessions that were never running on the reader's box.
 # `~/Sync/agent-status.json` is the former location, still read when the canonical

@@ -26,6 +26,13 @@ required=(
   ".docs/agents/design-standards.md"
   ".docs/agents/council.md"
   ".docs/agents/privacy-compliance.md"
+  # Sliced out of AGENTS.md: §4/§5/§9/§10, §6/§7/§7b, §8/§8a, e-mail. AGENTS.md now
+  # only points at them, so a missing file is a missing MANDATORY rule with nothing
+  # left behind to notice it.
+  ".docs/workflows/delivery-loop.md"
+  ".docs/workflows/git-delivery.md"
+  ".docs/workflows/session-memory.md"
+  ".docs/workflows/sending-email.md"
   ".docs/context-manifest.yaml"
   ".docs/schemas/context-manifest.schema.json"
   ".docs/schemas/context-state.schema.json"
@@ -457,6 +464,105 @@ if [[ -f "$pages_workflow" ]] &&
   ok "GitHub Pages workflow deploys only docs/ with current official actions"
 else
   err "GitHub Pages workflow is missing or does not deploy docs/ correctly"
+fi
+
+echo "== 10e. Every § reference resolves to a real section =="
+# AGENTS.md carried `§commit-only` for months — a reference to a section that has never
+# existed. Nothing dereferences §N, so a dangle costs nothing at runtime and everything
+# to the reader who goes looking. Now that the contract is split across files, a dangle
+# is also how a rule quietly becomes unreachable: the pointer survives the move, the
+# target does not.
+if python3 - <<'PY'
+import re, sys
+from pathlib import Path
+
+# Section numbers are small integers and they collide across the corpus: `## 9` exists
+# in security-standards.md and in three audit workflows. A check that pools every
+# heading into one namespace therefore answers "does §9 exist anywhere?", which is
+# always yes — it would have passed while `delivery-loop.md §9` pointed at nothing.
+# So a reference resolves against the file it names, and only a bare one falls back
+# to the file it was written in.
+SCAN = [Path("AGENTS.md"), *sorted(Path(".docs").rglob("*.md")), *sorted(Path("scripts").glob("*.sh"))]
+# This file is skipped: it is the only place in the tree that has to *write* the
+# patterns it looks for, and a detector that reads its own source finds itself. Same
+# shape as the four detection defects this kit has already paid for — here the scope
+# is narrowed on purpose rather than discovered in production.
+SCAN = [p for p in SCAN if p.name != "run-checks.sh"]
+sources = {p: p.read_text(encoding="utf-8", errors="replace") for p in SCAN if p.is_file()}
+
+HEADING = re.compile(r"^#{1,6}\s+(?:§\s*)?([0-9]+[a-z]?)\b")
+headings = {
+    path: {m.group(1) for line in text.splitlines() if (m := HEADING.match(line))}
+    for path, text in sources.items()
+}
+
+# A single uppercase letter after § is a metavariable in prose ("`design-standards.md`
+# §N"), not a citation. Everything else must resolve — including a word-shaped one:
+# sections are numbered, so `§commit-only` was never anything but a dangle.
+METAVARIABLE = re.compile(r"^[A-Z]$")
+FILENAME = re.compile(r"[`'\"]?([\w./-]+\.md)[`'\"]?")
+BARE = re.compile(r"§\s*([A-Za-z0-9][A-Za-z0-9-]*)")
+HEADING_LINE = re.compile(r"^#{1,6}\s")
+
+
+def resolve(named: str, home: Path) -> Path | None:
+    """Which scanned file a citation's filename refers to, or None if unknown."""
+    for candidate in ((home.parent / named).resolve(), Path(named.lstrip("/")).resolve()):
+        for path in sources:
+            if path.resolve() == candidate:
+                return path
+    return None
+
+
+dangling = []
+for path, text in sources.items():
+    # A pointer stub names its target in the heading and lists the sections below it,
+    # so a filename stays in force until the next heading. Without that, every stub
+    # this slice created would read as citing itself.
+    section_file = None
+    for n, line in enumerate(text.splitlines(), 1):
+        if HEADING_LINE.match(line):
+            found = FILENAME.search(line)
+            section_file = found.group(1) if found else None
+        for match in BARE.finditer(line):
+            ref = match.group(1)
+            if METAVARIABLE.match(ref):
+                continue
+            # A filename qualifies a § only when it sits immediately before it:
+            # "`design-standards.md` §1". Taking any filename on the line was wrong
+            # four times out of six against council.md, where a sentence names a
+            # sibling file and then cites its OWN §1 further along.
+            before = line[max(0, match.start() - 30):match.start()]
+            adjacent = re.search(r"[`'\"]?([\w./-]+\.md)[`'\"]?[\s(,]*$", before)
+            if adjacent:
+                named = adjacent.group(1)
+            elif ref in headings[path]:
+                # The own file wins over the enclosing heading's target. A heading may
+                # name a sibling for other reasons ("## 1. The boundary with
+                # governance-precedence.md") and its body still cite its own sections.
+                named = None
+            else:
+                named = section_file
+            target = resolve(named, path) if named else path
+            if target is None:
+                # Names a file this scan does not cover; only assert the number exists.
+                if any(ref in found for found in headings.values()):
+                    continue
+                dangling.append(f"{path}:{n}: §{ref} (in {named}, not scanned)")
+                continue
+            if ref not in headings[target]:
+                where = named or path.name
+                dangling.append(f"{path}:{n}: §{ref} — no such section in {where}")
+if dangling:
+    print("  dangling § references:")
+    for item in dangling:
+        print(f"    {item}")
+    raise SystemExit(1)
+PY
+then
+  ok "every § reference resolves to a heading in AGENTS.md or .docs/"
+else
+  err "dangling § reference"
 fi
 
 echo "== 11. shellcheck (advisory, if installed) =="

@@ -1972,20 +1972,28 @@ upgrade_kit() {
   # docs/software-overview.md, docs/limits.md, docs/project-rules.md, handoff,
   # issues, and lessons — but "supposed to" is not a guarantee, so copy_file_replace
   # checks the manifest before it overwrites, and refuses outright for AGENTS.md.
-  local root_file
-  for root_file in "${KIT_ROOT_FILES[@]}"; do
-    copy_file_replace "$root_file"
-  done
-  sync_dir "templates"
-
   # Kit-owned directories are synced file-by-file: kit files are replaced, files the
   # kit dropped are retired only when the manifest proves it wrote them untouched, and
   # project-authored files inside these directories are preserved (see sync_dir).
+  #
+  # These run BEFORE the root files, and the order is load-bearing since AGENTS.md was
+  # sliced: it now points at `.docs/workflows/*.md` for the delivery, git and session
+  # sections instead of carrying them inline.
+  # Copy the root file first and an interrupt — Ctrl-C, disk full, a killed session —
+  # leaves a contract whose MANDATORY sections name files that are not there yet.
+  # Targets first means the worst interruption leaves the previous contract intact,
+  # pointing at content that still exists.
   sync_dir ".docs/agents"
   sync_dir ".docs/workflows"
   sync_dir ".docs/articles"
   sync_dir ".docs/icons"
   sync_dir ".docs/issues/templates"
+
+  local root_file
+  for root_file in "${KIT_ROOT_FILES[@]}"; do
+    copy_file_replace "$root_file"
+  done
+  sync_dir "templates"
 
   # Kit-owned reference pages.
   copy_file_replace ".docs/index.html"
