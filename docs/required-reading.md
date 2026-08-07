@@ -1,10 +1,8 @@
 # Required Reading
 
-**O índice único da leitura obrigatória deste projeto.** O agente abre este arquivo e
-sabe tudo o que precisa ler — não precisa saber que parte da documentação mora em
-`.docs/` (território do kit, substituído no `--upgrade`) e parte em `docs/` (território
-do projeto, nunca sobrescrito). A coluna "Dono" diz de quem é cada arquivo, e isso só
-importa na hora de **escrever**, não de ler.
+**O índice único da leitura obrigatória deste projeto** — inclusive das fontes que
+moram fora do checkout. A coluna "Dono" (`.docs/` é do kit e some no `--upgrade`;
+`docs/` é do projeto) só importa na hora de **escrever**, não de ler.
 
 <!-- AI-AGENTS:BEGIN kit reading list — gerado por install-agents-kit.sh; edições aqui dentro são substituídas no --upgrade. Escreva fora do bloco. -->
 ## Sempre, antes de qualquer issue
@@ -12,41 +10,49 @@ importa na hora de **escrever**, não de ler.
 | Documento | Dono | O que é |
 |---|---|---|
 | `AGENTS.md` | kit | contrato universal de operação |
-| `docs/software-overview.md` | kit semeia, **projeto preenche** | produto, stack, módulos, comportamento |
-| `docs/limits.md` | kit semeia, **projeto preenche** | fronteiras duras do agente |
+| `docs/software-overview.md` | kit→**projeto** | produto, stack, módulos, comportamento |
+| `docs/limits.md` | kit→**projeto** | fronteiras duras do agente |
 | `docs/project-rules.md` | **projeto** | regras que valem só aqui |
 
 ## Conforme o papel do trabalho
 
-| Vai fazer | Leia também | Dono |
-|---|---|---|
-| codar / resolver issue | `.docs/agents/programmer.md` + `.docs/agents/design-standards.md` | kit |
-| revisar código ou PR | `.docs/agents/reviewer.md` + `.docs/agents/design-standards.md` | kit |
-| automatizar issue/PR | `.docs/agents/issue-automation.md` | kit |
-| **antes do commit de entrega** (e revisão adversarial de trabalho aprovado) | `.docs/agents/council.md` | kit |
-| mudança com impacto em runtime | `.docs/agents/security.md` + `.docs/agents/security-standards.md` | kit |
-| tratar dado pessoal | `.docs/agents/privacy-compliance.md` | kit |
-| retomar / fechar sessão | `.docs/workflows/session-restore.md`, `.docs/workflows/session-close.md` | kit |
-| implementar seleção/orçamento de contexto | `.docs/context-optimization.md` | kit |
-| adotar, inicializar ou definir o escopo do projeto | `.docs/agents/domains-and-capabilities.md` + `.docs/agents/credentials-operations.md` | kit |
-| classificar mudança estrutural | `.docs/agents/architecture-classification.md` | kit |
+| Vai fazer | Leia também (tudo do kit) |
+|---|---|
+| codar / resolver issue | `.docs/agents/programmer.md` + `.docs/agents/design-standards.md` |
+| revisar código ou PR | `.docs/agents/reviewer.md` + `.docs/agents/design-standards.md` |
+| automatizar issue/PR | `.docs/agents/issue-automation.md` |
+| **antes do commit de entrega** (e revisão adversarial de trabalho aprovado) | `.docs/agents/council.md` |
+| mudança com impacto em runtime | `.docs/agents/security.md` + `.docs/agents/security-standards.md` |
+| tratar dado pessoal | `.docs/agents/privacy-compliance.md` |
+| retomar / fechar sessão | `.docs/workflows/session-restore.md`, `.docs/workflows/session-close.md` |
+| implementar seleção/orçamento de contexto | `.docs/context-optimization.md` |
+| adotar, inicializar ou definir o escopo do projeto | `.docs/agents/domains-and-capabilities.md` + `.docs/agents/credentials-operations.md` |
+| classificar mudança estrutural | `.docs/agents/architecture-classification.md` |
 <!-- AI-AGENTS:END -->
 
 ## Deste projeto
 
-Documentos específicos deste repositório. Esta seção é 100% do projeto: nenhum upgrade
-a toca. Use `- (none)` se genuinamente não houver nenhum.
+Documentos deste repositório. Seção 100% do projeto: nenhum upgrade a toca. Use
+`- (none)` se não houver nenhum.
 
-- `docs/project-rules.md` — regras específicas deste projeto (também na tabela acima)
 - `docs/napkin-lessons.md` — lições curtas; leia ao retomar trabalho relacionado
+
+## Fontes locais — fora do checkout
+
+Regra não rastreável (credencial, agenda, perfil). Registre **caminho e propósito,
+nunca conteúdo**. `obrigatório` reprova no `doctor`; `opcional` só avisa.
+
+| Caminho | Obrigatório | O que é |
+|---|---|---|
+| `~/.config/USER.md` | opcional | perfil do operador; tom, não governança |
+| `~/.local/state/ai-agents/agent-status.json` | opcional | sessões vivas (§8a) |
+| `~/.config/email/send.py` | opcional | transporte da §Sending Email |
+| `~/.config/email/credentials.conf` | opcional | credenciais; nunca citar |
 
 ## Por área
 
-Leitura escopada: só quem for mexer na área precisa.
+Leitura escopada: só quem mexer na área precisa.
 
-<!-- Exemplo:
-- `docs/architecture.md` — ao tocar na camada de orquestração
-- `docs/integracoes/pagamentos.md` — ao trabalhar no fluxo de pagamento
--->
+<!-- Exemplo: `docs/architecture.md` — ao tocar na camada de orquestração -->
 
 - (none)
