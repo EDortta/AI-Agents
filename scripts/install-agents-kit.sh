@@ -1731,10 +1731,22 @@ READING_LOCAL_HEADING="## Fontes locais — fora do checkout"
 # that is not there. Appending an empty scaffold is additive and destroys nothing: the
 # same shape as the `.credentials/.gitignore` line this installer already appends when
 # an old target lacks it. The rows stay the project's to fill.
+#
+# Detection matches the heading FAMILY, not one spelling. Round 2 of the council found
+# the exact-string version duplicating the section on any project that had written its
+# own — `## Fontes locais`, `## Local sources`, a plain hyphen — including a project
+# that had followed `governancekit doctor`'s own remediation hint, which recommends a
+# different spelling than the one this file seeds. The duplicate ended with "(não
+# declarada — pergunte ao operador)" a few lines below the project's real recurring CC
+# list: two contradictory answers to the exact question whose corruption opened this
+# issue. Same regex family as doctor's `_LOCAL_SOURCES_HEADING_RE`.
 ensure_local_sources_section() {
   local dst="$1"
-  grep -qF "$READING_LOCAL_HEADING" "$dst" && return 0
-  have_python || return 0
+  grep -qiE '^#{2,4} .*(fontes locais|local sources)' "$dst" && return 0
+  have_python || {
+    echo "WARN: python3 not found — $READING_INDEX_REL kept without the Fontes locais section."
+    return 0
+  }
 
   local scaffold
   scaffold="$(python3 - "$SRC_ROOT/$READING_INDEX_TEMPLATE_REL" "$READING_LOCAL_HEADING" <<'PY'

@@ -239,8 +239,20 @@ echo "== 8b. The canonical contract names no email transport =="
 #     And sending-email.md is excluded rather than pattern-matched, because its
 #     Provenance section is *about* the retirement — the mention-versus-use distinction
 #     that has cost this kit four detectors is decided here by file, not by heuristic.
-transport_cite="$(git grep -nE '~/\.config/email' -- 'AGENTS.md' '.docs/*' \
-                  ':!.docs/workflows/sending-email.md' || true)"
+#
+#     Round 2 widened the pathspec: it was `AGENTS.md .docs/*`, and appending the
+#     retired rule to CLAUDE.md left the whole gate green. The six adapter mirrors are
+#     kit-owned, installed everywhere, and are exactly what doctor scans as contracts.
+#     Two files are excluded by name, not by pattern: sending-email.md documents the
+#     retirement, and docs/required-reading.md is where the rule SAYS a project must
+#     declare its own transport — flagging it would forbid compliance.
+transport_cite="$(git grep -nE '~/\.config/email' -- \
+                  'AGENTS.md' '.docs/*' 'docs/*.md' \
+                  'CLAUDE.md' 'GEMINI.md' '.cursorrules' '.windsurfrules' \
+                  '.github/copilot-instructions.md' '.amazonq/rules/*.md' \
+                  ':!.docs/workflows/sending-email.md' \
+                  ':!docs/required-reading.md' \
+                  ':!docs/issues/*' || true)"
 if [[ -n "$transport_cite" ]]; then
   echo "$transport_cite"
   err "a kit-owned contract cites one operator's email transport — it is installed in every project"
@@ -459,6 +471,36 @@ if grep -qF '## Fontes locais' "$legacy_index" &&
   ok "upgrade back-fills Fontes locais without touching the project's own list"
 else
   err "upgrade left an existing index without the section the email contract points at"
+fi
+
+# The seeded starter must read as a document: its lede explains what the file is and
+# who owns which half, and an exact-marker miss would bury it under the kit's tables.
+if [[ "$(grep -n 'índice único' "$fresh_index" | cut -d: -f1)" -lt \
+      "$(grep -n 'AI-AGENTS:BEGIN' "$fresh_index" | cut -d: -f1)" ]]; then
+  ok "the seeded index keeps its lede above the managed block"
+else
+  err "the seeded index has the kit block above its own lede — the template lost its markers"
+fi
+
+# Council round 2: the back-fill matched ONE spelling of the heading while doctor
+# accepts a family and recommends another, so a project that had already written its
+# own section got a second, empty, contradicting one appended.
+variant_target="$reading_test_root/variant"
+mkdir -p "$variant_target/docs" "$variant_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$variant_target/.credentials/identity.json"
+chmod 600 "$variant_target/.credentials/identity.json"
+printf '# Required Reading\n\n## Local sources\n\n| Caminho | Obrigatório | O que é |\n|---|---|---|\n| `~/x/mailer.py` | opcional | transporte deste projeto |\n\n### Lista de destinatários\n\n- ops@example.invalid (sempre em CC)\n' \
+  > "$variant_target/docs/required-reading.md"
+bash "$repo_root/$installer" --target "$variant_target" --upgrade \
+  >"$reading_test_root/variant.log" 2>&1 || true
+variant_index="$variant_target/docs/required-reading.md"
+if [[ "$(grep -ciE '^#{2,4} .*(fontes locais|local sources)' "$variant_index")" == "1" ]] &&
+   [[ "$(grep -cF 'Lista de destinatários' "$variant_index")" == "1" ]] &&
+   grep -qF 'ops@example.invalid' "$variant_index"; then
+  ok "back-fill recognises the heading family and never duplicates the section"
+else
+  err "upgrade duplicated the local-sources section — the project's recipient list now has a contradicting twin"
 fi
 rm -rf -- "$reading_test_root"
 trap - EXIT

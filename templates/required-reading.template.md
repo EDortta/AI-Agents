@@ -4,6 +4,9 @@
 moram fora do checkout. A coluna "Dono" (`.docs/` é do kit e some no `--upgrade`;
 `docs/` é do projeto) só importa na hora de **escrever**, não de ler.
 
+<!-- AI-AGENTS:BEGIN kit reading list -->
+<!-- AI-AGENTS:END -->
+
 ## Deste projeto
 
 Documentos deste repositório. Seção 100% do projeto: nenhum upgrade a toca. Use
