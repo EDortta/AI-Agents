@@ -2200,15 +2200,24 @@ upgrade_kit() {
   sync_reading_index
 
   # Preserve project-local files/state.
-  echo "preserved project-local: docs/software-overview.md"
-  echo "preserved project-local: docs/project-rules.md"
-  echo "preserved project-local: docs/limits.md"
+  #
+  # "preserved" is a claim about a file, so it is only printed for files that exist.
+  # The list used to be unconditional, which is how a run that had just warned it could
+  # NOT create docs/required-reading.md went on, seven lines later, to report that same
+  # file as preserved — reassurance last, about nothing. Council round 2 of gh-5.
+  local preserved_rel
+  for preserved_rel in \
+    "docs/software-overview.md" \
+    "docs/project-rules.md" \
+    "docs/limits.md" \
+    "docs/required-reading.md" \
+    "handoff.md" \
+    "docs/napkin-lessons.md"; do
+    [[ -e "$TARGET_DIR/$preserved_rel" ]] && echo "preserved project-local: $preserved_rel"
+  done
   echo "preserved project-local: docs/ (project territory, never overwritten)"
-  echo "preserved project-local: docs/required-reading.md"
-  echo "preserved project-local: handoff.md"
-  echo "preserved project-local: docs/napkin-lessons.md"
-  echo "preserved project-local: docs/issues/"
-  echo "preserved project-local: .credentials/"
+  [[ -d "$TARGET_DIR/docs/issues" ]] && echo "preserved project-local: docs/issues/"
+  [[ -d "$TARGET_DIR/.credentials" ]] && echo "preserved project-local: .credentials/"
 
   # The kit used to install its own README into every target. It no longer does;
   # a copy still sitting there is kit litter on the project's front page.

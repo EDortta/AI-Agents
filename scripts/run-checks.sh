@@ -560,10 +560,12 @@ chmod 600 "$partial_target/.credentials/identity.json"
 bash "$partial_src/scripts/$(basename "$installer")" --target "$partial_target" --upgrade \
   >"$reading_test_root/partial.log" 2>&1 || true
 if grep -q 'was NOT created' "$reading_test_root/partial.log" &&
-   [[ ! -f "$partial_target/docs/required-reading.md" ]]; then
-  ok "a source tree without templates/ says the index was not created"
+   [[ ! -f "$partial_target/docs/required-reading.md" ]] &&
+   ! grep -q 'preserved project-local: docs/required-reading.md' \
+       "$reading_test_root/partial.log"; then
+  ok "a source tree without templates/ says the index was not created, and nothing else"
 else
-  err "the installer stayed silent about failing to create the reading index"
+  err "the installer stayed silent, or claimed it preserved a file it never created"
 fi
 # The council's severest finding: `templates` was a kit-owned path at the PROJECT ROOT,
 # so a web project's own templates were recorded as kit-owned on the first upgrade and
