@@ -347,5 +347,9 @@ This contract owns the "what and why"; the kit owns the "how".
 
 ## Enviar e-mail — `.docs/workflows/sending-email.md`
 
-[MANDATORY] Credenciais e transporte moram em `~/.config/email/`, nunca no repositório.
+[MANDATORY] Transporte, remetente e lista de destinatários são **do projeto**, nunca
+herdados de outro projeto, de uma sessão anterior ou da memória: leia a documentação de
+e-mail deste projeto, indexada em `docs/required-reading.md`, antes de enviar. O e-mail
+que o harness reporta identifica a conta logada, **não** o operador, e nunca é
+destinatário. Credenciais nunca entram no repositório.
 Load it only when a task requires sending email.

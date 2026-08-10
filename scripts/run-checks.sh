@@ -223,6 +223,68 @@ else
   err "AGENTS.md no longer points at docs/required-reading.md"
 fi
 
+echo "== 8b. The canonical contract names no email transport =="
+# Council round 1 of the 2026-08-10 delivery (gh-5) found the retirement half-done in
+# three distinct ways. Each assertion below fails if one of them comes back.
+#
+# (a) The rewrite emptied the leaf file .docs/workflows/sending-email.md and left the
+#     ROOT contract still prescribing the transport as [MANDATORY] — and the leaf file
+#     defers to AGENTS.md on conflict, so the retired rule outranked its replacement in
+#     every installed project. Grep for the path, not for prose: a path is decidable.
+#
+#     Scope, twice — the first cut of this assertion passed against the un-fixed tree
+#     and would have cleared the very finding it was written for. It required a
+#     character after `email/`, and the offending line spelled the directory bare
+#     (`~/.config/email/` closed by a backtick). Now: the path anywhere, no lookahead.
+#     And sending-email.md is excluded rather than pattern-matched, because its
+#     Provenance section is *about* the retirement — the mention-versus-use distinction
+#     that has cost this kit four detectors is decided here by file, not by heuristic.
+transport_cite="$(git grep -nE '~/\.config/email' -- 'AGENTS.md' '.docs/*' \
+                  ':!.docs/workflows/sending-email.md' || true)"
+if [[ -n "$transport_cite" ]]; then
+  echo "$transport_cite"
+  err "a kit-owned contract cites one operator's email transport — it is installed in every project"
+else
+  ok "no kit-owned contract names an email transport"
+fi
+
+#     The excluded file still has to obey the rule in its normative half: everything
+#     above ## Provenance is the contract, and the contract names no transport.
+contract_half="$(awk '/^## Provenance/{exit} {print}' .docs/workflows/sending-email.md)"
+if grep -qE '~/\.config/email|send\.py' <<<"$contract_half"; then
+  err "the §Sending Email contract itself names a transport again — only its Provenance may"
+else
+  ok "the §Sending Email contract names no transport above its Provenance"
+fi
+
+# (b) A fresh install seeded docs/required-reading.md from THIS repository's own index,
+#     so the kit's transport and the kit's "no recipient list" arrived in an unrelated
+#     project as that project's own declaration. The starter must be a neutral template.
+reading_template="templates/required-reading.template.md"
+if [[ -f "$reading_template" ]] &&
+   ! grep -qE '~/\.config|send\.py|agent-status\.json' "$reading_template"; then
+  ok "$reading_template ships and declares no local source of its own"
+else
+  err "$reading_template is missing or carries this repository's own local sources"
+fi
+if grep -q 'READING_INDEX_TEMPLATE_REL' scripts/install-agents-kit.sh &&
+   ! awk '/^sync_reading_index\(\)/,/^}/' scripts/install-agents-kit.sh |
+       grep -q 'SRC_ROOT/\$READING_INDEX_REL'; then
+  ok "the installer seeds a new index from the template, never from ours"
+else
+  err "sync_reading_index copies this repository's own index into fresh targets"
+fi
+
+# (c) The contract sends the agent to a section the kit never provisioned: it lives
+#     outside the managed markers, so no upgrade could create it and no already
+#     installed project would ever have one.
+if grep -qF '## Fontes locais' "$reading_template" &&
+   grep -q 'ensure_local_sources_section' scripts/install-agents-kit.sh; then
+  ok "the section the contract points at is seeded and back-filled on upgrade"
+else
+  err "docs/required-reading.md has no Fontes locais scaffold — the contract points at nothing"
+fi
+
 echo "== 9. The kit does not ship its own README into consuming projects =="
 # README.md is the kit's front page, not a file a consumer should receive. Shipping it
 # meant --upgrade replaced the project's README with the kit's — which really happened
@@ -355,6 +417,50 @@ else
   err "interactive upgrade did not collect and apply the required identity field"
 fi
 rm -rf -- "$identity_test_root"
+trap - EXIT
+
+echo "== 10c-bis. A fresh target's reading index is the target's, not ours =="
+# The assertions in 8b are structural; these two run the installer, because the defect
+# council round 1 reproduced was in what lands on disk, not in what the script says.
+reading_test_root="$(mktemp -d)"
+trap 'rm -rf -- "$reading_test_root"' EXIT
+
+fresh_target="$reading_test_root/fresh"
+mkdir -p "$fresh_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$fresh_target/.credentials/identity.json"
+chmod 600 "$fresh_target/.credentials/identity.json"
+bash "$repo_root/$installer" --target "$fresh_target" --upgrade \
+  >"$reading_test_root/fresh.log" 2>&1 || true
+fresh_index="$fresh_target/docs/required-reading.md"
+if [[ -f "$fresh_index" ]] &&
+   grep -qF '## Fontes locais' "$fresh_index" &&
+   grep -q 'AI-AGENTS:BEGIN kit reading list' "$fresh_index" &&
+   ! grep -qE '~/\.config/email|agent-status\.json' "$fresh_index"; then
+  ok "fresh install seeds a neutral index with the Fontes locais section"
+else
+  err "fresh install produced no index, no Fontes locais section, or inherited our local sources"
+fi
+
+# An index written before the section existed — the state of essentially every install.
+legacy_target="$reading_test_root/legacy"
+mkdir -p "$legacy_target/docs" "$legacy_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$legacy_target/.credentials/identity.json"
+chmod 600 "$legacy_target/.credentials/identity.json"
+printf '# Required Reading\n\n## Deste projeto\n\n- `docs/arquitetura.md`\n' \
+  > "$legacy_target/docs/required-reading.md"
+bash "$repo_root/$installer" --target "$legacy_target" --upgrade \
+  >"$reading_test_root/legacy.log" 2>&1 || true
+legacy_index="$legacy_target/docs/required-reading.md"
+if grep -qF '## Fontes locais' "$legacy_index" &&
+   grep -qF 'docs/arquitetura.md' "$legacy_index" &&
+   grep -q 'AI-AGENTS:BEGIN kit reading list' "$legacy_index"; then
+  ok "upgrade back-fills Fontes locais without touching the project's own list"
+else
+  err "upgrade left an existing index without the section the email contract points at"
+fi
+rm -rf -- "$reading_test_root"
 trap - EXIT
 
 echo "== 10d. Landing page is publishable and release-safe =="

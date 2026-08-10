@@ -47,11 +47,21 @@ Email cannot be recalled. When the recipient is ambiguous, **ask before sending*
 ## Provenance
 
 Until `[2026-08-10]` this file did the opposite of what it now requires: it prescribed
-**one project's mechanism** — a fixed helper path (`~/.config/email/send.py`), a fixed
-credential file (`~/.config/email/credentials.conf`) and a single SMTP account slot
-(`SMTP_ACCOUNT`, since retired — written here without its braces so the installer
-cannot substitute the operator's address into the paragraph that forbids it) — as
-though it were universal. It is installed into every project
+**one project's mechanism** — a fixed helper and a fixed credential file under one
+operator's `~/.config/email/` (`send.py`, `credentials.conf`), and a single SMTP account
+slot (`SMTP_ACCOUNT`, since retired) — as though it were universal.
+
+Two spellings here are deliberate, and both were council findings. The slot is written
+without its double braces, or a legacy `identity.json` that still declares it would
+substitute the operator's address into the very paragraph that forbids it. The two file
+names are written **bare, under a directory path**, rather than as full `~/`-rooted
+paths:
+`governancekit doctor` scans contracts for cited local paths and asks the project to
+index them, and it cannot tell a citation from a counter-example — so the full paths, in
+a file installed everywhere, made every project in the park index another operator's
+transport. That is the disease, arriving through the prescription for it.
+
+The file is installed into every project
 in the park, and projects do not share a transport: some have a local helper, others
 version one inside the repository with its own credentials. A contract that names one
 of them makes an agent apply project A's mechanism while working in project B.

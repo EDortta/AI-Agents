@@ -1717,21 +1717,76 @@ seed_dir_missing() {
 # without markers gets the block inserted after its title and keeps all its content —
 # an existing target has a hand-written index that must survive.
 READING_INDEX_REL="docs/required-reading.md"
+READING_INDEX_TEMPLATE_REL="templates/required-reading.template.md"
 READING_BEGIN="<!-- AI-AGENTS:BEGIN kit reading list"
 READING_END="<!-- AI-AGENTS:END -->"
+READING_LOCAL_HEADING="## Fontes locais — fora do checkout"
+
+# The one migration this file can perform on the project's own half of the index.
+#
+# `.docs/workflows/sending-email.md` sends the agent to the "Fontes locais" section to
+# learn the project's transport and recipients. That section lives OUTSIDE the managed
+# markers — it is the project's to write — so no `--upgrade` can ever create it, and
+# every project installed before it existed receives a contract pointing at a heading
+# that is not there. Appending an empty scaffold is additive and destroys nothing: the
+# same shape as the `.credentials/.gitignore` line this installer already appends when
+# an old target lacks it. The rows stay the project's to fill.
+ensure_local_sources_section() {
+  local dst="$1"
+  grep -qF "$READING_LOCAL_HEADING" "$dst" && return 0
+  have_python || return 0
+
+  local scaffold
+  scaffold="$(python3 - "$SRC_ROOT/$READING_INDEX_TEMPLATE_REL" "$READING_LOCAL_HEADING" <<'PY'
+import sys
+
+template_path, heading = sys.argv[1:3]
+try:
+    with open(template_path, encoding="utf-8") as fh:
+        text = fh.read()
+except OSError:
+    raise SystemExit(0)
+
+start = text.find(heading)
+if start == -1:
+    raise SystemExit(0)
+# Up to the next top-level heading, so the scaffold carries its own subsections
+# (the recipient list) without dragging in the rest of the starter.
+stop = text.find("\n## ", start + len(heading))
+sys.stdout.write(text[start:] if stop == -1 else text[start:stop])
+PY
+  )" || return 0
+  [[ -n "${scaffold//[$'\n\t ']/}" ]] || return 0
+
+  printf '\n%s\n' "$scaffold" >> "$dst"
+  echo "added missing section to $READING_INDEX_REL: Fontes locais (rows are yours to fill)"
+}
+
 sync_reading_index() {
   local block="$SRC_ROOT/templates/required-reading.kit-block.md"
   local dst="$TARGET_DIR/$READING_INDEX_REL"
   [[ -f "$block" ]] || return 0
 
+  # Seed from a NEUTRAL TEMPLATE, never from this repository's own index. The kit's
+  # index describes the kit: its transport, its recipients, its local sources. Copied
+  # verbatim into a new project it does not read as an example — it reads as that
+  # project's own declaration, which is how `~/.config/email/send.py` became "o
+  # transporte deste projeto" in a project nobody had inspected. Same reason
+  # handoff.md and napkin-lessons.md are seeded from templates and not from ours.
   if [[ ! -f "$dst" ]]; then
     mkdir -p "$(dirname "$dst")"
-    if [[ -f "$SRC_ROOT/$READING_INDEX_REL" ]]; then
-      cp -a "$SRC_ROOT/$READING_INDEX_REL" "$dst"
+    if [[ -f "$SRC_ROOT/$READING_INDEX_TEMPLATE_REL" ]]; then
+      cp -a "$SRC_ROOT/$READING_INDEX_TEMPLATE_REL" "$dst"
       echo "created project-owned file: $READING_INDEX_REL"
+      # Fall through: the managed block is inserted by the same path that adopts an
+      # existing hand-written index, so the starter cannot drift from it.
+    else
+      echo "WARN: $READING_INDEX_TEMPLATE_REL missing — $READING_INDEX_REL not seeded."
+      return 0
     fi
-    return 0
   fi
+
+  ensure_local_sources_section "$dst"
 
   if ! have_python; then
     echo "WARN: python3 not found — $READING_INDEX_REL kit block not refreshed."
