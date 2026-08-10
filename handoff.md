@@ -1,5 +1,43 @@
 # Handoff
 
+## [2026-08-10] gh-5 — §Sending Email canônica - released v1.2.0
+
+- branch: `development`, em dia com `origin/development`. `main` empurrada.
+- **Publicado:** `main` + tag `v1.2.0` (aponta para `5f81e48`). Nenhum deploy.
+- RESUME: `docs/issues/009-sending-email-canonico-[review]/RESUME.md`
+
+> A entrada abaixo, `blocked-on-operator`, descreve um estado que já passou. Ficou como
+> está porque este arquivo é histórico: o operador decidiu os quatro itens dela no
+> mesmo dia e a release saiu.
+
+### Entregue
+
+Itens 1 e 2 da issue #5 fechados deste lado. Nove commits, dois deles fechando council.
+`v1.2.0` e não `v1.1.9`: a correção move os templates do kit de `templates/` para
+`.docs/templates/`, o que é mudança de layout com passo manual no alvo.
+
+### O que a release consertou, e que não era meu
+
+O `templates` estava no `KIT_OWNED_PATHS` **desde sempre**. Num projeto com pasta
+`templates/` própria, o segundo `--upgrade` apagava os arquivos dele em silêncio, sem
+backup. Estava em v1.1.7 e v1.1.8. Verificado corrigido no elo 4 — install real a
+partir da tag, não no repositório-fonte.
+
+Dois defeitos apareceram só ao tentar lançar: o gate de release aceitava apenas bump de
+patch (uma minor era impossível de preparar), e o teste do `DEFAULT_REF` afirmava a
+versão literal, então um ref esquecido passava enquanto ninguém editasse a string.
+
+### Council
+
+Duas rodadas, quatro lentes na primeira. **25 achados, 8 fechados com teste, 2 com
+aceitação de risco escrita.** Onze asserções novas no `run-checks`.
+
+**Next:** nada bloqueando aqui. O trabalho aberto está do lado GovernanceKit — R2-2
+(manifesto envenenado sem reparo) e R2-16' (`_do_upgrade` sobrescreve arquivo de topo
+sem hash-check nem stash) são os dois que ainda podem apagar arquivo de alguém.
+
+---
+
 ## [2026-08-10] gh-5 — §Sending Email canônica - blocked-on-operator
 
 - branch: `development`, 10 commits a frente de `origin/main`. `main` intocada.
