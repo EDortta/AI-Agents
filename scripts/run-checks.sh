@@ -565,6 +565,42 @@ if grep -q 'was NOT created' "$reading_test_root/partial.log" &&
 else
   err "the installer stayed silent about failing to create the reading index"
 fi
+# The council's severest finding: `templates` was a kit-owned path at the PROJECT ROOT,
+# so a web project's own templates were recorded as kit-owned on the first upgrade and
+# DELETED, silently and without backup, on the second. Two upgrades is the fixture,
+# because one is not enough to reproduce it.
+web_target="$reading_test_root/web"
+mkdir -p "$web_target/templates" "$web_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$web_target/.credentials/identity.json"
+chmod 600 "$web_target/.credentials/identity.json"
+printf '<html>project layout</html>\n' > "$web_target/templates/base.html"
+bash "$repo_root/$installer" --target "$web_target" --upgrade >/dev/null 2>&1 || true
+bash "$repo_root/$installer" --target "$web_target" --upgrade >/dev/null 2>&1 || true
+if [[ -f "$web_target/templates/base.html" ]] &&
+   [[ -f "$web_target/.docs/templates/required-reading.template.md" ]] &&
+   ! grep -q '"templates/base.html"' "$web_target/.gk/manifest.json" 2>/dev/null; then
+  ok "two upgrades leave a project's own templates/ untouched and unclaimed"
+else
+  err "the installer claimed or deleted the project's own templates/ — data loss"
+fi
+
+# A target installed while templates/ was a kit path keeps the kit's starters in its own
+# directory. Ownership forbids removing them, so the run must name them.
+legacy_tpl="$reading_test_root/legacy-tpl"
+mkdir -p "$legacy_tpl/templates" "$legacy_tpl/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$legacy_tpl/.credentials/identity.json"
+chmod 600 "$legacy_tpl/.credentials/identity.json"
+cp "$repo_root/templates/required-reading.template.md" "$legacy_tpl/templates/"
+bash "$repo_root/$installer" --target "$legacy_tpl" --upgrade \
+  >"$reading_test_root/legacy-tpl.log" 2>&1 || true
+if grep -q 'templates/required-reading.template.md' "$reading_test_root/legacy-tpl.log" &&
+   [[ -f "$legacy_tpl/templates/required-reading.template.md" ]]; then
+  ok "an older install's kit templates are named, not deleted"
+else
+  err "kit templates left at the project root were silently removed or never reported"
+fi
 rm -rf -- "$reading_test_root"
 trap - EXIT
 

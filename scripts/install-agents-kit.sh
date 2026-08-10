@@ -247,7 +247,7 @@ fi
 
 copy_path() {
   local rel="$1"
-  local src="$SRC_ROOT/$rel"
+  local src="$SRC_ROOT/${2:-$rel}"
   local dst="$TARGET_DIR/$rel"
 
   if [[ ! -e "$src" ]]; then
@@ -695,7 +695,10 @@ PY
 # wins, but the edit is stashed under .gk/overwritten/ rather than destroyed.
 sync_dir() {
   local rel="$1"
-  local src="$SRC_ROOT/$rel"
+  # Optional $2: where the path lives in the SOURCE, when it differs from where it
+  # lands in the TARGET. The kit keeps its templates at templates/ and installs them
+  # to .docs/templates, so the project's own templates/ is never claimed.
+  local src="$SRC_ROOT/${2:-$rel}"
   local dst="$TARGET_DIR/$rel"
 
   if [[ ! -d "$src" ]]; then
@@ -901,7 +904,29 @@ PY
   echo "recorded kit manifest: $MANIFEST_REL"
 }
 
+# A target installed while `templates/` was a kit path has the kit's starters sitting in
+# the project's own directory. They are no longer synced, so nothing deletes them and
+# nothing updates them — and the directory may hold the project's files too, so this
+# cannot rm the path. Name the kit's own filenames and let the operator remove them:
+# same instrument as every other case where ownership forbids the fix.
+warn_legacy_root_templates() {
+  local dir="$TARGET_DIR/templates" leftovers=() name
+  [[ -d "$dir" ]] || return 0
+  for name in required-reading.kit-block.md required-reading.template.md               handoff.template.md napkin-lessons.template.md               mandatory-context.kit-block.md; do
+    [[ -f "$dir/$name" ]] && leftovers+=("templates/$name")
+  done
+  [[ ${#leftovers[@]} -gt 0 ]] || return 0
+  echo
+  echo "WARN: kit templates left in the project's own templates/ by an older install."
+  printf '  %s
+' "${leftovers[@]}"
+  echo "      They moved to $KIT_TEMPLATES_REL and are no longer updated here."
+  echo "      Delete the files listed above — the kit will not touch templates/, because"
+  echo "      that directory is the project's and may hold its own files."
+}
+
 report_upgrade_effects() {
+  warn_legacy_root_templates
   if [[ ${#DRIFTED[@]} -gt 0 ]]; then
     echo
     echo "Kept ${#DRIFTED[@]} protected file(s) that differ from what the kit installed."
@@ -1731,6 +1756,39 @@ seed_dir_missing() {
 # an existing target has a hand-written index that must survive.
 READING_INDEX_REL="docs/required-reading.md"
 READING_INDEX_TEMPLATE_REL="templates/required-reading.template.md"
+
+# Where the kit's templates live IN A TARGET. Not `templates/` — that is the commonest
+# top-level directory name in web projects (Django, Flask, Jinja, Hugo), and this
+# installer used to claim it wholesale. The cost, reproduced end to end by the council
+# of 2026-08-10: the first --upgrade copies kit files into the project's own templates/
+# and records the PROJECT's files in .gk/manifest.json as kit-owned; the SECOND deletes
+# them, silently, with no backup and no line in the log. Every other kit path is
+# namespaced (`.docs/`, `.gk/`); this one was not, and nothing made that visible.
+KIT_TEMPLATES_REL=".docs/templates"
+
+# Where this source root keeps the templates directory: already namespaced in an
+# installed target, still at the root in the kit's own checkout.
+kit_templates_src_rel() {
+  if [[ -d "$SRC_ROOT/$KIT_TEMPLATES_REL" ]]; then
+    printf '%s\n' "$KIT_TEMPLATES_REL"
+  else
+    printf 'templates\n'
+  fi
+}
+
+# Read a kit template from wherever this source root keeps it: `.docs/templates/` in an
+# installed target, `templates/` in the kit's own checkout. Prints nothing and returns
+# non-zero when neither exists, so every caller decides what a miss means.
+kit_template() {
+  local name="$1" candidate
+  for candidate in "$SRC_ROOT/$KIT_TEMPLATES_REL/$name" "$SRC_ROOT/templates/$name"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
 READING_BEGIN="<!-- AI-AGENTS:BEGIN kit reading list"
 READING_END="<!-- AI-AGENTS:END -->"
 READING_LOCAL_HEADING="## Fontes locais — fora do checkout"
@@ -1790,7 +1848,9 @@ ensure_local_sources_section() {
   }
 
   local scaffold
-  scaffold="$(python3 - "$SRC_ROOT/$READING_INDEX_TEMPLATE_REL" "$READING_LOCAL_HEADING" <<'PY'
+  local starter; starter="$(kit_template required-reading.template.md || true)"
+  [[ -n "$starter" ]] || return 0
+  scaffold="$(python3 - "$starter" "$READING_LOCAL_HEADING" <<'PY'
 import sys
 
 template_path, heading = sys.argv[1:3]
@@ -1816,7 +1876,7 @@ PY
 }
 
 sync_reading_index() {
-  local block="$SRC_ROOT/templates/required-reading.kit-block.md"
+  local block; block="$(kit_template required-reading.kit-block.md || true)"
   local dst="$TARGET_DIR/$READING_INDEX_REL"
 
   # A source tree without templates/ used to leave here on a silent `return 0`. The
@@ -1824,7 +1884,7 @@ sync_reading_index() {
   # created, and the run's only line about the file read "preserved project-local" —
   # reassuring, and about a file that did not exist. Say what did not happen instead.
   if [[ ! -f "$block" ]]; then
-    echo "WARN: $SRC_ROOT/templates/ is missing — $READING_INDEX_REL was NOT created or"
+    echo "WARN: no kit templates under $SRC_ROOT — $READING_INDEX_REL was NOT created or"
     echo "      refreshed. AGENTS.md points at that index, and the email contract sends"
     echo "      agents to its 'Fontes locais' section. Re-run from a complete kit source."
     return 0
@@ -1838,13 +1898,14 @@ sync_reading_index() {
   # handoff.md and napkin-lessons.md are seeded from templates and not from ours.
   if [[ ! -f "$dst" ]]; then
     mkdir -p "$(dirname "$dst")"
-    if [[ -f "$SRC_ROOT/$READING_INDEX_TEMPLATE_REL" ]]; then
-      cp -a "$SRC_ROOT/$READING_INDEX_TEMPLATE_REL" "$dst"
+    local starter; starter="$(kit_template required-reading.template.md || true)"
+    if [[ -n "$starter" ]]; then
+      cp -a "$starter" "$dst"
       echo "created project-owned file: $READING_INDEX_REL"
       # Fall through: the managed block is inserted by the same path that adopts an
       # existing hand-written index, so the starter cannot drift from it.
     else
-      echo "WARN: $READING_INDEX_TEMPLATE_REL missing — $READING_INDEX_REL not seeded."
+      echo "WARN: required-reading.template.md missing — $READING_INDEX_REL not seeded."
       return 0
     fi
   fi
@@ -2118,7 +2179,7 @@ upgrade_kit() {
   for root_file in "${KIT_ROOT_FILES[@]}"; do
     copy_file_replace "$root_file"
   done
-  sync_dir "templates"
+  sync_dir "$KIT_TEMPLATES_REL" "$(kit_templates_src_rel)"
 
   # Kit-owned reference pages.
   copy_file_replace ".docs/index.html"
@@ -2170,7 +2231,7 @@ upgrade_kit() {
 # simply never retired, which is safe but silently accumulates.
 KIT_OWNED_PATHS=(
   "${KIT_ROOT_FILES[@]}"
-  "templates"
+  ".docs/templates"
   ".docs/agents" ".docs/workflows" ".docs/articles" ".docs/icons"
   ".docs/governancekit-integration.json"
   ".docs/context-manifest.yaml" ".docs/context-optimization.md" ".docs/schemas"
@@ -2227,8 +2288,9 @@ else
   # would hand every project this repository's session history as if it were theirs.
   # Seed an empty template instead, and only when the target has none.
   if [[ ! -e "$TARGET_DIR/handoff.md" ]]; then
-    if [[ -f "$SRC_ROOT/templates/handoff.template.md" ]]; then
-      cp -a "$SRC_ROOT/templates/handoff.template.md" "$TARGET_DIR/handoff.md"
+    tpl_handoff="$(kit_template handoff.template.md || true)"
+    if [[ -n "$tpl_handoff" ]]; then
+      cp -a "$tpl_handoff" "$TARGET_DIR/handoff.md"
     else
       printf '# Handoff\n\nSession memory for this project.\n' > "$TARGET_DIR/handoff.md"
     fi
@@ -2236,7 +2298,7 @@ else
   fi
   copy_path "scripts/agent-worktree.sh"
   copy_path "scripts/git-bare-remote.sh"
-  copy_path "templates"
+  copy_path "$KIT_TEMPLATES_REL" "$(kit_templates_src_rel)"
 
   # Seed project territory (docs/) from kit starters when the target lacks them.
   # These are project-owned once created; --upgrade never overwrites them.
@@ -2244,8 +2306,9 @@ else
   sync_reading_index
   # Same reasoning as handoff.md: the kit's own lessons are not this project's.
   if [[ ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
-    if [[ -f "$SRC_ROOT/templates/napkin-lessons.template.md" ]]; then
-      cp -a "$SRC_ROOT/templates/napkin-lessons.template.md" "$TARGET_DIR/docs/napkin-lessons.md"
+    tpl_napkin_lessons="$(kit_template napkin-lessons.template.md || true)"
+    if [[ -n "$tpl_napkin_lessons" ]]; then
+      cp -a "$tpl_napkin_lessons" "$TARGET_DIR/docs/napkin-lessons.md"
     fi
   fi
   # The readiness files: the kit ships a template, the project owns the content and
