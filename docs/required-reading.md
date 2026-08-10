@@ -49,8 +49,13 @@ nunca conteúdo**. `obrigatório` reprova no `doctor`; `opcional` só avisa.
 |---|---|---|
 | `~/.config/USER.md` | opcional | perfil do operador; tom, não governança |
 | `~/.local/state/ai-agents/agent-status.json` | opcional | sessões vivas (§8a) |
-| `~/.config/email/send.py` | opcional | transporte da §Sending Email |
-| `~/.config/email/credentials.conf` | opcional | credenciais; nunca citar |
+| `~/.config/email/send.py` | opcional | **o transporte de e-mail deste projeto** — `.docs/workflows/sending-email.md` exige que o projeto diga qual é o seu; este é o daqui, e não vale para nenhum outro |
+| `~/.config/email/credentials.conf` | opcional | credenciais do transporte acima; nunca citar |
+
+**Lista de destinatários deste projeto: não existe.** Este repositório não tem
+destinatário recorrente nem regra de CC. Todo envio daqui é pontual: pergunte ao
+operador quem recebe. `.docs/workflows/sending-email.md` proíbe deduzir isso do e-mail
+do harness, que identifica a conta logada e não o operador.
 
 ## Por área
 
