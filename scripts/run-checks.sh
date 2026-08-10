@@ -506,6 +506,45 @@ if [[ "$(grep -ciE '^#{2,4} .*(fontes locais|local sources)' "$variant_index")" 
 else
   err "upgrade duplicated the local-sources section — the project's recipient list now has a contradicting twin"
 fi
+# The cohort installed between 2026-08-07 and 2026-08-10: the section is already there,
+# carrying the row the kit itself wrote and has since retired. Ownership forbids
+# rewriting it, so the upgrade must NAME it — and must leave it exactly as it was.
+stale_target="$reading_test_root/stale"
+mkdir -p "$stale_target/docs" "$stale_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$stale_target/.credentials/identity.json"
+chmod 600 "$stale_target/.credentials/identity.json"
+printf '# Required Reading\n\n## Fontes locais — fora do checkout\n\n| Caminho | Obrigatório | O que é |\n|---|---|---|\n| `~/.config/email/send.py` | opcional | transporte da §Sending Email |\n' \
+  > "$stale_target/docs/required-reading.md"
+bash "$repo_root/$installer" --target "$stale_target" --upgrade \
+  >"$reading_test_root/stale.log" 2>&1 || true
+if grep -q 'has since retired' "$reading_test_root/stale.log" &&
+   grep -q 'transporte da §Sending Email' "$reading_test_root/stale.log" &&
+   [[ "$(grep -cF 'transporte da §Sending Email' "$stale_target/docs/required-reading.md")" == "1" ]]; then
+  ok "upgrade names the retired transport row and leaves the project's half untouched"
+else
+  err "upgrade stayed silent about a retired row, or rewrote the project's own index"
+fi
+# The other cohort ownership puts out of reach: a drifted AGENTS.md is preserved, so the
+# project keeps a BINDING contract carrying a WITHDRAWN rule while the corrected one
+# waits, unread, in .kit-new. Same instrument, same decision: name it, never overwrite.
+drift_target="$reading_test_root/drift"
+mkdir -p "$drift_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$drift_target/.credentials/identity.json"
+chmod 600 "$drift_target/.credentials/identity.json"
+bash "$repo_root/$installer" --target "$drift_target" --upgrade >/dev/null 2>&1 || true
+printf '# AGENTS.md\n\n[MANDATORY] Credenciais e transporte moram em `~/.config/email/`.\n' \
+  > "$drift_target/AGENTS.md"
+bash "$repo_root/$installer" --target "$drift_target" --upgrade \
+  >"$reading_test_root/drift.log" 2>&1 || true
+if grep -q 'kept: AGENTS.md' "$reading_test_root/drift.log" &&
+   grep -q 'WITHDRAWN' "$reading_test_root/drift.log" &&
+   grep -qF '~/.config/email' "$drift_target/AGENTS.md"; then
+  ok "upgrade names a kept contract that still carries the withdrawn rule"
+else
+  err "a preserved AGENTS.md kept the withdrawn transport rule with no warning"
+fi
 rm -rf -- "$reading_test_root"
 trap - EXIT
 

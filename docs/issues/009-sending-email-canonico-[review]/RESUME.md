@@ -2,15 +2,18 @@
 
 - work_id: WK-20260810-sending-email-canonico
 - date: 2026-08-10
-- status: `[review]` — lado AI-Agents entregue e gateado; **parado no §4 do council.md**
-  aguardando decisão do operador. Lado GovernanceKit não iniciado.
+- status: `[review]` — lado AI-Agents entregue e gateado. Operador decidiu A e D em
+  2026-08-10 (avisar, nunca reescrever) e mandou seguir para o GovernanceKit fechando
+  a #7 e os achados do concílio juntos. Lado GovernanceKit não iniciado.
 
 ## Next Step (DO THIS FIRST)
 
-**Decisão do operador sobre os quatro itens abertos da rodada 2** (abaixo, "Aberto").
-Não rodar uma terceira rodada: `.docs/agents/council.md` §4 manda parar e escalar.
-Depois da decisão, seguir para a etapa GovernanceKit — que a rodada 2 mostrou não ser
-follow-up, e sim pré-requisito para o defeito estar realmente fechado no parque.
+**Etapa GovernanceKit, em `GovernanceKit-main-merge` (branch `development`):** seção
+canônica no `AGENTS.md` dele, `SMTP_ACCOUNT` fora do `install_agents.py` e dos testes,
+o seeding de `docs/required-reading.md` (que hoje refaz o defeito que o lado shell
+corrigiu), o `templates/` que falta nos alvos instalados pelo Python, o parser de
+tabela vazia do `doctor` e a distinção citação-vs-contra-exemplo do
+`_check_local_sources_indexed`. Concílio de novo no commit de entrega.
 
 ## O que a issue pedia
 
@@ -73,16 +76,23 @@ Fechados (commit `0c0b6be`):
 
 ## Aberto — decisão do operador (council.md §4)
 
-**A. O coorte de 3 dias não é alcançado, e é o que existe no parque.** Um projeto
+**A. RESOLVIDO — decisão do operador em 2026-08-10: avisar, nunca reescrever.**
+O coorte de 3 dias não era alcançado, e é o que existe no parque. Um projeto
 instalado depois de `889eabe` já tem a seção `Fontes locais`, com a linha antiga
 `| ~/.config/email/send.py | opcional | transporte da §Sending Email |`. A guarda do
 back-fill vê a seção e volta; a linha fica. Um agente ali lê a tabela, encontra um
 transporte declarado para o projeto, e envia por ele — a corrupção exata da gh-5. O
 `doctor` certifica: `[PASS] 4 local source(s) indexed and present`.
-**A decisão:** o kit pode reescrever uma linha na metade do índice que é do projeto? A
-regra de propriedade diz que não, e foi ela que evitou que o `--upgrade` invadisse
-`docs/`. Alternativas: (i) avisar nomeando a linha, sem tocar; (ii) reescrever só esta
-linha, com precedente registrado; (iii) aceitar o risco por escrito e cobrir no doctor.
+**Decidido (i):** o `--upgrade` nomeia a linha, cita o número dela e diz o que fazer;
+não toca em `docs/`. A regra de propriedade fica de pé — foi ela que impediu o
+`--upgrade` de invadir `docs/`, e a lição de 07/08 já tinha escolhido este mesmo
+veículo. O casamento é com a redação que o próprio kit escreveu, então não pode
+disparar sobre nada que o projeto tenha escrito.
+
+**D. RESOLVIDO pela mesma decisão.** O coorte de `AGENTS.md` com deriva recebe o mesmo
+tratamento: o `report_upgrade_effects` avisa que o arquivo mantido ainda prescreve o
+transporte retirado e que ele vence por precedência até alguém adotar o `.kit-new`.
+Dois testes novos, ambos verificados vermelhos sem a correção.
 
 **B. Regressão no `doctor`, no caminho feliz da própria entrega.** O scaffold semeado
 tem cabeçalho de tabela e nenhuma linha de dado, e o `_parse_local_sources` classifica
@@ -102,13 +112,9 @@ instalador imprime `preserved project-local: docs/required-reading.md`. Ordem
 `python-fresh → shell-upgrade` deixa o alvo contaminado para sempre. **Isso torna a
 etapa GovernanceKit pré-requisito, não follow-up.**
 
-**D. O coorte de `AGENTS.md` com deriva.** O arquivo é preservado e a versão nova cai
-como `AGENTS.md.kit-new`. Até alguém adotar, o contrato vinculante do projeto ainda
-prescreve `python3 ~/.config/email/send.py` como `[MANDATORY]`, e a única dica do
-`doctor` naquele estado recomenda **indexar** esse caminho — isto é, terminar a
-corrupção. A mensagem de KEPT não diz que o que está sendo mantido é uma regra
-retirada. Não há como o kit sobrescrever um `AGENTS.md` derivado; o que dá para fazer é
-a mensagem e o doctor.
+**D-restante (doctor).** Falta o outro meio do coorte com deriva: naquele estado a
+única dica do `doctor` recomenda **indexar** o caminho retirado — isto é, terminar a
+corrupção. Isso é da etapa GovernanceKit.
 
 ## Aceitações de risco escritas (delivery-loop §9)
 

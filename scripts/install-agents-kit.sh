@@ -910,6 +910,19 @@ report_upgrade_effects() {
     for p in "${DRIFTED[@]}"; do
       echo "  kept: $p"
       echo "        review with: diff -u $p $p.kit-new"
+      # A kept file is not merely older — it can be BINDING and WITHDRAWN. The kit
+      # cannot overwrite it (that is the whole point of protecting it), so the only
+      # instrument left is naming what the operator is choosing to keep. Decided by
+      # the operator on 2026-08-10: warn, never rewrite.
+      if [[ -f "$TARGET_DIR/$p" ]] &&
+         grep -q '~/\.config/email' "$TARGET_DIR/$p" 2>/dev/null &&
+         [[ -f "$TARGET_DIR/$p.kit-new" ]] &&
+         ! grep -q '~/\.config/email' "$TARGET_DIR/$p.kit-new" 2>/dev/null; then
+        echo "        WARNING: the kept version still prescribes one operator's email"
+        echo "        transport. That rule was WITHDRAWN (AI-Agents#5): transport and"
+        echo "        recipients are per-project. Until you adopt the .kit-new version,"
+        echo "        agents here follow the withdrawn rule — it wins on precedence."
+      fi
     done
     echo "  Move any lasting project rule into docs/project-rules.md, which no"
     echo "  upgrade touches, then adopt the .kit-new version and delete it."
@@ -1740,9 +1753,37 @@ READING_LOCAL_HEADING="## Fontes locais — fora do checkout"
 # declarada — pergunte ao operador)" a few lines below the project's real recurring CC
 # list: two contradictory answers to the exact question whose corruption opened this
 # issue. Same regex family as doctor's `_LOCAL_SOURCES_HEADING_RE`.
+#
+# When the section IS present, the one thing this function may do is speak. A project
+# installed between 2026-08-07 and 2026-08-10 has the section already, carrying a row
+# the kit itself wrote — `transporte da <secao> Sending Email` — which now asserts that one
+# operator's helper is this project's transport, in the exact table the email contract
+# tells the agent to trust. The row sits in the project's half of the index, and the
+# ownership rule that keeps `--upgrade` out of `docs/` is worth more than this fix is.
+# So: name the row, never touch it. Operator decision, 2026-08-10. The match is the
+# kit's own retired wording, so it cannot fire on anything a project wrote itself.
+warn_stale_transport_row() {
+  local dst="$1" hits
+  # The needle is BUILT, not written: check 10e resolves every literal `§N` against a
+  # real heading, and this one is a quotation of a retired table cell, not a reference.
+  local needle
+  needle="transporte da $(printf '\xc2\xa7')Sending Email"
+  hits="$(grep -nF "$needle" "$dst" 2>/dev/null || true)"
+  [[ -n "$hits" ]] || return 0
+  echo "WARNING: $READING_INDEX_REL still carries a row this kit wrote and has since retired:"
+  echo "$hits" | sed 's/^/    /'
+  echo "    It declares one operator's helper as THIS project's email transport."
+  echo "    .docs/workflows/sending-email.md sends the agent to that table to learn"
+  echo "    which transport to use. The row is yours to fix — the kit will not touch"
+  echo "    docs/. Replace it with this project's own transport, or delete it."
+}
+
 ensure_local_sources_section() {
   local dst="$1"
-  grep -qiE '^#{2,4} .*(fontes locais|local sources)' "$dst" && return 0
+  if grep -qiE '^#{2,4} .*(fontes locais|local sources)' "$dst"; then
+    warn_stale_transport_row "$dst"
+    return 0
+  fi
   have_python || {
     echo "WARN: python3 not found — $READING_INDEX_REL kept without the Fontes locais section."
     return 0
