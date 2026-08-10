@@ -25,6 +25,7 @@ Shared references:
   when roles **disagree**: precedence, then human arbitration
 - [council: adversarial review of approved work](./council.md) — when **nobody**
   disagrees and the artifact is wrong anyway: findings, never decisions.
-  Runs at the **delivery commit** (§4), gated by `governancekit council`
+  Runs at the **delivery commit** (`../workflows/git-delivery.md` §7), gated by
+  `governancekit council`
 
 Common/global rules remain canonical in `/AGENTS.md`.

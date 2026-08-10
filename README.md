@@ -116,7 +116,7 @@ kit source. The values live in **`.credentials/identity.json`**:
 
 ```json
 {
-  "values": { "OPERATOR_NAME": "…", "SMTP_ACCOUNT": "…" },
+  "values": { "OPERATOR_NAME": "…" },
   "refs":   { "EMAIL_CREDENTIALS": "~/.config/email/credentials.conf" }
 }
 ```
@@ -129,8 +129,8 @@ account are the personal data the slot scheme exists to keep out of the repo, an
 sharing one file would only move the leak from `AGENTS.md` into a JSON.
 
 On every install and `--upgrade`, the installer resolves these required values first.
-In an interactive terminal it prompts for empty `OPERATOR_NAME` and `SMTP_ACCOUNT`
-values; in a non-interactive run it fails before copying kit files and names what must
+In an interactive terminal it prompts for an empty `OPERATOR_NAME`
+value; in a non-interactive run it fails before copying kit files and names what must
 be configured. It stores the file with mode `0600`, then re-applies the values, so a
 filled slot is not drift: the file on disk and the incoming kit version match byte for
 byte, and the upgrade neither burns the value nor asks you to merge one.

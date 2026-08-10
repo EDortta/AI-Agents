@@ -9,8 +9,7 @@
     "path touches this file."
   ],
   "values": {
-    "OPERATOR_NAME": "",
-    "SMTP_ACCOUNT": ""
+    "OPERATOR_NAME": ""
   },
   "refs": {}
 }

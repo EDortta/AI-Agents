@@ -90,7 +90,7 @@ Precedence: for **decisions**, `./governance-precedence.md` wins. For
   keeps coming back across rounds is how the next council gets its lens.
 - [MANDATORY] Every surviving finding closes with either a test that fails without
   the fix (`./design-standards.md` §1) or a written risk acceptance
-  (`/AGENTS.md` §9). "Fixed" without one of those is a claim, and §1 forbids it.
+  (`../workflows/delivery-loop.md` §9). "Fixed" without one of those is a claim, and §1 forbids it.
 - [PROHIBITED] Reporting a finding whose evidence is that a model found it
   convincing. The council's members are agents; **an agent's confidence is not
   evidence**, and this file is the last place that should forget it.
@@ -155,8 +155,17 @@ see Provenance. The registration rule below is what will eventually correct them
   files). This is the exact shape of the precedent.
 - [MANDATORY] After a change to a **kit-owned or shared contract** that propagates
   to other repositories — blast radius greater than one repo.
-- [MANDATORY] When the delivery's `Tests` section contains any `not validated:`
-  on a runtime path.
+- [MANDATORY] When the delivery **adds** a `not validated:` claim — in its
+  `Tests` section, or anywhere in the entry when it has no such section. Scope
+  matters twice here, and getting it wrong cost this gate three
+  false positives: "adds" means the staged diff's own lines, because `handoff.md`
+  is append-only and reading it whole makes every past entry part of today's
+  delivery; and the section keeps prose that *mentions* the marker from being
+  read as a claim, which quoting cannot do — a genuine claim is often written
+  `not validated:` in backticks too. The earlier wording said "on a runtime
+  path"; no gate ever implemented that, and a trigger cannot judge what a claim
+  is *about*. The words are gone rather than left promising a distinction the
+  tool does not make.
 - [MANDATORY] Before a release/tag that **changes a gate**.
 - [DEFAULT] Whenever the operator asks.
 - [PROHIBITED] Running a council **instead of** `./reviewer.md`. The council runs
@@ -274,7 +283,7 @@ the push — and the deferral was retired rather than satisfied.
 
 What convenes it now:
 
-- `/AGENTS.md` §7 names this file at the delivery commit. It **names**, and does not
+- `../workflows/git-delivery.md` §7 names this file at the delivery commit. It **names**, and does not
   restate, so it cannot fall out of date when the rules here change.
 - `governancekit doctor` carries a **non-advisory** `council gate` check, and the
   `pre-commit` hook the kit installs already refuses on exactly that. The check is

@@ -52,7 +52,7 @@ governancekit configure
 # 4. Valide tudo
 governancekit doctor
 governancekit --version</code></pre>
-    <p class="note"><strong>Não existe obrigação de criar <code>WORKSPACE.md</code>.</strong> A identidade executável da instância fica em <code>.governancekit-identity.json</code>. O nome do operador e a conta SMTP usados nos contratos ficam separadamente em <code>.credentials/identity.json</code>.</p>
+    <p class="note"><strong>Não existe obrigação de criar <code>WORKSPACE.md</code>.</strong> A identidade executável da instância fica em <code>.governancekit-identity.json</code>. Os valores do operador usados nos contratos ficam separadamente em <code>.credentials/identity.json</code>.</p>
   </section>
 
   <section>
@@ -60,7 +60,7 @@ governancekit --version</code></pre>
     <table>
       <thead><tr><th>Arquivo</th><th>Responsabilidade</th><th>Criado por</th><th>Git</th></tr></thead>
       <tbody>
-        <tr><td><code>.credentials/identity.json</code></td><td>Valores dos slots <code>OPERATOR_NAME</code> e <code>SMTP_ACCOUNT</code> nos contratos.</td><td><code>install-agents-kit.sh</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
+        <tr><td><code>.credentials/identity.json</code></td><td>Valor do slot <code>OPERATOR_NAME</code> nos contratos.</td><td><code>install-agents-kit.sh</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
         <tr><td><code>.governancekit-identity.json</code></td><td>Identidade da máquina e do checkout: host, caminho, portas e propriedade de branches.</td><td><code>governancekit configure</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
       </tbody>
     </table>

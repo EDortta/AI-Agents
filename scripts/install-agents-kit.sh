@@ -247,7 +247,7 @@ fi
 
 copy_path() {
   local rel="$1"
-  local src="$SRC_ROOT/$rel"
+  local src="$SRC_ROOT/${2:-$rel}"
   local dst="$TARGET_DIR/$rel"
 
   if [[ ! -e "$src" ]]; then
@@ -490,7 +490,7 @@ seed_identity() {
     if [[ -f "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" ]]; then
       cp -a "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" "$dst"
     else
-      printf '{\n  "state_version": 1,\n  "values": { "OPERATOR_NAME": "", "SMTP_ACCOUNT": "" },\n  "refs": {}\n}\n' > "$dst"
+      printf '{\n  "state_version": 1,\n  "values": { "OPERATOR_NAME": "" },\n  "refs": {}\n}\n' > "$dst"
     fi
     echo "created programmer-owned file (untracked): $IDENTITY_REL"
   fi
@@ -502,7 +502,14 @@ seed_identity() {
 # leave the target with an immediately blocking Start Gate.
 ensure_required_identity() {
   local identity="$TARGET_DIR/$IDENTITY_REL"
-  local required=("OPERATOR_NAME" "SMTP_ACCOUNT")
+  # SMTP_ACCOUNT was required here until 2026-08-10. It is gone because the canonical
+  # contract no longer names a transport (.docs/workflows/sending-email.md): an install
+  # cannot know whether this project sends email at all, let alone through SMTP, so
+  # demanding an account was a precondition invented by one project's mechanism. A
+  # project that does send email declares its transport in docs/required-reading.md.
+  # An existing identity.json that still carries the value is left alone — an
+  # undeclared value is simply never substituted.
+  local required=("OPERATOR_NAME")
 
   if ! have_python; then
     echo "ERROR: python3 is required to validate and configure $IDENTITY_REL." >&2
@@ -688,7 +695,10 @@ PY
 # wins, but the edit is stashed under .gk/overwritten/ rather than destroyed.
 sync_dir() {
   local rel="$1"
-  local src="$SRC_ROOT/$rel"
+  # Optional $2: where the path lives in the SOURCE, when it differs from where it
+  # lands in the TARGET. The kit keeps its templates at templates/ and installs them
+  # to .docs/templates, so the project's own templates/ is never claimed.
+  local src="$SRC_ROOT/${2:-$rel}"
   local dst="$TARGET_DIR/$rel"
 
   if [[ ! -d "$src" ]]; then
@@ -758,6 +768,76 @@ pre-migrate/
 IGN
 }
 
+# The root .gitignore secret block, byte-identical to the one
+# `governancekit/install_agents.py::SECRET_IGNORE_PATTERNS` writes.
+#
+# This script used to touch only `.gk/.gitignore` and `.credentials/.gitignore`,
+# deliberately: "the installer never has to edit the project's own .gitignore".
+# The cost was that a shell-installed project had `.env` untracked-but-not-ignored and
+# failed `doctor`'s mandatory `gitignore secrets` gate from the moment it was created —
+# with a remediation message naming a Python command it had never run. A project's own
+# .gitignore is the only place a root-level `.env` rule can live, so the block goes
+# here, fenced by the same markers the Python installer uses so the two never write
+# two blocks. Keep this list and SECRET_IGNORE_PATTERNS in step; `run-checks.sh`
+# compares them.
+GITIGNORE_BEGIN="# AI-Agents kit — managed by governancekit install-agents"
+GITIGNORE_END="# end AI-Agents kit"
+
+write_root_gitignore_secrets() {
+  local target="$TARGET_DIR/.gitignore"
+  local tmp
+  tmp="$(mktemp)"
+
+  # Drop any previous managed block, then append the current one. Same shape as the
+  # Python side: the block always ends the file, so the kit's rules win over lines
+  # above it and an operator who needs an exception puts it in a separate file.
+  if [ -f "$target" ]; then
+    # The marker comparison ignores a trailing CR: a `.gitignore` with CRLF endings
+    # never matched an LF-only constant, so the old block survived and a second one
+    # was appended below it — permanently two blocks, stable across reruns. Only the
+    # comparison is normalised; the lines themselves are printed as they were found.
+    awk -v b="$GITIGNORE_BEGIN" -v e="$GITIGNORE_END" '
+      { line = $0; sub(/\r$/, "", line) }
+      line == b { skip = 1; next }
+      line == e { skip = 0; next }
+      !skip     { print }
+    ' "$target" > "$tmp"
+  else
+    : > "$tmp"
+  fi
+
+  {
+    printf '%s\n' "$GITIGNORE_BEGIN"
+    cat <<'IGN'
+.env
+.env.*
+.envrc
+.npmrc
+.pypirc
+.netrc
+*.pem
+*.key
+.credentials/*
+!.env.example
+!.env.sample
+!.env.template
+!.env.dist
+!.env-example
+!.env.missing
+!.credentials/.gitignore
+!.credentials/.keep
+!.credentials/README*
+!.credentials/*.example
+!.credentials/*.sample
+!.credentials/*.template
+!.credentials/*.dist
+IGN
+    printf '%s\n' "$GITIGNORE_END"
+  } >> "$tmp"
+
+  mv "$tmp" "$target"
+}
+
 # Record every kit file now on disk. Merges over the previous manifest: a narrower run
 # must not make the next upgrade forget that e.g. AGENTS.md is kit-owned.
 write_manifest() {
@@ -791,6 +871,7 @@ write_manifest() {
 
   mkdir -p "$TARGET_DIR/$STATE_DIR"
   write_gk_gitignore
+  write_root_gitignore_secrets
 
   python3 - "$TARGET_DIR/$MANIFEST_REL" "$tmp" "$REPO" "$REF" <<'PY'
 import json, sys
@@ -823,7 +904,29 @@ PY
   echo "recorded kit manifest: $MANIFEST_REL"
 }
 
+# A target installed while `templates/` was a kit path has the kit's starters sitting in
+# the project's own directory. They are no longer synced, so nothing deletes them and
+# nothing updates them — and the directory may hold the project's files too, so this
+# cannot rm the path. Name the kit's own filenames and let the operator remove them:
+# same instrument as every other case where ownership forbids the fix.
+warn_legacy_root_templates() {
+  local dir="$TARGET_DIR/templates" leftovers=() name
+  [[ -d "$dir" ]] || return 0
+  for name in required-reading.kit-block.md required-reading.template.md               handoff.template.md napkin-lessons.template.md               mandatory-context.kit-block.md; do
+    [[ -f "$dir/$name" ]] && leftovers+=("templates/$name")
+  done
+  [[ ${#leftovers[@]} -gt 0 ]] || return 0
+  echo
+  echo "WARN: kit templates left in the project's own templates/ by an older install."
+  printf '  %s
+' "${leftovers[@]}"
+  echo "      They moved to $KIT_TEMPLATES_REL and are no longer updated here."
+  echo "      Delete the files listed above — the kit will not touch templates/, because"
+  echo "      that directory is the project's and may hold its own files."
+}
+
 report_upgrade_effects() {
+  warn_legacy_root_templates
   if [[ ${#DRIFTED[@]} -gt 0 ]]; then
     echo
     echo "Kept ${#DRIFTED[@]} protected file(s) that differ from what the kit installed."
@@ -832,6 +935,19 @@ report_upgrade_effects() {
     for p in "${DRIFTED[@]}"; do
       echo "  kept: $p"
       echo "        review with: diff -u $p $p.kit-new"
+      # A kept file is not merely older — it can be BINDING and WITHDRAWN. The kit
+      # cannot overwrite it (that is the whole point of protecting it), so the only
+      # instrument left is naming what the operator is choosing to keep. Decided by
+      # the operator on 2026-08-10: warn, never rewrite.
+      if [[ -f "$TARGET_DIR/$p" ]] &&
+         grep -q '~/\.config/email' "$TARGET_DIR/$p" 2>/dev/null &&
+         [[ -f "$TARGET_DIR/$p.kit-new" ]] &&
+         ! grep -q '~/\.config/email' "$TARGET_DIR/$p.kit-new" 2>/dev/null; then
+        echo "        WARNING: the kept version still prescribes one operator's email"
+        echo "        transport. That rule was WITHDRAWN (AI-Agents#5): transport and"
+        echo "        recipients are per-project. Until you adopt the .kit-new version,"
+        echo "        agents here follow the withdrawn rule — it wins on precedence."
+      fi
     done
     echo "  Move any lasting project rule into docs/project-rules.md, which no"
     echo "  upgrade touches, then adopt the .kit-new version and delete it."
@@ -1120,6 +1236,7 @@ migrate_project_content() {
     seed_identity
     seed_project_rules
     write_gk_gitignore
+    write_root_gitignore_secrets
   fi
 
   # Fresh each run, for the same reason pre-upgrade/ is: a backup that accumulates
@@ -1638,21 +1755,162 @@ seed_dir_missing() {
 # without markers gets the block inserted after its title and keeps all its content —
 # an existing target has a hand-written index that must survive.
 READING_INDEX_REL="docs/required-reading.md"
+READING_INDEX_TEMPLATE_REL="templates/required-reading.template.md"
+
+# Where the kit's templates live IN A TARGET. Not `templates/` — that is the commonest
+# top-level directory name in web projects (Django, Flask, Jinja, Hugo), and this
+# installer used to claim it wholesale. The cost, reproduced end to end by the council
+# of 2026-08-10: the first --upgrade copies kit files into the project's own templates/
+# and records the PROJECT's files in .gk/manifest.json as kit-owned; the SECOND deletes
+# them, silently, with no backup and no line in the log. Every other kit path is
+# namespaced (`.docs/`, `.gk/`); this one was not, and nothing made that visible.
+KIT_TEMPLATES_REL=".docs/templates"
+
+# Where this source root keeps the templates directory: already namespaced in an
+# installed target, still at the root in the kit's own checkout.
+kit_templates_src_rel() {
+  if [[ -d "$SRC_ROOT/$KIT_TEMPLATES_REL" ]]; then
+    printf '%s\n' "$KIT_TEMPLATES_REL"
+  else
+    printf 'templates\n'
+  fi
+}
+
+# Read a kit template from wherever this source root keeps it: `.docs/templates/` in an
+# installed target, `templates/` in the kit's own checkout. Prints nothing and returns
+# non-zero when neither exists, so every caller decides what a miss means.
+kit_template() {
+  local name="$1" candidate
+  for candidate in "$SRC_ROOT/$KIT_TEMPLATES_REL/$name" "$SRC_ROOT/templates/$name"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
 READING_BEGIN="<!-- AI-AGENTS:BEGIN kit reading list"
 READING_END="<!-- AI-AGENTS:END -->"
-sync_reading_index() {
-  local block="$SRC_ROOT/templates/required-reading.kit-block.md"
-  local dst="$TARGET_DIR/$READING_INDEX_REL"
-  [[ -f "$block" ]] || return 0
+READING_LOCAL_HEADING="## Fontes locais — fora do checkout"
 
-  if [[ ! -f "$dst" ]]; then
-    mkdir -p "$(dirname "$dst")"
-    if [[ -f "$SRC_ROOT/$READING_INDEX_REL" ]]; then
-      cp -a "$SRC_ROOT/$READING_INDEX_REL" "$dst"
-      echo "created project-owned file: $READING_INDEX_REL"
-    fi
+# The one migration this file can perform on the project's own half of the index.
+#
+# `.docs/workflows/sending-email.md` sends the agent to the "Fontes locais" section to
+# learn the project's transport and recipients. That section lives OUTSIDE the managed
+# markers — it is the project's to write — so no `--upgrade` can ever create it, and
+# every project installed before it existed receives a contract pointing at a heading
+# that is not there. Appending an empty scaffold is additive and destroys nothing: the
+# same shape as the `.credentials/.gitignore` line this installer already appends when
+# an old target lacks it. The rows stay the project's to fill.
+#
+# Detection matches the heading FAMILY, not one spelling. Round 2 of the council found
+# the exact-string version duplicating the section on any project that had written its
+# own — `## Fontes locais`, `## Local sources`, a plain hyphen — including a project
+# that had followed `governancekit doctor`'s own remediation hint, which recommends a
+# different spelling than the one this file seeds. The duplicate ended with "(não
+# declarada — pergunte ao operador)" a few lines below the project's real recurring CC
+# list: two contradictory answers to the exact question whose corruption opened this
+# issue. Same regex family as doctor's `_LOCAL_SOURCES_HEADING_RE`.
+#
+# When the section IS present, the one thing this function may do is speak. A project
+# installed between 2026-08-07 and 2026-08-10 has the section already, carrying a row
+# the kit itself wrote — `transporte da <secao> Sending Email` — which now asserts that one
+# operator's helper is this project's transport, in the exact table the email contract
+# tells the agent to trust. The row sits in the project's half of the index, and the
+# ownership rule that keeps `--upgrade` out of `docs/` is worth more than this fix is.
+# So: name the row, never touch it. Operator decision, 2026-08-10. The match is the
+# kit's own retired wording, so it cannot fire on anything a project wrote itself.
+warn_stale_transport_row() {
+  local dst="$1" hits
+  # The needle is BUILT, not written: check 10e resolves every literal `§N` against a
+  # real heading, and this one is a quotation of a retired table cell, not a reference.
+  local needle
+  needle="transporte da $(printf '\xc2\xa7')Sending Email"
+  hits="$(grep -nF "$needle" "$dst" 2>/dev/null || true)"
+  [[ -n "$hits" ]] || return 0
+  echo "WARNING: $READING_INDEX_REL still carries a row this kit wrote and has since retired:"
+  echo "$hits" | sed 's/^/    /'
+  echo "    It declares one operator's helper as THIS project's email transport."
+  echo "    .docs/workflows/sending-email.md sends the agent to that table to learn"
+  echo "    which transport to use. The row is yours to fix — the kit will not touch"
+  echo "    docs/. Replace it with this project's own transport, or delete it."
+}
+
+ensure_local_sources_section() {
+  local dst="$1"
+  if grep -qiE '^#{2,4} .*(fontes locais|local sources)' "$dst"; then
+    warn_stale_transport_row "$dst"
     return 0
   fi
+  have_python || {
+    echo "WARN: python3 not found — $READING_INDEX_REL kept without the Fontes locais section."
+    return 0
+  }
+
+  local scaffold
+  local starter; starter="$(kit_template required-reading.template.md || true)"
+  [[ -n "$starter" ]] || return 0
+  scaffold="$(python3 - "$starter" "$READING_LOCAL_HEADING" <<'PY'
+import sys
+
+template_path, heading = sys.argv[1:3]
+try:
+    with open(template_path, encoding="utf-8") as fh:
+        text = fh.read()
+except OSError:
+    raise SystemExit(0)
+
+start = text.find(heading)
+if start == -1:
+    raise SystemExit(0)
+# Up to the next top-level heading, so the scaffold carries its own subsections
+# (the recipient list) without dragging in the rest of the starter.
+stop = text.find("\n## ", start + len(heading))
+sys.stdout.write(text[start:] if stop == -1 else text[start:stop])
+PY
+  )" || return 0
+  [[ -n "${scaffold//[$'\n\t ']/}" ]] || return 0
+
+  printf '\n%s\n' "$scaffold" >> "$dst"
+  echo "added missing section to $READING_INDEX_REL: Fontes locais (rows are yours to fill)"
+}
+
+sync_reading_index() {
+  local block; block="$(kit_template required-reading.kit-block.md || true)"
+  local dst="$TARGET_DIR/$READING_INDEX_REL"
+
+  # A source tree without templates/ used to leave here on a silent `return 0`. The
+  # target then kept a refreshed AGENTS.md pointing at a reading index that was never
+  # created, and the run's only line about the file read "preserved project-local" —
+  # reassuring, and about a file that did not exist. Say what did not happen instead.
+  if [[ ! -f "$block" ]]; then
+    echo "WARN: no kit templates under $SRC_ROOT — $READING_INDEX_REL was NOT created or"
+    echo "      refreshed. AGENTS.md points at that index, and the email contract sends"
+    echo "      agents to its 'Fontes locais' section. Re-run from a complete kit source."
+    return 0
+  fi
+
+  # Seed from a NEUTRAL TEMPLATE, never from this repository's own index. The kit's
+  # index describes the kit: its transport, its recipients, its local sources. Copied
+  # verbatim into a new project it does not read as an example — it reads as that
+  # project's own declaration, which is how `~/.config/email/send.py` became "o
+  # transporte deste projeto" in a project nobody had inspected. Same reason
+  # handoff.md and napkin-lessons.md are seeded from templates and not from ours.
+  if [[ ! -f "$dst" ]]; then
+    mkdir -p "$(dirname "$dst")"
+    local starter; starter="$(kit_template required-reading.template.md || true)"
+    if [[ -n "$starter" ]]; then
+      cp -a "$starter" "$dst"
+      echo "created project-owned file: $READING_INDEX_REL"
+      # Fall through: the managed block is inserted by the same path that adopts an
+      # existing hand-written index, so the starter cannot drift from it.
+    else
+      echo "WARN: required-reading.template.md missing — $READING_INDEX_REL not seeded."
+      return 0
+    fi
+  fi
+
+  ensure_local_sources_section "$dst"
 
   if ! have_python; then
     echo "WARN: python3 not found — $READING_INDEX_REL kit block not refreshed."
@@ -1900,20 +2158,28 @@ upgrade_kit() {
   # docs/software-overview.md, docs/limits.md, docs/project-rules.md, handoff,
   # issues, and lessons — but "supposed to" is not a guarantee, so copy_file_replace
   # checks the manifest before it overwrites, and refuses outright for AGENTS.md.
-  local root_file
-  for root_file in "${KIT_ROOT_FILES[@]}"; do
-    copy_file_replace "$root_file"
-  done
-  sync_dir "templates"
-
   # Kit-owned directories are synced file-by-file: kit files are replaced, files the
   # kit dropped are retired only when the manifest proves it wrote them untouched, and
   # project-authored files inside these directories are preserved (see sync_dir).
+  #
+  # These run BEFORE the root files, and the order is load-bearing since AGENTS.md was
+  # sliced: it now points at `.docs/workflows/*.md` for the delivery, git and session
+  # sections instead of carrying them inline.
+  # Copy the root file first and an interrupt — Ctrl-C, disk full, a killed session —
+  # leaves a contract whose MANDATORY sections name files that are not there yet.
+  # Targets first means the worst interruption leaves the previous contract intact,
+  # pointing at content that still exists.
   sync_dir ".docs/agents"
   sync_dir ".docs/workflows"
   sync_dir ".docs/articles"
   sync_dir ".docs/icons"
   sync_dir ".docs/issues/templates"
+
+  local root_file
+  for root_file in "${KIT_ROOT_FILES[@]}"; do
+    copy_file_replace "$root_file"
+  done
+  sync_dir "$KIT_TEMPLATES_REL" "$(kit_templates_src_rel)"
 
   # Kit-owned reference pages.
   copy_file_replace ".docs/index.html"
@@ -1934,15 +2200,24 @@ upgrade_kit() {
   sync_reading_index
 
   # Preserve project-local files/state.
-  echo "preserved project-local: docs/software-overview.md"
-  echo "preserved project-local: docs/project-rules.md"
-  echo "preserved project-local: docs/limits.md"
+  #
+  # "preserved" is a claim about a file, so it is only printed for files that exist.
+  # The list used to be unconditional, which is how a run that had just warned it could
+  # NOT create docs/required-reading.md went on, seven lines later, to report that same
+  # file as preserved — reassurance last, about nothing. Council round 2 of gh-5.
+  local preserved_rel
+  for preserved_rel in \
+    "docs/software-overview.md" \
+    "docs/project-rules.md" \
+    "docs/limits.md" \
+    "docs/required-reading.md" \
+    "handoff.md" \
+    "docs/napkin-lessons.md"; do
+    [[ -e "$TARGET_DIR/$preserved_rel" ]] && echo "preserved project-local: $preserved_rel"
+  done
   echo "preserved project-local: docs/ (project territory, never overwritten)"
-  echo "preserved project-local: docs/required-reading.md"
-  echo "preserved project-local: handoff.md"
-  echo "preserved project-local: docs/napkin-lessons.md"
-  echo "preserved project-local: docs/issues/"
-  echo "preserved project-local: .credentials/"
+  [[ -d "$TARGET_DIR/docs/issues" ]] && echo "preserved project-local: docs/issues/"
+  [[ -d "$TARGET_DIR/.credentials" ]] && echo "preserved project-local: .credentials/"
 
   # The kit used to install its own README into every target. It no longer does;
   # a copy still sitting there is kit litter on the project's front page.
@@ -1965,7 +2240,7 @@ upgrade_kit() {
 # simply never retired, which is safe but silently accumulates.
 KIT_OWNED_PATHS=(
   "${KIT_ROOT_FILES[@]}"
-  "templates"
+  ".docs/templates"
   ".docs/agents" ".docs/workflows" ".docs/articles" ".docs/icons"
   ".docs/governancekit-integration.json"
   ".docs/context-manifest.yaml" ".docs/context-optimization.md" ".docs/schemas"
@@ -2022,8 +2297,9 @@ else
   # would hand every project this repository's session history as if it were theirs.
   # Seed an empty template instead, and only when the target has none.
   if [[ ! -e "$TARGET_DIR/handoff.md" ]]; then
-    if [[ -f "$SRC_ROOT/templates/handoff.template.md" ]]; then
-      cp -a "$SRC_ROOT/templates/handoff.template.md" "$TARGET_DIR/handoff.md"
+    tpl_handoff="$(kit_template handoff.template.md || true)"
+    if [[ -n "$tpl_handoff" ]]; then
+      cp -a "$tpl_handoff" "$TARGET_DIR/handoff.md"
     else
       printf '# Handoff\n\nSession memory for this project.\n' > "$TARGET_DIR/handoff.md"
     fi
@@ -2031,7 +2307,7 @@ else
   fi
   copy_path "scripts/agent-worktree.sh"
   copy_path "scripts/git-bare-remote.sh"
-  copy_path "templates"
+  copy_path "$KIT_TEMPLATES_REL" "$(kit_templates_src_rel)"
 
   # Seed project territory (docs/) from kit starters when the target lacks them.
   # These are project-owned once created; --upgrade never overwrites them.
@@ -2039,8 +2315,9 @@ else
   sync_reading_index
   # Same reasoning as handoff.md: the kit's own lessons are not this project's.
   if [[ ! -e "$TARGET_DIR/docs/napkin-lessons.md" ]]; then
-    if [[ -f "$SRC_ROOT/templates/napkin-lessons.template.md" ]]; then
-      cp -a "$SRC_ROOT/templates/napkin-lessons.template.md" "$TARGET_DIR/docs/napkin-lessons.md"
+    tpl_napkin_lessons="$(kit_template napkin-lessons.template.md || true)"
+    if [[ -n "$tpl_napkin_lessons" ]]; then
+      cp -a "$tpl_napkin_lessons" "$TARGET_DIR/docs/napkin-lessons.md"
     fi
   fi
   # The readiness files: the kit ships a template, the project owns the content and

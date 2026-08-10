@@ -26,6 +26,13 @@ required=(
   ".docs/agents/design-standards.md"
   ".docs/agents/council.md"
   ".docs/agents/privacy-compliance.md"
+  # Sliced out of AGENTS.md: §4/§5/§9/§10, §6/§7/§7b, §8/§8a, e-mail. AGENTS.md now
+  # only points at them, so a missing file is a missing MANDATORY rule with nothing
+  # left behind to notice it.
+  ".docs/workflows/delivery-loop.md"
+  ".docs/workflows/git-delivery.md"
+  ".docs/workflows/session-memory.md"
+  ".docs/workflows/sending-email.md"
   ".docs/context-manifest.yaml"
   ".docs/schemas/context-manifest.schema.json"
   ".docs/schemas/context-state.schema.json"
@@ -84,8 +91,10 @@ else
 fi
 
 echo "== 5. Operator placeholders not filled with real data in kit source =="
-# The kit ships with {{OPERATOR_NAME}}/{{SMTP_ACCOUNT}} slots. If they are absent from
-# AGENTS.md the source was likely committed with real operator data.
+# The kit ships a {{OPERATOR_NAME}} slot. If it is absent from AGENTS.md the source was
+# likely committed with real operator data. (SMTP_ACCOUNT — braces omitted on purpose,
+# a legacy identity.json that still declares it would substitute them — was the slot until
+# 2026-08-10; it is retired — the canonical contract no longer names a transport.)
 #
 # The delimiter is {{...}}, not [...], because [MANDATORY]/[PROHIBITED]/[DEFAULT] are
 # content vocabulary in these documents: a bracket token cannot be told from prose
@@ -214,6 +223,84 @@ else
   err "AGENTS.md no longer points at docs/required-reading.md"
 fi
 
+echo "== 8b. The canonical contract names no email transport =="
+# Council round 1 of the 2026-08-10 delivery (gh-5) found the retirement half-done in
+# three distinct ways. Each assertion below fails if one of them comes back.
+#
+# (a) The rewrite emptied the leaf file .docs/workflows/sending-email.md and left the
+#     ROOT contract still prescribing the transport as [MANDATORY] — and the leaf file
+#     defers to AGENTS.md on conflict, so the retired rule outranked its replacement in
+#     every installed project. Grep for the path, not for prose: a path is decidable.
+#
+#     Scope, twice — the first cut of this assertion passed against the un-fixed tree
+#     and would have cleared the very finding it was written for. It required a
+#     character after `email/`, and the offending line spelled the directory bare
+#     (`~/.config/email/` closed by a backtick). Now: the path anywhere, no lookahead.
+#     And sending-email.md is excluded rather than pattern-matched, because its
+#     Provenance section is *about* the retirement — the mention-versus-use distinction
+#     that has cost this kit four detectors is decided here by file, not by heuristic.
+#
+#     Round 2 widened the pathspec: it was `AGENTS.md .docs/*`, and appending the
+#     retired rule to CLAUDE.md left the whole gate green. The six adapter mirrors are
+#     kit-owned, installed everywhere, and are exactly what doctor scans as contracts.
+#     Three files are excluded by name, not by pattern: sending-email.md documents the
+#     retirement, docs/required-reading.md is where the rule SAYS a project must declare
+#     its own transport (flagging it would forbid compliance), and napkin-lessons.md is
+#     history — it records what happened, quoting the path, and this very check flagged
+#     the lesson written about it. Same exclusion, same reason, as doctor's
+#     `_CONTRACT_SCAN_SKIP`: "History, not instructions."
+transport_cite="$(git grep -nE '~/\.config/email' -- \
+                  'AGENTS.md' '.docs/*' 'docs/*.md' \
+                  'CLAUDE.md' 'GEMINI.md' '.cursorrules' '.windsurfrules' \
+                  '.github/copilot-instructions.md' '.amazonq/rules/*.md' \
+                  ':!.docs/workflows/sending-email.md' \
+                  ':!docs/required-reading.md' \
+                  ':!docs/napkin-lessons.md' \
+                  ':!docs/issues/*' || true)"
+if [[ -n "$transport_cite" ]]; then
+  echo "$transport_cite"
+  err "a kit-owned contract cites one operator's email transport — it is installed in every project"
+else
+  ok "no kit-owned contract names an email transport"
+fi
+
+#     The excluded file still has to obey the rule in its normative half: everything
+#     above ## Provenance is the contract, and the contract names no transport.
+contract_half="$(awk '/^## Provenance/{exit} {print}' .docs/workflows/sending-email.md)"
+if grep -qE '~/\.config/email|send\.py' <<<"$contract_half"; then
+  err "the §Sending Email contract itself names a transport again — only its Provenance may"
+else
+  ok "the §Sending Email contract names no transport above its Provenance"
+fi
+
+# (b) A fresh install seeded docs/required-reading.md from THIS repository's own index,
+#     so the kit's transport and the kit's "no recipient list" arrived in an unrelated
+#     project as that project's own declaration. The starter must be a neutral template.
+reading_template="templates/required-reading.template.md"
+if [[ -f "$reading_template" ]] &&
+   ! grep -qE '~/\.config|send\.py|agent-status\.json' "$reading_template"; then
+  ok "$reading_template ships and declares no local source of its own"
+else
+  err "$reading_template is missing or carries this repository's own local sources"
+fi
+if grep -q 'READING_INDEX_TEMPLATE_REL' scripts/install-agents-kit.sh &&
+   ! awk '/^sync_reading_index\(\)/,/^}/' scripts/install-agents-kit.sh |
+       grep -q 'SRC_ROOT/\$READING_INDEX_REL'; then
+  ok "the installer seeds a new index from the template, never from ours"
+else
+  err "sync_reading_index copies this repository's own index into fresh targets"
+fi
+
+# (c) The contract sends the agent to a section the kit never provisioned: it lives
+#     outside the managed markers, so no upgrade could create it and no already
+#     installed project would ever have one.
+if grep -qF '## Fontes locais' "$reading_template" &&
+   grep -q 'ensure_local_sources_section' scripts/install-agents-kit.sh; then
+  ok "the section the contract points at is seeded and back-filled on upgrade"
+else
+  err "docs/required-reading.md has no Fontes locais scaffold — the contract points at nothing"
+fi
+
 echo "== 9. The kit does not ship its own README into consuming projects =="
 # README.md is the kit's front page, not a file a consumer should receive. Shipping it
 # meant --upgrade replaced the project's README with the kit's — which really happened
@@ -322,31 +409,201 @@ noninteractive_rc=$?
 set -e
 if [[ "$noninteractive_rc" == "8" ]] &&
    grep -q 'OPERATOR_NAME' "$identity_test_root/noninteractive.log" &&
-   grep -q 'SMTP_ACCOUNT' "$identity_test_root/noninteractive.log" &&
+   ! grep -q 'SMTP_ACCOUNT' "$identity_test_root/noninteractive.log" &&
    [[ ! -e "$noninteractive_target/AGENTS.md" ]]; then
   ok "non-interactive upgrade fails before copying files when identity is empty"
 else
-  err "non-interactive upgrade did not fail early with both missing identity fields"
+  err "non-interactive upgrade did not fail early naming OPERATOR_NAME and only it"
 fi
 
 interactive_target="$identity_test_root/interactive"
 mkdir -p "$interactive_target"
 set +e
-printf 'Test Operator\ntest@example.invalid\n' |
+printf 'Test Operator\n' |
   script -qec "bash '$repo_root/$installer' --target '$interactive_target' --upgrade" /dev/null \
     >"$identity_test_root/interactive.log" 2>&1
 interactive_rc=$?
 set -e
 if [[ "$interactive_rc" == "30" ]] &&
    grep -q 'Test Operator' "$interactive_target/AGENTS.md" &&
-   grep -q 'test@example.invalid' "$interactive_target/AGENTS.md" &&
-   ! grep -q '{{OPERATOR_NAME}}\\|{{SMTP_ACCOUNT}}' "$interactive_target/AGENTS.md" &&
+   ! grep -q '{{OPERATOR_NAME}}' "$interactive_target/AGENTS.md" &&
    [[ "$(stat -c '%a' "$interactive_target/.credentials/identity.json")" == "600" ]]; then
   ok "interactive upgrade collects, protects, and applies required identity first"
 else
-  err "interactive upgrade did not collect and apply both identity fields"
+  err "interactive upgrade did not collect and apply the required identity field"
 fi
 rm -rf -- "$identity_test_root"
+trap - EXIT
+
+echo "== 10c-bis. A fresh target's reading index is the target's, not ours =="
+# The assertions in 8b are structural; these two run the installer, because the defect
+# council round 1 reproduced was in what lands on disk, not in what the script says.
+reading_test_root="$(mktemp -d)"
+trap 'rm -rf -- "$reading_test_root"' EXIT
+
+fresh_target="$reading_test_root/fresh"
+mkdir -p "$fresh_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$fresh_target/.credentials/identity.json"
+chmod 600 "$fresh_target/.credentials/identity.json"
+bash "$repo_root/$installer" --target "$fresh_target" --upgrade \
+  >"$reading_test_root/fresh.log" 2>&1 || true
+fresh_index="$fresh_target/docs/required-reading.md"
+if [[ -f "$fresh_index" ]] &&
+   grep -qF '## Fontes locais' "$fresh_index" &&
+   grep -q 'AI-AGENTS:BEGIN kit reading list' "$fresh_index" &&
+   ! grep -qE '~/\.config/email|agent-status\.json' "$fresh_index"; then
+  ok "fresh install seeds a neutral index with the Fontes locais section"
+else
+  err "fresh install produced no index, no Fontes locais section, or inherited our local sources"
+fi
+
+# An index written before the section existed — the state of essentially every install.
+legacy_target="$reading_test_root/legacy"
+mkdir -p "$legacy_target/docs" "$legacy_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$legacy_target/.credentials/identity.json"
+chmod 600 "$legacy_target/.credentials/identity.json"
+printf '# Required Reading\n\n## Deste projeto\n\n- `docs/arquitetura.md`\n' \
+  > "$legacy_target/docs/required-reading.md"
+bash "$repo_root/$installer" --target "$legacy_target" --upgrade \
+  >"$reading_test_root/legacy.log" 2>&1 || true
+legacy_index="$legacy_target/docs/required-reading.md"
+if grep -qF '## Fontes locais' "$legacy_index" &&
+   grep -qF 'docs/arquitetura.md' "$legacy_index" &&
+   grep -q 'AI-AGENTS:BEGIN kit reading list' "$legacy_index"; then
+  ok "upgrade back-fills Fontes locais without touching the project's own list"
+else
+  err "upgrade left an existing index without the section the email contract points at"
+fi
+
+# The seeded starter must read as a document: its lede explains what the file is and
+# who owns which half, and an exact-marker miss would bury it under the kit's tables.
+if [[ "$(grep -n 'índice único' "$fresh_index" | cut -d: -f1)" -lt \
+      "$(grep -n 'AI-AGENTS:BEGIN' "$fresh_index" | cut -d: -f1)" ]]; then
+  ok "the seeded index keeps its lede above the managed block"
+else
+  err "the seeded index has the kit block above its own lede — the template lost its markers"
+fi
+
+# Council round 2: the back-fill matched ONE spelling of the heading while doctor
+# accepts a family and recommends another, so a project that had already written its
+# own section got a second, empty, contradicting one appended.
+variant_target="$reading_test_root/variant"
+mkdir -p "$variant_target/docs" "$variant_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$variant_target/.credentials/identity.json"
+chmod 600 "$variant_target/.credentials/identity.json"
+printf '# Required Reading\n\n## Local sources\n\n| Caminho | Obrigatório | O que é |\n|---|---|---|\n| `~/x/mailer.py` | opcional | transporte deste projeto |\n\n### Lista de destinatários\n\n- ops@example.invalid (sempre em CC)\n' \
+  > "$variant_target/docs/required-reading.md"
+bash "$repo_root/$installer" --target "$variant_target" --upgrade \
+  >"$reading_test_root/variant.log" 2>&1 || true
+variant_index="$variant_target/docs/required-reading.md"
+if [[ "$(grep -ciE '^#{2,4} .*(fontes locais|local sources)' "$variant_index")" == "1" ]] &&
+   [[ "$(grep -cF 'Lista de destinatários' "$variant_index")" == "1" ]] &&
+   grep -qF 'ops@example.invalid' "$variant_index"; then
+  ok "back-fill recognises the heading family and never duplicates the section"
+else
+  err "upgrade duplicated the local-sources section — the project's recipient list now has a contradicting twin"
+fi
+# The cohort installed between 2026-08-07 and 2026-08-10: the section is already there,
+# carrying the row the kit itself wrote and has since retired. Ownership forbids
+# rewriting it, so the upgrade must NAME it — and must leave it exactly as it was.
+stale_target="$reading_test_root/stale"
+mkdir -p "$stale_target/docs" "$stale_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$stale_target/.credentials/identity.json"
+chmod 600 "$stale_target/.credentials/identity.json"
+printf '# Required Reading\n\n## Fontes locais — fora do checkout\n\n| Caminho | Obrigatório | O que é |\n|---|---|---|\n| `~/.config/email/send.py` | opcional | transporte da §Sending Email |\n' \
+  > "$stale_target/docs/required-reading.md"
+bash "$repo_root/$installer" --target "$stale_target" --upgrade \
+  >"$reading_test_root/stale.log" 2>&1 || true
+if grep -q 'has since retired' "$reading_test_root/stale.log" &&
+   grep -q 'transporte da §Sending Email' "$reading_test_root/stale.log" &&
+   [[ "$(grep -cF 'transporte da §Sending Email' "$stale_target/docs/required-reading.md")" == "1" ]]; then
+  ok "upgrade names the retired transport row and leaves the project's half untouched"
+else
+  err "upgrade stayed silent about a retired row, or rewrote the project's own index"
+fi
+# The other cohort ownership puts out of reach: a drifted AGENTS.md is preserved, so the
+# project keeps a BINDING contract carrying a WITHDRAWN rule while the corrected one
+# waits, unread, in .kit-new. Same instrument, same decision: name it, never overwrite.
+drift_target="$reading_test_root/drift"
+mkdir -p "$drift_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$drift_target/.credentials/identity.json"
+chmod 600 "$drift_target/.credentials/identity.json"
+bash "$repo_root/$installer" --target "$drift_target" --upgrade >/dev/null 2>&1 || true
+printf '# AGENTS.md\n\n[MANDATORY] Credenciais e transporte moram em `~/.config/email/`.\n' \
+  > "$drift_target/AGENTS.md"
+bash "$repo_root/$installer" --target "$drift_target" --upgrade \
+  >"$reading_test_root/drift.log" 2>&1 || true
+if grep -q 'kept: AGENTS.md' "$reading_test_root/drift.log" &&
+   grep -q 'WITHDRAWN' "$reading_test_root/drift.log" &&
+   grep -qF '~/.config/email' "$drift_target/AGENTS.md"; then
+  ok "upgrade names a kept contract that still carries the withdrawn rule"
+else
+  err "a preserved AGENTS.md kept the withdrawn transport rule with no warning"
+fi
+# A source tree without templates/ must say what it failed to do. The silent `return 0`
+# left the target with a refreshed AGENTS.md pointing at an index that was never made,
+# and the run's only line about that file claimed it had been preserved.
+partial_src="$reading_test_root/partial-src"
+mkdir -p "$partial_src"
+cp -a "$repo_root/AGENTS.md" "$repo_root/scripts" "$partial_src/"
+rm -rf "$partial_src/templates"
+partial_target="$reading_test_root/partial-target"
+mkdir -p "$partial_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$partial_target/.credentials/identity.json"
+chmod 600 "$partial_target/.credentials/identity.json"
+bash "$partial_src/scripts/$(basename "$installer")" --target "$partial_target" --upgrade \
+  >"$reading_test_root/partial.log" 2>&1 || true
+if grep -q 'was NOT created' "$reading_test_root/partial.log" &&
+   [[ ! -f "$partial_target/docs/required-reading.md" ]] &&
+   ! grep -q 'preserved project-local: docs/required-reading.md' \
+       "$reading_test_root/partial.log"; then
+  ok "a source tree without templates/ says the index was not created, and nothing else"
+else
+  err "the installer stayed silent, or claimed it preserved a file it never created"
+fi
+# The council's severest finding: `templates` was a kit-owned path at the PROJECT ROOT,
+# so a web project's own templates were recorded as kit-owned on the first upgrade and
+# DELETED, silently and without backup, on the second. Two upgrades is the fixture,
+# because one is not enough to reproduce it.
+web_target="$reading_test_root/web"
+mkdir -p "$web_target/templates" "$web_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$web_target/.credentials/identity.json"
+chmod 600 "$web_target/.credentials/identity.json"
+printf '<html>project layout</html>\n' > "$web_target/templates/base.html"
+bash "$repo_root/$installer" --target "$web_target" --upgrade >/dev/null 2>&1 || true
+bash "$repo_root/$installer" --target "$web_target" --upgrade >/dev/null 2>&1 || true
+if [[ -f "$web_target/templates/base.html" ]] &&
+   [[ -f "$web_target/.docs/templates/required-reading.template.md" ]] &&
+   ! grep -q '"templates/base.html"' "$web_target/.gk/manifest.json" 2>/dev/null; then
+  ok "two upgrades leave a project's own templates/ untouched and unclaimed"
+else
+  err "the installer claimed or deleted the project's own templates/ — data loss"
+fi
+
+# A target installed while templates/ was a kit path keeps the kit's starters in its own
+# directory. Ownership forbids removing them, so the run must name them.
+legacy_tpl="$reading_test_root/legacy-tpl"
+mkdir -p "$legacy_tpl/templates" "$legacy_tpl/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$legacy_tpl/.credentials/identity.json"
+chmod 600 "$legacy_tpl/.credentials/identity.json"
+cp "$repo_root/templates/required-reading.template.md" "$legacy_tpl/templates/"
+bash "$repo_root/$installer" --target "$legacy_tpl" --upgrade \
+  >"$reading_test_root/legacy-tpl.log" 2>&1 || true
+if grep -q 'templates/required-reading.template.md' "$reading_test_root/legacy-tpl.log" &&
+   [[ -f "$legacy_tpl/templates/required-reading.template.md" ]]; then
+  ok "an older install's kit templates are named, not deleted"
+else
+  err "kit templates left at the project root were silently removed or never reported"
+fi
+rm -rf -- "$reading_test_root"
 trap - EXIT
 
 echo "== 10d. Landing page is publishable and release-safe =="
@@ -457,6 +714,105 @@ if [[ -f "$pages_workflow" ]] &&
   ok "GitHub Pages workflow deploys only docs/ with current official actions"
 else
   err "GitHub Pages workflow is missing or does not deploy docs/ correctly"
+fi
+
+echo "== 10e. Every § reference resolves to a real section =="
+# AGENTS.md carried `§commit-only` for months — a reference to a section that has never
+# existed. Nothing dereferences §N, so a dangle costs nothing at runtime and everything
+# to the reader who goes looking. Now that the contract is split across files, a dangle
+# is also how a rule quietly becomes unreachable: the pointer survives the move, the
+# target does not.
+if python3 - <<'PY'
+import re, sys
+from pathlib import Path
+
+# Section numbers are small integers and they collide across the corpus: `## 9` exists
+# in security-standards.md and in three audit workflows. A check that pools every
+# heading into one namespace therefore answers "does §9 exist anywhere?", which is
+# always yes — it would have passed while `delivery-loop.md §9` pointed at nothing.
+# So a reference resolves against the file it names, and only a bare one falls back
+# to the file it was written in.
+SCAN = [Path("AGENTS.md"), *sorted(Path(".docs").rglob("*.md")), *sorted(Path("scripts").glob("*.sh"))]
+# This file is skipped: it is the only place in the tree that has to *write* the
+# patterns it looks for, and a detector that reads its own source finds itself. Same
+# shape as the four detection defects this kit has already paid for — here the scope
+# is narrowed on purpose rather than discovered in production.
+SCAN = [p for p in SCAN if p.name != "run-checks.sh"]
+sources = {p: p.read_text(encoding="utf-8", errors="replace") for p in SCAN if p.is_file()}
+
+HEADING = re.compile(r"^#{1,6}\s+(?:§\s*)?([0-9]+[a-z]?)\b")
+headings = {
+    path: {m.group(1) for line in text.splitlines() if (m := HEADING.match(line))}
+    for path, text in sources.items()
+}
+
+# A single uppercase letter after § is a metavariable in prose ("`design-standards.md`
+# §N"), not a citation. Everything else must resolve — including a word-shaped one:
+# sections are numbered, so `§commit-only` was never anything but a dangle.
+METAVARIABLE = re.compile(r"^[A-Z]$")
+FILENAME = re.compile(r"[`'\"]?([\w./-]+\.md)[`'\"]?")
+BARE = re.compile(r"§\s*([A-Za-z0-9][A-Za-z0-9-]*)")
+HEADING_LINE = re.compile(r"^#{1,6}\s")
+
+
+def resolve(named: str, home: Path) -> Path | None:
+    """Which scanned file a citation's filename refers to, or None if unknown."""
+    for candidate in ((home.parent / named).resolve(), Path(named.lstrip("/")).resolve()):
+        for path in sources:
+            if path.resolve() == candidate:
+                return path
+    return None
+
+
+dangling = []
+for path, text in sources.items():
+    # A pointer stub names its target in the heading and lists the sections below it,
+    # so a filename stays in force until the next heading. Without that, every stub
+    # this slice created would read as citing itself.
+    section_file = None
+    for n, line in enumerate(text.splitlines(), 1):
+        if HEADING_LINE.match(line):
+            found = FILENAME.search(line)
+            section_file = found.group(1) if found else None
+        for match in BARE.finditer(line):
+            ref = match.group(1)
+            if METAVARIABLE.match(ref):
+                continue
+            # A filename qualifies a § only when it sits immediately before it:
+            # "`design-standards.md` §1". Taking any filename on the line was wrong
+            # four times out of six against council.md, where a sentence names a
+            # sibling file and then cites its OWN §1 further along.
+            before = line[max(0, match.start() - 30):match.start()]
+            adjacent = re.search(r"[`'\"]?([\w./-]+\.md)[`'\"]?[\s(,]*$", before)
+            if adjacent:
+                named = adjacent.group(1)
+            elif ref in headings[path]:
+                # The own file wins over the enclosing heading's target. A heading may
+                # name a sibling for other reasons ("## 1. The boundary with
+                # governance-precedence.md") and its body still cite its own sections.
+                named = None
+            else:
+                named = section_file
+            target = resolve(named, path) if named else path
+            if target is None:
+                # Names a file this scan does not cover; only assert the number exists.
+                if any(ref in found for found in headings.values()):
+                    continue
+                dangling.append(f"{path}:{n}: §{ref} (in {named}, not scanned)")
+                continue
+            if ref not in headings[target]:
+                where = named or path.name
+                dangling.append(f"{path}:{n}: §{ref} — no such section in {where}")
+if dangling:
+    print("  dangling § references:")
+    for item in dangling:
+        print(f"    {item}")
+    raise SystemExit(1)
+PY
+then
+  ok "every § reference resolves to a heading in AGENTS.md or .docs/"
+else
+  err "dangling § reference"
 fi
 
 echo "== 11. shellcheck (advisory, if installed) =="

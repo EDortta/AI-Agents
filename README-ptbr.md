@@ -118,7 +118,7 @@ pode ficar em fonte rastreada. Os valores vivem em **`.credentials/identity.json
 
 ```json
 {
-  "values": { "OPERATOR_NAME": "…", "SMTP_ACCOUNT": "…" },
+  "values": { "OPERATOR_NAME": "…" },
   "refs":   { "EMAIL_CREDENTIALS": "~/.config/email/credentials.conf" }
 }
 ```
@@ -131,8 +131,8 @@ operador são justamente o dado pessoal que o esquema de slots existe para mante
 repo, e compartilhar um arquivo só mudaria o vazamento do `AGENTS.md` para um JSON.
 
 Em todo install e `--upgrade`, o instalador resolve primeiro esses valores obrigatórios.
-Num terminal interativo ele pergunta pelos valores vazios de `OPERATOR_NAME` e
-`SMTP_ACCOUNT`; numa execução não interativa, falha antes de copiar arquivos do kit e
+Num terminal interativo ele pergunta pelo valor vazio de `OPERATOR_NAME`;
+numa execução não interativa, falha antes de copiar arquivos do kit e
 informa o que precisa ser configurado. Ele mantém o arquivo com modo `0600` e reaplica
 os valores, então um slot preenchido não é deriva: o arquivo em disco e a versão nova
 do kit ficam byte a byte iguais, e o upgrade não queima o valor nem pede merge.

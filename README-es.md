@@ -120,7 +120,7 @@ personal no puede quedar en fuente versionada. Los valores viven en
 
 ```json
 {
-  "values": { "OPERATOR_NAME": "…", "SMTP_ACCOUNT": "…" },
+  "values": { "OPERATOR_NAME": "…" },
   "refs":   { "EMAIL_CREDENTIALS": "~/.config/email/credentials.conf" }
 }
 ```
@@ -134,8 +134,8 @@ esquema de slots existe para mantener fuera del repo, y compartir un archivo sol
 movería la fuga de `AGENTS.md` a un JSON.
 
 En cada install y `--upgrade`, el instalador resuelve primero estos valores obligatorios.
-En una terminal interactiva pregunta por los valores vacíos de `OPERATOR_NAME` y
-`SMTP_ACCOUNT`; en una ejecución no interactiva, falla antes de copiar archivos del kit
+En una terminal interactiva pregunta por el valor vacío de `OPERATOR_NAME`;
+en una ejecución no interactiva, falla antes de copiar archivos del kit
 e informa qué debe configurarse. Mantiene el archivo con modo `0600` y reaplica los
 valores, así que un slot completado no es deriva: el archivo en disco y la versión nueva
 del kit quedan byte a byte iguales, y el upgrade ni quema el valor ni pide una fusión.
