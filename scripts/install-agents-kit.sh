@@ -1818,7 +1818,17 @@ PY
 sync_reading_index() {
   local block="$SRC_ROOT/templates/required-reading.kit-block.md"
   local dst="$TARGET_DIR/$READING_INDEX_REL"
-  [[ -f "$block" ]] || return 0
+
+  # A source tree without templates/ used to leave here on a silent `return 0`. The
+  # target then kept a refreshed AGENTS.md pointing at a reading index that was never
+  # created, and the run's only line about the file read "preserved project-local" —
+  # reassuring, and about a file that did not exist. Say what did not happen instead.
+  if [[ ! -f "$block" ]]; then
+    echo "WARN: $SRC_ROOT/templates/ is missing — $READING_INDEX_REL was NOT created or"
+    echo "      refreshed. AGENTS.md points at that index, and the email contract sends"
+    echo "      agents to its 'Fontes locais' section. Re-run from a complete kit source."
+    return 0
+  fi
 
   # Seed from a NEUTRAL TEMPLATE, never from this repository's own index. The kit's
   # index describes the kit: its transport, its recipients, its local sources. Copied

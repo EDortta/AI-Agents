@@ -545,6 +545,26 @@ if grep -q 'kept: AGENTS.md' "$reading_test_root/drift.log" &&
 else
   err "a preserved AGENTS.md kept the withdrawn transport rule with no warning"
 fi
+# A source tree without templates/ must say what it failed to do. The silent `return 0`
+# left the target with a refreshed AGENTS.md pointing at an index that was never made,
+# and the run's only line about that file claimed it had been preserved.
+partial_src="$reading_test_root/partial-src"
+mkdir -p "$partial_src"
+cp -a "$repo_root/AGENTS.md" "$repo_root/scripts" "$partial_src/"
+rm -rf "$partial_src/templates"
+partial_target="$reading_test_root/partial-target"
+mkdir -p "$partial_target/.credentials"
+printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
+  > "$partial_target/.credentials/identity.json"
+chmod 600 "$partial_target/.credentials/identity.json"
+bash "$partial_src/scripts/$(basename "$installer")" --target "$partial_target" --upgrade \
+  >"$reading_test_root/partial.log" 2>&1 || true
+if grep -q 'was NOT created' "$reading_test_root/partial.log" &&
+   [[ ! -f "$partial_target/docs/required-reading.md" ]]; then
+  ok "a source tree without templates/ says the index was not created"
+else
+  err "the installer stayed silent about failing to create the reading index"
+fi
 rm -rf -- "$reading_test_root"
 trap - EXIT
 
