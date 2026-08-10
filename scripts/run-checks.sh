@@ -243,15 +243,19 @@ echo "== 8b. The canonical contract names no email transport =="
 #     Round 2 widened the pathspec: it was `AGENTS.md .docs/*`, and appending the
 #     retired rule to CLAUDE.md left the whole gate green. The six adapter mirrors are
 #     kit-owned, installed everywhere, and are exactly what doctor scans as contracts.
-#     Two files are excluded by name, not by pattern: sending-email.md documents the
-#     retirement, and docs/required-reading.md is where the rule SAYS a project must
-#     declare its own transport — flagging it would forbid compliance.
+#     Three files are excluded by name, not by pattern: sending-email.md documents the
+#     retirement, docs/required-reading.md is where the rule SAYS a project must declare
+#     its own transport (flagging it would forbid compliance), and napkin-lessons.md is
+#     history — it records what happened, quoting the path, and this very check flagged
+#     the lesson written about it. Same exclusion, same reason, as doctor's
+#     `_CONTRACT_SCAN_SKIP`: "History, not instructions."
 transport_cite="$(git grep -nE '~/\.config/email' -- \
                   'AGENTS.md' '.docs/*' 'docs/*.md' \
                   'CLAUDE.md' 'GEMINI.md' '.cursorrules' '.windsurfrules' \
                   '.github/copilot-instructions.md' '.amazonq/rules/*.md' \
                   ':!.docs/workflows/sending-email.md' \
                   ':!docs/required-reading.md' \
+                  ':!docs/napkin-lessons.md' \
                   ':!docs/issues/*' || true)"
 if [[ -n "$transport_cite" ]]; then
   echo "$transport_cite"

@@ -1,5 +1,41 @@
 # Handoff
 
+## [2026-08-10] gh-5 — §Sending Email canônica - blocked-on-operator
+
+- branch: `development`, 10 commits a frente de `origin/main`. `main` intocada.
+- **Nada empurrado.** Nenhum deploy, nenhuma tag.
+- RESUME: `docs/issues/009-sending-email-canonico-[review]/RESUME.md`
+
+### Entregue
+
+Quatro commits, dois deles fechando council. Itens 1 e 2 da issue fechados **do lado
+AI-Agents**: a seção canônica não nomeia transporte e o slot `SMTP_ACCOUNT` saiu de 15
+arquivos. Itens 3 e 4 dependem do GovernanceKit e não foram tocados.
+
+### Council
+
+Duas rodadas, quatro lentes na primeira (as três padrão mais **the migrator**,
+selecionada pela pergunta de §5 sobre ordem de deploy). **25 achados levantados, 18
+sobreviveram ao §2, 8 fechados com teste, 2 com aceitação de risco escrita, 10 em
+aberto.** Nove asserções novas no `run-checks.sh`, seis verificadas vermelhas contra a
+árvore pré-correção.
+
+A rodada 1 mostrou que a entrega estava pela metade: o `AGENTS.md` ainda prescrevia o
+transporte, com precedência sobre o arquivo corrigido. A rodada 2 mostrou que a
+correção também: o gate novo não via os espelhos de adaptador, o back-fill duplicava
+seção, e o instalador Python refaz tudo.
+
+### Parado no §4
+
+`council.md` §4 manda parar depois da rodada 2 e levar ao operador em vez de orbitar.
+Quatro decisões em aberto, escritas no RESUME: o coorte de 3 dias que o back-fill não
+alcança, uma regressão de `doctor` no caminho feliz, o instalador Python (que deixou de
+ser follow-up e virou pré-requisito) e o coorte de `AGENTS.md` com deriva.
+
+**Next:** decisão do operador sobre os quatro itens; depois a etapa GovernanceKit.
+
+---
+
 ## [2026-08-07] Epico 006 — A3, B3 e o fatiamento do AGENTS.md - ready-for-review
 
 - branch: `development`, 5 commits a frente de `origin/development`. `main` intocada.
