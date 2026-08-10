@@ -35,11 +35,11 @@
   <section>
     <h2>Fluxo recomendado</h2>
     <pre><code># 1a. Instalação nova
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.0/scripts/install-agents-kit.sh) \
   --target "$PWD"
 
 # 1b. Atualização de uma instalação existente
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.0/scripts/install-agents-kit.sh) \
   --target "$PWD" --upgrade
 
 # 2. Configure a identidade desta máquina/checkout
@@ -73,7 +73,7 @@ governancekit --version</code></pre>
       <tbody>
         <tr><td><code>--target &lt;dir&gt;</code></td><td>Define o projeto alvo. O padrão é o diretório atual.</td><td>Sempre que o script for executado fora do projeto.</td></tr>
         <tr><td><code>--repo &lt;owner/repo&gt;</code></td><td>Seleciona outro repositório de origem.</td><td>Forks e distribuições internas.</td></tr>
-        <tr><td><code>--ref &lt;ref&gt;</code></td><td>Seleciona tag, branch ou commit. O padrão é <code>v1.1.8</code>.</td><td>Fixar uma versão ou testar uma origem específica.</td></tr>
+        <tr><td><code>--ref &lt;ref&gt;</code></td><td>Seleciona tag, branch ou commit. O padrão é <code>v1.2.0</code>.</td><td>Fixar uma versão ou testar uma origem específica.</td></tr>
         <tr><td><code>--checksum &lt;sha256&gt;</code></td><td>Valida o tarball baixado e aborta se o hash divergir.</td><td>CI e instalações com exigência de integridade.</td></tr>
         <tr><td><code>--upgrade</code></td><td>Atualiza arquivos do kit e preserva contexto, regras, identidade, handoff e issues do projeto.</td><td>Atualização normal de uma instalação existente.</td></tr>
         <tr><td><code>--force</code></td><td>Sobrescreve arquivos existentes numa instalação. Não pode ser combinado com <code>--upgrade</code>.</td><td>Somente quando a substituição integral foi revisada e é intencional.</td></tr>
