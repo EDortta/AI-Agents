@@ -374,21 +374,29 @@ echo "== 10c. Installer release and identity preflight stay coherent =="
 installer="scripts/install-agents-kit.sh"
 installer_ref="$(awk -F'"' '$1 == "REF=" { print $2; exit }' "$installer")"
 latest_tag="$(git tag --sort=-version:refname | head -n1)"
-next_tag="$(
-  python3 - "$latest_tag" <<'PY'
+# The question is "is REF stale?", so any version at or ahead of the latest tag answers
+# it. This used to accept only the next PATCH, which made a minor or major release
+# impossible to prepare: the gate refused the bump before the tag existed, and the tag
+# could not be cut without the bump. Caught while cutting v1.2.0.
+ref_ok="$(
+  python3 - "$installer_ref" "$latest_tag" <<'REFPY'
 import re
 import sys
 
-match = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", sys.argv[1])
-if match:
-    major, minor, patch = map(int, match.groups())
-    print(f"v{major}.{minor}.{patch + 1}")
-PY
+
+def parse(tag):
+    match = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", tag)
+    return tuple(map(int, match.groups())) if match else None
+
+
+ref, latest = parse(sys.argv[1]), parse(sys.argv[2])
+print("yes" if ref and latest and ref >= latest else "no")
+REFPY
 )"
-if [[ "$installer_ref" == "$latest_tag" || "$installer_ref" == "$next_tag" ]]; then
-  ok "installer REF is the current release or the next patch ($installer_ref)"
+if [[ "$ref_ok" == "yes" ]]; then
+  ok "installer REF is the current release or ahead of it ($installer_ref)"
 else
-  err "installer REF $installer_ref is stale; expected $latest_tag or $next_tag"
+  err "installer REF $installer_ref is stale or unparsable; latest tag is $latest_tag"
 fi
 if grep -qF "/$installer_ref/scripts/install-agents-kit.sh" "$installer" &&
    grep -qF -- "--branch $installer_ref" "$installer" &&

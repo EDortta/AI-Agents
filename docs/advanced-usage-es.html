@@ -31,11 +31,11 @@
   <section>
     <h2>Flujo recomendado</h2>
     <pre><code># 1a. Instalación nueva
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.0/scripts/install-agents-kit.sh) \
   --target "$PWD"
 
 # 1b. Actualización de una instalación existente
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.1.8/scripts/install-agents-kit.sh) \
+bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.0/scripts/install-agents-kit.sh) \
   --target "$PWD" --upgrade
 
 # 2. Configura la identidad de esta máquina/checkout
@@ -64,7 +64,7 @@ governancekit --version</code></pre>
     <table><thead><tr><th>Parámetro</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead><tbody>
       <tr><td><code>--target &lt;dir&gt;</code></td><td>Selecciona el proyecto destino; por defecto, el directorio actual.</td><td>Al ejecutar fuera del proyecto.</td></tr>
       <tr><td><code>--repo &lt;owner/repo&gt;</code></td><td>Selecciona otro repositorio de origen.</td><td>Forks o distribuciones internas.</td></tr>
-      <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selecciona tag, branch o commit; por defecto <code>v1.1.8</code>.</td><td>Fijar o probar un origen específico.</td></tr>
+      <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selecciona tag, branch o commit; por defecto <code>v1.2.0</code>.</td><td>Fijar o probar un origen específico.</td></tr>
       <tr><td><code>--checksum &lt;sha256&gt;</code></td><td>Valida el tarball y aborta si el hash no coincide.</td><td>Instalaciones sensibles y CI.</td></tr>
       <tr><td><code>--upgrade</code></td><td>Actualiza archivos del kit preservando contexto, reglas, identidad, handoff e issues.</td><td>Actualización normal.</td></tr>
       <tr><td><code>--force</code></td><td>Sobrescribe archivos; incompatible con <code>--upgrade</code>.</td><td>Solo después de revisar un reemplazo intencional.</td></tr>
