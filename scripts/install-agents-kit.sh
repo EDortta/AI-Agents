@@ -490,7 +490,7 @@ seed_identity() {
     if [[ -f "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" ]]; then
       cp -a "$SRC_ROOT/$IDENTITY_EXAMPLE_REL" "$dst"
     else
-      printf '{\n  "state_version": 1,\n  "values": { "OPERATOR_NAME": "", "SMTP_ACCOUNT": "" },\n  "refs": {}\n}\n' > "$dst"
+      printf '{\n  "state_version": 1,\n  "values": { "OPERATOR_NAME": "" },\n  "refs": {}\n}\n' > "$dst"
     fi
     echo "created programmer-owned file (untracked): $IDENTITY_REL"
   fi
@@ -502,7 +502,14 @@ seed_identity() {
 # leave the target with an immediately blocking Start Gate.
 ensure_required_identity() {
   local identity="$TARGET_DIR/$IDENTITY_REL"
-  local required=("OPERATOR_NAME" "SMTP_ACCOUNT")
+  # SMTP_ACCOUNT was required here until 2026-08-10. It is gone because the canonical
+  # contract no longer names a transport (.docs/workflows/sending-email.md): an install
+  # cannot know whether this project sends email at all, let alone through SMTP, so
+  # demanding an account was a precondition invented by one project's mechanism. A
+  # project that does send email declares its transport in docs/required-reading.md.
+  # An existing identity.json that still carries the value is left alone — an
+  # undeclared value is simply never substituted.
+  local required=("OPERATOR_NAME")
 
   if ! have_python; then
     echo "ERROR: python3 is required to validate and configure $IDENTITY_REL." >&2

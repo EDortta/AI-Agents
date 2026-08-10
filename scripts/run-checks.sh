@@ -91,8 +91,10 @@ else
 fi
 
 echo "== 5. Operator placeholders not filled with real data in kit source =="
-# The kit ships with {{OPERATOR_NAME}}/{{SMTP_ACCOUNT}} slots. If they are absent from
-# AGENTS.md the source was likely committed with real operator data.
+# The kit ships a {{OPERATOR_NAME}} slot. If it is absent from AGENTS.md the source was
+# likely committed with real operator data. (SMTP_ACCOUNT — braces omitted on purpose,
+# a legacy identity.json that still declares it would substitute them — was the slot until
+# 2026-08-10; it is retired — the canonical contract no longer names a transport.)
 #
 # The delimiter is {{...}}, not [...], because [MANDATORY]/[PROHIBITED]/[DEFAULT] are
 # content vocabulary in these documents: a bracket token cannot be told from prose
@@ -329,29 +331,28 @@ noninteractive_rc=$?
 set -e
 if [[ "$noninteractive_rc" == "8" ]] &&
    grep -q 'OPERATOR_NAME' "$identity_test_root/noninteractive.log" &&
-   grep -q 'SMTP_ACCOUNT' "$identity_test_root/noninteractive.log" &&
+   ! grep -q 'SMTP_ACCOUNT' "$identity_test_root/noninteractive.log" &&
    [[ ! -e "$noninteractive_target/AGENTS.md" ]]; then
   ok "non-interactive upgrade fails before copying files when identity is empty"
 else
-  err "non-interactive upgrade did not fail early with both missing identity fields"
+  err "non-interactive upgrade did not fail early naming OPERATOR_NAME and only it"
 fi
 
 interactive_target="$identity_test_root/interactive"
 mkdir -p "$interactive_target"
 set +e
-printf 'Test Operator\ntest@example.invalid\n' |
+printf 'Test Operator\n' |
   script -qec "bash '$repo_root/$installer' --target '$interactive_target' --upgrade" /dev/null \
     >"$identity_test_root/interactive.log" 2>&1
 interactive_rc=$?
 set -e
 if [[ "$interactive_rc" == "30" ]] &&
    grep -q 'Test Operator' "$interactive_target/AGENTS.md" &&
-   grep -q 'test@example.invalid' "$interactive_target/AGENTS.md" &&
-   ! grep -q '{{OPERATOR_NAME}}\\|{{SMTP_ACCOUNT}}' "$interactive_target/AGENTS.md" &&
+   ! grep -q '{{OPERATOR_NAME}}' "$interactive_target/AGENTS.md" &&
    [[ "$(stat -c '%a' "$interactive_target/.credentials/identity.json")" == "600" ]]; then
   ok "interactive upgrade collects, protects, and applies required identity first"
 else
-  err "interactive upgrade did not collect and apply both identity fields"
+  err "interactive upgrade did not collect and apply the required identity field"
 fi
 rm -rf -- "$identity_test_root"
 trap - EXIT

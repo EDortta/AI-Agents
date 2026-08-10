@@ -49,7 +49,9 @@ Email cannot be recalled. When the recipient is ambiguous, **ask before sending*
 Until `[2026-08-10]` this file did the opposite of what it now requires: it prescribed
 **one project's mechanism** — a fixed helper path (`~/.config/email/send.py`), a fixed
 credential file (`~/.config/email/credentials.conf`) and a single SMTP account slot
-(`{{SMTP_ACCOUNT}}`) — as though it were universal. It is installed into every project
+(`SMTP_ACCOUNT`, since retired — written here without its braces so the installer
+cannot substitute the operator's address into the paragraph that forbids it) — as
+though it were universal. It is installed into every project
 in the park, and projects do not share a transport: some have a local helper, others
 version one inside the repository with its own credentials. A contract that names one
 of them makes an agent apply project A's mechanism while working in project B.
