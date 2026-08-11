@@ -54,7 +54,7 @@ CI examples, see [Advanced usage details](https://edortta.github.io/AI-Agents/ad
 Preferred: clone and inspect before running, especially the first time:
 
 ```bash
-git clone --branch v1.2.0 https://github.com/EDortta/AI-Agents.git
+git clone --branch v1.2.1 https://github.com/EDortta/AI-Agents.git
 less AI-Agents/scripts/install-agents-kit.sh
 ./AI-Agents/scripts/install-agents-kit.sh --target /path/to/your-project
 ```
@@ -63,7 +63,7 @@ Shortcut, if you accept running a script straight from GitHub (pinned to a
 release tag, not the mutable `main` branch):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.0/scripts/install-agents-kit.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
   --target /path/to/your-project
 ```
 
