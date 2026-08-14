@@ -2,7 +2,12 @@
 
 ## [2026-08-14] WK-20260814-unattended-run — contrato de rodada sem supervisão
 
-- branch: `development`. Nada empurrado para `main`, nenhum deploy, nenhuma tag.
+- branch: `development`, empurrada para `origin/development` em `95aec8e`.
+  **`main` intocada, nenhum deploy, nenhuma tag.**
+- Aberto para amanhã (§1c): **`development`** carrega esta entrega e está 4 commits
+  à frente de `main` — o que falta ali é a decisão de release, não código. Não há
+  worktree aberto. Nenhum epic ativo: este trabalho não abriu pasta de issue, então
+  o estado vive neste handoff e nos seis itens abertos abaixo.
 - Origem: o incidente de 13–14/08 — duas esteiras, ~12h, **zero issues fechadas**.
 
 ### Entregue
