@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI-Agents — Rodar sem supervisão</title>
+  <meta name="description" content="Rodar uma fila do AI-Agents à noite sem supervisão: quando ela precisa parar e quanto isso custa de verdade." />
+  <style>
+    :root{--bg:#0b1020;--panel:#131b31;--text:#edf2ff;--muted:#aab5cf;--line:#293653;--accent:#79a8ff;--code:#080d19;--warn:#ffb26b}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,sans-serif}
+    main,nav{width:min(1080px,calc(100% - 32px));margin:auto} nav{display:flex;justify-content:space-between;gap:18px;padding:22px 0;flex-wrap:wrap}
+    a{color:var(--accent)} nav a{text-decoration:none}.hero{padding:54px 0 32px}.eyebrow{color:var(--accent);font-weight:700}
+    h1{font-size:clamp(2.2rem,6vw,4.5rem);line-height:1.03;margin:.25em 0} h2{margin-top:2.2em} h3{margin-top:1.6em}
+    p,li{color:var(--muted)} strong,th{color:var(--text)} code,pre{font-family:ui-monospace,SFMono-Regular,monospace}
+    code{color:#c9d9ff} pre{background:var(--code);border:1px solid var(--line);padding:18px;overflow:auto;border-radius:10px;color:#dce7ff}
+    table{width:100%;border-collapse:collapse;margin:18px 0 28px} th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+    .note{background:var(--panel);border-left:4px solid var(--accent);padding:14px 18px;border-radius:6px}
+    .warn{background:var(--panel);border-left:4px solid var(--warn);padding:14px 18px;border-radius:6px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:10px}.card h3{margin-top:0}
+    footer{border-top:1px solid var(--line);margin-top:64px;padding:28px 0;color:var(--muted)}
+  </style>
+</head>
+<body>
+<nav>
+  <a href="./index.html">← AI-Agents</a>
+  <span><a href="./unattended-run.html" onclick="localStorage.setItem('ai-agents-lang','en')">EN</a> · <strong>PT-BR</strong> · <a href="./unattended-run-es.html" onclick="localStorage.setItem('ai-agents-lang','es')">ES</a></span>
+  <a href="https://github.com/EDortta/AI-Agents">GitHub</a>
+</nav>
+<main>
+  <header class="hero">
+    <div class="eyebrow">Modo de operação</div>
+    <h1>Rodar sem supervisão</h1>
+    <p>Um agente pode trabalhar uma fila de issues durante a noite, agendado, sem ninguém olhando. A parte difícil não é fazer ele continuar. É fazer ele <strong>parar</strong>.</p>
+  </header>
+
+  <section>
+    <h2>O que é esse modo</h2>
+    <p>Uma rodada sem supervisão é um agente que puxa issues de uma fila e as executa enquanto você dorme: implementa, revisa, registra e para. O contrato do kit para isso é <code>.docs/workflows/unattended-run.md</code>, que o agente precisa carregar <strong>antes de armar qualquer coisa que rode sem supervisão, e antes de revisar qualquer coisa que já esteja rodando</strong>.</p>
+    <p class="warn"><strong>O kit não entrega uma esteira pronta.</strong> Ele entrega as regras que essa esteira precisa satisfazer — condições de parada, tetos, protocolo de escalação, relatório. O mecanismo é seu, porque todo mecanismo revisado até agora quebrou em algum ponto onde as regras não quebraram.</p>
+  </section>
+
+  <section>
+    <h2>Por que a condição de parada é a funcionalidade inteira</h2>
+    <p>Em 13–14 de agosto de 2026, duas esteiras rodaram cerca de doze horas e fecharam <strong>zero</strong> issues. Uma repetiu o mesmo ciclo de revisão umas cem vezes. A outra recusou iniciar a cada dez minutos por horas, bloqueada por sobras de uma unidade morta, e nunca avisou. As duas pareciam saudáveis de fora o tempo todo.</p>
+    <p>Nada ali foi falha de modelo. Toda instrução especificava como <em>continuar</em> e nenhuma especificava quando <em>desistir</em>.</p>
+    <div class="cards">
+      <article class="card"><h3>Suspensão</h3><p>Condição transitória conhecida <strong>com regra de retomada escrita ao lado</strong> — a janela fechou, o orçamento da noite acabou. Sem essa regra, o desfecho correto é falta.</p></article>
+      <article class="card"><h3>Falta</h3><p>A confiança no próprio estado acabou — uma fronteira foi cruzada, o branch está falhando os próprios checks, a árvore está suja de origem desconhecida. Nunca retoma sozinha.</p></article>
+      <article class="card"><h3>Sem progresso</h3><p><strong>É falta, não suspensão.</strong> N issues seguidas que consumiram trabalho real e não fecharam nenhuma são evidência de que o modelo de trabalho não está funcionando hoje. Isso precisa de um humano, não de outra noite.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Rodar de madrugada sai mais barato?</h2>
+    <p class="note"><strong>Por si só, não.</strong> A API da Anthropic não tem preço por hora do dia: um token custa o mesmo às 03:00 e às 15:00. Se você ouviu o contrário, o que está sendo lembrado é quase certamente o desconto da Batch API, que depende de <em>como</em> o trabalho é enviado, não de <em>quando</em>.</p>
+    <p>O que de fato move a conta, na ordem em que o dinheiro realmente está:</p>
+    <table>
+      <thead><tr><th>Alavanca</th><th>Efeito</th><th>Serve para rodada sem supervisão?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Parar cedo</strong></td>
+          <td>Ilimitado. É o maior número desta página.</td>
+          <td>Sempre. Uma rodada que desiste às 02:00 em vez de faturar até as 08:00 economiza mais que todas as outras linhas desta tabela somadas. No incidente, doze horas de gasto não compraram nada.</td>
+        </tr>
+        <tr>
+          <td><strong>Prompt caching</strong></td>
+          <td>Leitura de cache custa cerca de um décimo do preço de input. A escrita custa 1,25× no TTL padrão de 5 minutos e <strong>2× no TTL de 1 hora</strong> — justamente o que uma rodada noturna com intervalos ociosos entre issues iria querer —, o que também move o ponto de equilíbrio de duas para três requisições.</td>
+          <td>Sim, e é onde o dinheiro está. Uma chamada agêntica reenvia todo o contexto a cada turno: uma chamada medida mostrou <strong>7,1M tokens de input <em>lidos de cache</em> contra 68k de output</strong>, e ainda assim custou US$ 6,86. Um teto sobre tokens de saída não limita nada.</td>
+        </tr>
+        <tr>
+          <td><strong>Escalonar modelos</strong></td>
+          <td>Cerca de 2,5× entre os tiers atuais — Opus 5 a US$ 5/25 por MTok contra Sonnet 5 a US$ 2/10. Nomeie os modelos exatos ao dimensionar isso: a diferença muda entre gerações, e a tarifa lembrada da anterior não é a que você vai pagar.</td>
+          <td>Sim — modelo caro para análise e revisão, mais barato para implementação. Reporte custo <em>por fase e por modelo</em>: nada nesta página diz quanto custa uma rodada de revisão, então só os seus próprios números podem dizer se o modelo barato de implementação está se pagando ou apenas comprando rodadas extras no preço do modelo caro.</td>
+        </tr>
+        <tr>
+          <td><strong>Batch API</strong></td>
+          <td>50% de desconto em input e output, resultado em até 24 horas.</td>
+          <td>Raramente, e não para o laço do agente. Batch recebe requisições independentes e não interativas, enviadas de uma vez. Um agente que lê um arquivo, decide, edita e lê de novo não se expressa assim. Serve para o que está em volta do laço — classificação em massa, resumir os logs da noite — não para o laço.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>O que a noite compra de verdade são as suas horas</strong>, mais uma janela ininterrupta em que ninguém vai precisar da máquina. Trate qualquer economia como vinda dos tetos e das condições de parada, não do relógio.</p>
+  </section>
+
+  <section>
+    <h2>Os tetos que precisam existir</h2>
+    <p>Cada um deles está no contrato porque a ausência dele já custou dinheiro.</p>
+    <ul>
+      <li><strong>Teto em toda chamada, inclusive na de implementação.</strong> No incidente, a chamada cara foi a de implementação, não a de revisão.</li>
+      <li><strong>Teto no input, não só no output e no número de turnos.</strong> Ver o envelope de 7,1M lidos de cache contra 68k acima.</li>
+      <li><strong>Teto por contagem, além de por dinheiro.</strong> Alguns provedores não reportam custo algum; sem dinheiro disponível, a contagem é o único teto que segura.</li>
+      <li><strong>Recusar antes de gastar, não depois.</strong> Uma chamada que não pode ser paga é recusada na admissão.</li>
+      <li><strong>Chamada cancelada ou falha não é grátis.</strong> Registre o que ela consumiu, como exposição, nunca como zero.</li>
+      <li><strong>Teto nas rodadas de revisão.</strong> Duas por objeto; não existe terceira. E detecte o <em>ciclo</em>, não só a repetição — A→B→A é a forma comum.</li>
+      <li><strong>Teto na campanha, não só na noite.</strong> Um limite por noite multiplicado pelas noites em que ninguém olha não é limite.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Antes de armar qualquer coisa</h2>
+    <pre><code># O operador responde isto uma vez; fica armazenado e é ecoado de volta
+#   - quais repositórios, e quais caminhos dentro deles podem mudar
+#   - qual modelo em qual fase, pelo nome exato
+#   - todos os tetos: por chamada, por issue, por rodada, por noite, por campanha
+#   - concorrência, de chamadas de modelo e de builds e suites de teste locais
+#   - a janela, conferida contra o calendário de manutenção da máquina
+#   - o canal de notificação, e como a entrega é confirmada
+#   - que revisão precisa passar antes de o trabalho chegar ao branch de integração
+
+# Depois, prove cada freio quebrando-o de propósito, e mate o processo em cada
+# fronteira para mostrar que nada foi duplicado e nada foi perdido.</code></pre>
+    <p class="warn"><strong>Freio não testado não existe.</strong> O que não foi exercitado ponta a ponta precisa ser declarado como tal, por escrito, antes da primeira noite sem supervisão.</p>
+  </section>
+
+  <section>
+    <h2>Próximos passos</h2>
+    <p>Leia o contrato em <code>.docs/workflows/unattended-run.md</code>, e o método de revisão que o produziu em <code>.docs/agents/council.md</code>. Para instalação e identidade, veja o <a href="./advanced-usage-ptbr.html">guia de uso avançado</a>.</p>
+  </section>
+</main>
+<footer><main>AI-Agents · operação sem supervisão · <a href="./index.html">voltar à landing page</a></main></footer>
+</body>
+</html>

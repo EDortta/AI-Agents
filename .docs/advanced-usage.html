@@ -122,11 +122,24 @@ install-agents-kit.sh --target /project --upgrade</code></pre><p>Separates mixed
   </section>
 
   <section>
-    <h2>File ownership and exit codes</h2>
-    <p>Kit-owned content includes <code>AGENTS.md</code>, agent adapters, role contracts, workflows, and templates. Project-owned content includes the overview, limits, <code>docs/</code>, handoff, identities, and issues. A modified <code>AGENTS.md</code> is preserved and the incoming version is written as <code>AGENTS.md.kit-new</code>.</p>
+    <h2>What an upgrade preserves</h2>
+    <table>
+      <thead><tr><th>Kit territory</th><th>Project / instance territory</th></tr></thead>
+      <tbody>
+        <tr><td><code>AGENTS.md</code>, agent adapters, <code>.docs/agents/</code>, <code>.docs/workflows/</code>, templates, and reference pages.</td><td><code>docs/software-overview.md</code>, <code>docs/limits.md</code>, <code>docs/</code>, <code>handoff.md</code>, identities, and issues.</td></tr>
+      </tbody>
+    </table>
+    <p>A modified <code>AGENTS.md</code> is preserved and the incoming version is written beside it as <code>AGENTS.md.kit-new</code> for a manual merge.</p>
+  </section>
+
+  <section>
+    <h2>Exit codes</h2>
     <table><tbody>
       <tr><td><code>0</code></td><td>Operation completed.</td></tr>
       <tr><td><code>2</code></td><td>Invalid or incompatible options.</td></tr>
+      <tr><td><code>3</code></td><td><code>--migrate</code> was run without a TTY. Use <code>--migrate --dry-run</code> to preview non-interactively.</td></tr>
+      <tr><td><code>4</code></td><td>The target directory does not exist.</td></tr>
+      <tr><td><code>5</code></td><td>The target already has a kit file and neither <code>--force</code> nor <code>--upgrade</code> was given.</td></tr>
       <tr><td><code>6</code></td><td><code>--strict</code> found a protected file requiring merge.</td></tr>
       <tr><td><code>7</code></td><td>Downloaded checksum mismatch.</td></tr>
       <tr><td><code>8</code></td><td>Required identity is absent, invalid, or cannot be collected.</td></tr>
@@ -134,7 +147,7 @@ install-agents-kit.sh --target /project --upgrade</code></pre><p>Separates mixed
     </tbody></table>
   </section>
 
-  <section><h2>Next</h2><p>See the <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">GovernanceKit advanced guide</a> for every CLI command, deterministic context selection, diagnostics, and CI automation.</p></section>
+  <section><h2>Next</h2><p>Running the kit on a schedule with nobody watching has its own contract and its own failure modes — see <a href="./unattended-run.html">running unattended</a>. For every CLI command, deterministic context selection, diagnostics, and CI automation, see the <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">GovernanceKit advanced guide</a>.</p></section>
 </main>
 <footer><main>AI-Agents · advanced usage documentation · <a href="./index.html">back to the landing page</a></main></footer>
 </body>

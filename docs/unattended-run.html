@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI-Agents — Running unattended</title>
+  <meta name="description" content="Running an AI-Agents queue overnight without supervision: when it must stop, and what it actually costs." />
+  <style>
+    :root{--bg:#0b1020;--panel:#131b31;--text:#edf2ff;--muted:#aab5cf;--line:#293653;--accent:#79a8ff;--code:#080d19;--warn:#ffb26b}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,sans-serif}
+    main,nav{width:min(1080px,calc(100% - 32px));margin:auto} nav{display:flex;justify-content:space-between;gap:18px;padding:22px 0;flex-wrap:wrap}
+    a{color:var(--accent)} nav a{text-decoration:none}.hero{padding:54px 0 32px}.eyebrow{color:var(--accent);font-weight:700}
+    h1{font-size:clamp(2.2rem,6vw,4.5rem);line-height:1.03;margin:.25em 0} h2{margin-top:2.2em} h3{margin-top:1.6em}
+    p,li{color:var(--muted)} strong,th{color:var(--text)} code,pre{font-family:ui-monospace,SFMono-Regular,monospace}
+    code{color:#c9d9ff} pre{background:var(--code);border:1px solid var(--line);padding:18px;overflow:auto;border-radius:10px;color:#dce7ff}
+    table{width:100%;border-collapse:collapse;margin:18px 0 28px} th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+    .note{background:var(--panel);border-left:4px solid var(--accent);padding:14px 18px;border-radius:6px}
+    .warn{background:var(--panel);border-left:4px solid var(--warn);padding:14px 18px;border-radius:6px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:10px}.card h3{margin-top:0}
+    footer{border-top:1px solid var(--line);margin-top:64px;padding:28px 0;color:var(--muted)}
+  </style>
+</head>
+<body>
+<nav>
+  <a href="./index.html">← AI-Agents</a>
+  <span><strong>EN</strong> · <a href="./unattended-run-ptbr.html" onclick="localStorage.setItem('ai-agents-lang','ptbr')">PT-BR</a> · <a href="./unattended-run-es.html" onclick="localStorage.setItem('ai-agents-lang','es')">ES</a></span>
+  <a href="https://github.com/EDortta/AI-Agents">GitHub</a>
+</nav>
+<main>
+  <header class="hero">
+    <div class="eyebrow">Operating mode</div>
+    <h1>Running unattended</h1>
+    <p>An agent can work a queue of issues overnight, on a schedule, with nobody watching. The hard part is not making it continue. It is making it <strong>stop</strong>.</p>
+  </header>
+
+  <section>
+    <h2>What this mode is</h2>
+    <p>An unattended run is an agent that picks issues off a queue and works them while you sleep: implement, review, record, and stop. The kit contract for it is <code>.docs/workflows/unattended-run.md</code>, which an agent must load <strong>before arming anything that runs without supervision, and before reviewing anything that already is</strong>.</p>
+    <p class="warn"><strong>The kit does not ship a pipeline.</strong> It ships the rules such a pipeline has to satisfy — the stop conditions, the ceilings, the escalation protocol, the report. The mechanism is yours to build, because every mechanism reviewed so far broke somewhere the rules did not.</p>
+  </section>
+
+  <section>
+    <h2>Why the stop condition is the whole feature</h2>
+    <p>On 13–14 August 2026 two pipelines ran for about twelve hours and closed <strong>zero</strong> issues. One repeated the same review cycle roughly a hundred times. The other refused to start every ten minutes for hours, blocked by leftovers from a dead unit, and never said so. Both looked healthy from outside the entire time.</p>
+    <p>Nothing there was a model failure. Every instruction specified how to <em>continue</em> and none specified when to <em>give up</em>.</p>
+    <div class="cards">
+      <article class="card"><h3>Suspend</h3><p>A known transient condition <strong>with a written resume rule next to it</strong> — the window closed, the night budget is spent. Without such a rule, the correct outcome is a fault.</p></article>
+      <article class="card"><h3>Fault</h3><p>Confidence in the run's own state is gone — a boundary was crossed, the branch is failing its own checks, the tree is dirty from an unknown source. It never resumes on its own.</p></article>
+      <article class="card"><h3>No progress</h3><p><strong>A fault, not a suspension.</strong> N issues in a row that consumed real work and closed nothing is evidence the work model is not working tonight. That needs a human, not another night.</p></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Does running at night make it cheaper?</h2>
+    <p class="note"><strong>Not by itself.</strong> The Anthropic API has no time-of-day pricing: a token costs the same at 03:00 as at 15:00. If you have heard otherwise, the claim being remembered is almost certainly the Batch API discount, which is about <em>how</em> you send the work, not <em>when</em>.</p>
+    <p>What does move the bill, in the order the money actually sits:</p>
+    <table>
+      <thead><tr><th>Lever</th><th>Effect</th><th>Fits an unattended run?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Stopping early</strong></td>
+          <td>Unbounded. This is the biggest number on the page.</td>
+          <td>Always. A run that gives up at 02:00 instead of billing until 08:00 saves more than every other line in this table combined. In the incident, twelve hours of spend bought nothing.</td>
+        </tr>
+        <tr>
+          <td><strong>Prompt caching</strong></td>
+          <td>Cache reads bill at roughly a tenth of the input price. A write costs 1.25× at the default 5-minute TTL and <strong>2× at the 1-hour TTL</strong> an overnight run with idle gaps between issues would actually want — which also moves break-even from two requests to three.</td>
+          <td>Yes, and it is where the money is. An agentic call re-sends its whole context on every turn: one measured call showed <strong>7.1M <em>cached</em> input tokens against 68k of output</strong>, and still cost USD 6.86. A ceiling on output tokens bounds nothing.</td>
+        </tr>
+        <tr>
+          <td><strong>Model tiering</strong></td>
+          <td>About 2.5× between the current tiers — Opus 5 at $5/$25 per MTok against Sonnet 5 at $2/$10. Name the exact models when you size this: the gap moves between generations, and a rate remembered from the previous one is not the rate you will pay.</td>
+          <td>Yes — an expensive model for analysis and review, a cheaper one for implementation. Report cost <em>by phase and by model</em>: nothing on this page tells you what a review round costs, so only your own numbers can say whether the cheaper implementation model is paying for itself or just buying extra rounds at the expensive model's price.</td>
+        </tr>
+        <tr>
+          <td><strong>Batch API</strong></td>
+          <td>50% off input and output, results within 24 hours.</td>
+          <td>Rarely, and not for the agent loop. Batch takes independent, non-interactive requests submitted up front. An agent that reads a file, decides, edits, and reads again cannot be expressed that way. It fits the parts around the loop — bulk classification, summarising a night's logs — not the loop itself.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>What the night actually buys you is your own hours</strong>, plus an uninterrupted window that no one will need the machine during. Treat any cost saving as coming from the ceilings and the stop conditions, not from the clock.</p>
+  </section>
+
+  <section>
+    <h2>The ceilings that have to exist</h2>
+    <p>Every one of these is in the contract because its absence has already cost money.</p>
+    <ul>
+      <li><strong>Cap every call, including the implementation call.</strong> In the incident the expensive call was implementation, not review.</li>
+      <li><strong>Cap the input, not just the output and the turn count.</strong> See the 7.1M-cached-against-68k envelope above.</li>
+      <li><strong>Cap by count as well as by money.</strong> Some providers report no cost at all; when money is unavailable the count is the only ceiling that binds.</li>
+      <li><strong>Refuse before spending, not after.</strong> A call that cannot be paid for is refused at admission.</li>
+      <li><strong>A cancelled or failed call is not free.</strong> Record what it used, as exposure, never as zero.</li>
+      <li><strong>Cap the review rounds.</strong> Two per object; there is no third. And detect the <em>cycle</em>, not just the repetition — A→B→A is the common shape.</li>
+      <li><strong>Cap the campaign, not only the night.</strong> A night limit multiplied by the nights nobody looks is not a limit.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Before you arm anything</h2>
+    <pre><code># The operator answers these once, and they are stored and echoed back
+#   - which repositories, and which paths inside them may change
+#   - which model for which phase, by exact name
+#   - every ceiling: per call, per issue, per round, per night, per campaign
+#   - concurrency, of model calls and of local builds and test suites
+#   - the window, checked against the host's maintenance calendar
+#   - the notification channel, and how delivery is confirmed
+#   - what review must pass before work reaches the integration branch
+
+# Then prove each brake by breaking it on purpose, and kill the process at
+# every boundary to show that nothing is duplicated and nothing is lost.</code></pre>
+    <p class="warn"><strong>An untested brake does not exist.</strong> Whatever was not exercised end to end has to be stated as such, in writing, before the first unattended night.</p>
+  </section>
+
+  <section>
+    <h2>Next</h2>
+    <p>Read the contract itself in <code>.docs/workflows/unattended-run.md</code>, and the review method that produced it in <code>.docs/agents/council.md</code>. For installation and identity, see the <a href="./advanced-usage.html">advanced usage guide</a>.</p>
+  </section>
+</main>
+<footer><main>AI-Agents · unattended operation · <a href="./index.html">back to the landing page</a></main></footer>
+</body>
+</html>

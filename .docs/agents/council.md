@@ -107,6 +107,20 @@ Precedence: for **decisions**, `./governance-precedence.md` wins. For
   and finds what the first found.
 - [MANDATORY] Lenses must **differ from each other**. Three members with one lens
   is one member with extra cost.
+- [MANDATORY] **A member does not see another member's output.** A lens that reads
+  what another lens found stops being an independent look and becomes a reviewer
+  of that finding — which is the consensus failure of §0, rebuilt inside the
+  instrument meant to break it. Members run against the artifact and nothing else.
+  This is easy to violate by accident: on `[2026-08-13]` a pipeline staged each
+  member's prompt through exported variables and had no reset between members, so
+  a value left over from the previous member arrived as part of the next member's
+  own prompt.
+- [MANDATORY] **The record of earlier rounds is withheld from the lens prompt
+  physically, not by request.** Asking a member not to read something it was
+  handed is not isolation; it is a hope. Round 2's members receive the artifact
+  and the surviving findings **they are being asked to check**, and not the raw
+  output of round 1 — otherwise round 2 re-finds round 1's list and reports
+  agreement as if it were evidence.
 
 Default council: **three members.** See Provenance for why that number is
 precedent and not evidence.
@@ -143,6 +157,15 @@ falls one step after `./reviewer.md` returned non-BLOCKER — which is the order
   written out. Do not run a third round. Same escalation shape as
   `./governance-precedence.md`, which reaches for a human on round 2 rather than
   orbiting.
+- [MANDATORY] **Round 2 separates old defects from the ones round 1's fixes
+  introduced.** Whoever consolidates the round — the editor-in-chief, a role no
+  lens holds — classifies every round-2 finding as *still open from round 1*,
+  *pre-existing and newly seen*, or **introduced by a round-1 fix**. Without that
+  split, a round that fixed six defects and created five looks like progress
+  because the count went down, and the operator cannot tell a converging document
+  from one that is churning. A high proportion of introduced regressions is itself
+  the finding: it says the fixes are not understood, and it is a reason to stop
+  and hand the whole thing to the operator rather than to keep correcting.
 - [MANDATORY] **A finding that contradicts an established project rule leaves the
   council.** The agent does not weigh the two and pick. That is the one-way door in
   §1: it becomes a role conflict, goes to `./governance-precedence.md`, and the
@@ -217,6 +240,8 @@ runtime work in **AI-GovernanceKit** (the "how").
 - [ ] The artifact was already approved by `./reviewer.md` — this is not the review
 - [ ] Each member has a lens, and no two lenses are the same
 - [ ] Every lens asks something `./reviewer.md` does not ask
+- [ ] No member received another member's output, or the record of an earlier round
+- [ ] Round 2 said, per finding, whether it is old or was introduced by a round-1 fix
 - [ ] Every surviving finding names trigger, wrong outcome, location, and evidence
 - [ ] Findings with no evidence were written as questions, not dropped
 - [ ] No finding survived on agreement alone; nothing was voted on
@@ -266,6 +291,17 @@ produces directions is already in this kit, it escalates to a human on round 2,
 and a second one that quietly arbitrates by majority would route around that
 escalation. The prohibition on voting is `./design-standards.md` §0 applied to
 this file: agreement is a level-3 comfort with no level-1 rule behind it.
+
+The three isolation rules in §3 and the round-2 classification in §4 come from a
+second exercise, `[2026-08-14]`: four rounds of an ad-hoc council against a design
+document (`AI/prompts/unattended-run-design-notes.md`). Blocker counts across the
+four rounds were **19 → 29 → 32 → 27**, and by round 3 most new blockers were
+regressions the previous round's own fixes had introduced. Nothing in the counts
+said so, because nothing was classifying them. The reading also drifted: members
+that could see earlier rounds spent the later ones re-litigating the earlier list
+instead of looking at the artifact. The document was abandoned and replaced by a
+much smaller one that states properties instead of mechanism — which is a result
+this instrument produced, and is the reason the rules above exist.
 
 **Enforcement status:** gated at the delivery commit, since `[2026-08-06]`.
 

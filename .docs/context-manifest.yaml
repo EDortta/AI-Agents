@@ -42,8 +42,9 @@ tasks:
         required: true
   # The delivery commit needs the branch/commit gate and the council contract in the
   # same load — §7 names council.md, and the gate refuses without a recorded round.
-  # Not folded into `implementation`: that profile is already 8,027/8,500 and adding
-  # these would overflow. Over budget with required:true raises; with required:false
+  # Not folded into `implementation`: that profile is already near its cap (see the
+  # measured baseline below) and adding these would overflow. Over budget with
+  # required:true raises; with required:false
   # the loader drops a mandatory contract in silence, which is the worse failure.
   delivery:
     include:
@@ -56,9 +57,10 @@ tasks:
       - path: .docs/agents/council.md
         mode: full
         required: true
-  # `.docs/workflows/session-memory.md` and `sending-email.md` get no profile on
-  # purpose: their triggers are session lifecycle and a capability, neither of which
-  # is an axis this manifest models. `docs/required-reading.md` routes them.
+  # `.docs/workflows/session-memory.md`, `sending-email.md` and `unattended-run.md`
+  # get no profile on purpose: their triggers are session lifecycle, a capability,
+  # and an operating mode — none of which is an axis this manifest models.
+  # `docs/required-reading.md` routes them.
 
 risks:
   runtime:
@@ -75,10 +77,34 @@ risks:
         mode: full
         required: true
 
-# Baseline with deterministic fallback (characters / 4), measured 2026-08-07 after
-# AGENTS.md was sliced into .docs/workflows/:
+# Baseline with the deterministic fallback, re-measured 2026-08-14 after
+# `council.md` gained the isolation and round-2 classification rules:
+# base_contracts=6,221; implementation=7,992; review=6,531; council=4,828;
+# delivery=6,654. Largest normal combination (base + implementation + runtime,
+# where runtime=4,184) is 18,397 against a 22,000 total.
+# Previous measurement, 2026-08-07, after AGENTS.md was sliced into .docs/workflows/:
 # base_contracts=6,010; implementation=7,994; review=6,533; council=4,157;
-# delivery=5,983. Largest normal combination (implementation + runtime) is 18,735.
+# delivery=5,983.
+#
+# The method, written down because two earlier passes at this same re-measurement
+# each got it wrong in a different way: sum `len(text)` over the profile's files,
+# decoded as UTF-8, then integer divide the total by 4 — **one floor for the whole
+# profile, not one per file**. Counting bytes instead of characters reads high, and
+# unevenly: these files are full of multibyte characters (§, —), so the error runs
+# from +0.43% on `implementation` to +1.19% on `base_contracts` — which is the
+# profile with the tightest cap and the one that had come within a token of it.
+#
+# The two figures that did not change: applying this method to the 2026-08-07 tree
+# yields implementation=7,992 and review=6,531 — today's numbers exactly, and
+# `programmer.md`, `design-standards.md` and `reviewer.md` have not been touched
+# since. The 2026-08-07 line reads 2 tokens higher on those, and 1–2 higher on every
+# other profile, because it floored per file and then summed. So the two baselines
+# are on slightly different scales throughout; only `base_contracts`
+# (required-reading.md gained a row), `council` and `delivery` actually moved in
+# this delivery.
+#
+# `implementation` sits at 7,992/8,500 — 508 tokens of headroom. Nothing else can
+# be folded into it; a new task contract needs its own profile or a slice.
 #
 # base_contracts had reached 7,999/8,000 — one token — before the slice. The cap was
 # not raised: a budget lifted to make its own test pass is decoration, and this cap is

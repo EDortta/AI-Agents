@@ -2187,6 +2187,9 @@ upgrade_kit() {
   copy_file_replace ".docs/advanced-usage.html"
   copy_file_replace ".docs/advanced-usage-ptbr.html"
   copy_file_replace ".docs/advanced-usage-es.html"
+  copy_file_replace ".docs/unattended-run.html"
+  copy_file_replace ".docs/unattended-run-ptbr.html"
+  copy_file_replace ".docs/unattended-run-es.html"
   copy_file_replace ".docs/governancekit-integration.json"
 
   # Keep the issues index current without touching project issue folders.
@@ -2247,6 +2250,7 @@ KIT_OWNED_PATHS=(
   ".docs/issues/templates" ".docs/issues/README.md"
   ".docs/index.html" ".docs/concepts.html"
   ".docs/advanced-usage.html" ".docs/advanced-usage-ptbr.html" ".docs/advanced-usage-es.html"
+  ".docs/unattended-run.html" ".docs/unattended-run-ptbr.html" ".docs/unattended-run-es.html"
 )
 
 if [[ "$CHECK" == "1" ]]; then

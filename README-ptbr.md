@@ -285,6 +285,7 @@ Modelos disponíveis:
 - `docs/napkin-lessons.md`: log conciso de lições aprendidas
 - `.docs/workflows/session-close.md`: checklist de fechamento de etapa/sessão
 - `.docs/workflows/dev-workflow-integration.md`: integração opcional de automação no fim de etapa
+- `.docs/workflows/unattended-run.md`: regras que uma rodada sem supervisão precisa satisfazer — quando ela para, o que nunca pode fazer e o que reporta de manhã
 
 ## Artigos
 

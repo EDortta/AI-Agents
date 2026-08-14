@@ -17,6 +17,16 @@ Keep each lesson concise and actionable.
 - `Action next time: <specific behavior to repeat/avoid>`
 
 ## Entries
+- `[2026-08-14] WK-20260814-unattended-run - Round 2 of the council found that 8 of its 13 findings were regressions introduced by round 1's own fixes, two of them destroying user data in the installer.`
+- `Action next time: Classify every round-2 finding as old or introduced-by-a-round-1-fix, and read a high introduced ratio as the finding itself: revert those fixes and hand them to the operator instead of patching further. A fix to a mechanism you do not fully understand costs more than the defect.`
+- `[2026-08-14] WK-20260814-unattended-run - Replacing a vague claim with a precise one made it falsifiable and false: "a factor of a few" became "1.7x", built on a previous-generation rate, when the current gap is 2.5x.`
+- `Action next time: When a correction introduces an exact figure, name the exact thing it measures (the model generation, the TTL, the units) and verify it against the vendor's own page on the day you write it. Precision without provenance is worse than the vagueness it replaced.`
+- `[2026-08-14] WK-20260814-unattended-run - Instructions for an autonomous run specified how to continue and never when to give up; two pipelines burned ~12 hours and closed zero issues while looking healthy from outside.`
+- `Action next time: Specify the stop condition with the same care as the work. Distinguish suspend (transient, with a written resume rule beside it) from fault (state is untrusted, never resumes on its own), and treat "N issues consumed work and closed none" as a fault, not a suspension.`
+- `[2026-08-14] WK-20260814-unattended-run - Falling blocker counts across review rounds are not convergence: 19 to 29 to 32 to 27, where most later blockers were regressions introduced by the previous round's own fixes.`
+- `Action next time: Have round 2 classify every finding as old or introduced-by-a-round-1-fix. A high proportion of introduced regressions is itself the finding, and a reason to stop rather than to correct again.`
+- `[2026-08-14] WK-20260814-unattended-run - A cost premise arrived as folklore ("tokens are cheaper at night") and would have been documented as fact if it had not been checked; the real lever is prompt caching, because an agentic call re-sends its whole context every turn (7.1M **cached** input against 68k output in one measured call, billed at USD 6.86).`
+- `Action next time: Verify a pricing or capability premise before writing it into a public page, and say plainly in the page that the folklore is wrong — the reader arrives believing it.`
 - `[2026-05-07] WK-20260507-personal-touch-1.0.2 - Cursor ignores chain-loaded files; tool adapters must be self-contained to be effective.`
 - `Action next time: Write .cursorrules to cover start gate, hard rules, session-close format, quality gates, and branch rules — no chain-loading assumption.`
 - `[2026-05-07] WK-20260507-personal-touch-1.0.2 - USER.md is a global user-level file (~/.config/USER.md); never put it in the project repo or the install script.`

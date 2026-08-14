@@ -289,6 +289,7 @@ Templates available:
 - `docs/napkin-lessons.md`: concise lessons learned log
 - `.docs/workflows/session-close.md`: end-of-stage/session close checklist
 - `.docs/workflows/dev-workflow-integration.md`: optional automation hook for stage-end session close
+- `.docs/workflows/unattended-run.md`: rules an unsupervised run must satisfy — when it stops, what it may never do, and what it reports in the morning
 
 ## Articles
 

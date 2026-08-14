@@ -289,6 +289,7 @@ Plantillas disponibles:
 - `docs/napkin-lessons.md`: log conciso de lecciones aprendidas
 - `.docs/workflows/session-close.md`: checklist de cierre de etapa/sesión
 - `.docs/workflows/dev-workflow-integration.md`: integración opcional de automatización al cierre de etapa
+- `.docs/workflows/unattended-run.md`: reglas que una ejecución sin supervisión debe cumplir — cuándo se detiene, qué nunca puede hacer y qué informa por la mañana
 
 ## Artículos
 

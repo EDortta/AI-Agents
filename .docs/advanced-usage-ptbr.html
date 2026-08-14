@@ -142,6 +142,9 @@ install-agents-kit.sh --target /projeto --upgrade</code></pre><p>Separa primeiro
       <tbody>
         <tr><td><code>0</code></td><td>Operação concluída.</td></tr>
         <tr><td><code>2</code></td><td>Parâmetros incompatíveis ou inválidos.</td></tr>
+        <tr><td><code>3</code></td><td><code>--migrate</code> executado sem terminal. Use <code>--migrate --dry-run</code> para pré-visualizar sem interação.</td></tr>
+        <tr><td><code>4</code></td><td>O diretório alvo não existe.</td></tr>
+        <tr><td><code>5</code></td><td>O alvo já tem um arquivo do kit e nem <code>--force</code> nem <code>--upgrade</code> foi passado.</td></tr>
         <tr><td><code>6</code></td><td><code>--strict</code> encontrou arquivo protegido pendente de merge.</td></tr>
         <tr><td><code>7</code></td><td>Checksum do download divergente.</td></tr>
         <tr><td><code>8</code></td><td>Identidade obrigatória ausente, inválida ou não configurável.</td></tr>
@@ -152,7 +155,7 @@ install-agents-kit.sh --target /projeto --upgrade</code></pre><p>Separa primeiro
 
   <section>
     <h2>Próximos passos</h2>
-    <p>Consulte também os <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">detalhes avançados do GovernanceKit</a> para todos os comandos do CLI, seleção de contexto, diagnóstico e automação em CI.</p>
+    <p>Rodar o kit agendado, sem ninguém olhando, tem contrato próprio e modos de falha próprios — veja <a href="./unattended-run-ptbr.html">rodar sem supervisão</a>. Para todos os comandos do CLI, seleção de contexto, diagnóstico e automação em CI, consulte os <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">detalhes avançados do GovernanceKit</a>.</p>
   </section>
 </main>
 <footer><main>AI-Agents · documentação de uso avançado · <a href="./index.html">voltar à landing page</a></main></footer>

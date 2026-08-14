@@ -33,6 +33,7 @@ required=(
   ".docs/workflows/git-delivery.md"
   ".docs/workflows/session-memory.md"
   ".docs/workflows/sending-email.md"
+  ".docs/workflows/unattended-run.md"
   ".docs/context-manifest.yaml"
   ".docs/schemas/context-manifest.schema.json"
   ".docs/schemas/context-state.schema.json"
@@ -406,6 +407,19 @@ else
   err "installer release references disagree with REF=$installer_ref"
 fi
 
+# The integration contract carries its own `ref`, is copied into every target on
+# upgrade, and is what `governancekit --version` reports as the project's kit
+# version. Nothing compared it to REF, so a release could ship an installer pinned
+# to v1.2.2 while every consuming project kept reporting v1.2.1 — found by the
+# second-caller lens, which could not tell an upgraded project from a stale one.
+integration=".docs/governancekit-integration.json"
+integration_ref="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ai_agents"]["ref"])' "$integration" 2>/dev/null || true)"
+if [[ "$integration_ref" == "$installer_ref" ]]; then
+  ok "governancekit-integration.json ref matches REF=$installer_ref"
+else
+  err "governancekit-integration.json ref is '${integration_ref:-unreadable}', expected $installer_ref"
+fi
+
 identity_test_root="$(mktemp -d)"
 trap 'rm -rf -- "$identity_test_root"' EXIT
 noninteractive_target="$identity_test_root/noninteractive"
@@ -628,7 +642,7 @@ else
   err "$landing and $landing_copy differ or one is missing"
 fi
 translated_nav_ok=1
-for key in products features install advanced compatibility concepts support star; do
+for key in products features install advanced unattended compatibility concepts support star; do
   if [[ "$(grep -c "'nav\\.${key}':" "$landing")" != "3" ]] ||
      ! grep -qF "data-i18n=\"nav.${key}\"" "$landing"; then
     err "landing navigation key is not complete in EN, PT-BR, and ES: nav.${key}"
@@ -659,12 +673,106 @@ if [[ "$multilingual_guides_ok" == "1" ]] &&
 else
   err "landing does not route all three advanced usage languages"
 fi
+# The unattended-run guide is the only page that documents an operating mode rather
+# than an install step, and it is the one a reader reaches with a cost question. Both
+# halves are asserted: that the three languages stay in sync with their distributed
+# copies (same failure the advanced guide already had), and that each one still names
+# the contract it summarises — a summary that outlives its contract is worse than none.
+unattended_run="docs/unattended-run.html"
+unattended_run_ptbr="docs/unattended-run-ptbr.html"
+unattended_run_es="docs/unattended-run-es.html"
+unattended_ok=1
+for guide in "$unattended_run" "$unattended_run_ptbr" "$unattended_run_es"; do
+  distributed=".docs/${guide#docs/}"
+  if [[ ! -f "$guide" || ! -f "$distributed" ]] || ! cmp -s "$guide" "$distributed"; then
+    err "unattended-run language copy is missing or unsynchronized: $guide"
+    unattended_ok=0
+  fi
+  if ! grep -qF '.docs/workflows/unattended-run.md' "$guide"; then
+    err "unattended-run page does not name the contract it summarises: $guide"
+    unattended_ok=0
+  fi
+  # Named because the operator arrives believing tokens are cheaper overnight. They
+  # are not: the discount that exists is the Batch API's, and it is about how the
+  # work is sent, not when. A page that drops this answers the wrong question.
+  if ! grep -qF 'Batch API' "$guide"; then
+    err "unattended-run page dropped the Batch API cost answer: $guide"
+    unattended_ok=0
+  fi
+done
+# The delivery that introduced these pages got this figure wrong once in seven places,
+# fixed it in five, and left it wrong in the two that outlive the pages — the napkin
+# lessons and the handoff, which is where the next council reads from. So the guard is
+# repository-wide, not page-wide: anything citing the incident's input envelope has to
+# say the tokens were cache reads. Read as plain input, 7.1M prices the call at ~7x what
+# it actually cost, inside the sentence arguing that caching is the lever.
+#
+# Two things this check learned the hard way. The qualifier must sit right after the
+# figure: a first cut searched the whole line, and the word "caching" elsewhere in the
+# same sentence satisfied it while the figure stayed unqualified. And the scan is over
+# the whole file, not line by line, because markdown wraps prose and the qualifier
+# legitimately lands on the next line.
+if python3 - <<'ENVPY'
+import re, sys
+from pathlib import Path
+
+FIGURE = re.compile(r"7[.,]1M(.{0,60})", re.S)
+CACHE = re.compile(r"cach", re.I)
+
+bad = []
+for path in sorted(Path(".").rglob("*")):
+    if path.suffix not in {".md", ".html"} or not path.is_file():
+        continue
+    if ".git/" in str(path):
+        continue
+    text = path.read_text(encoding="utf-8", errors="replace")
+    for m in FIGURE.finditer(text):
+        if not CACHE.search(m.group(1)):
+            bad.append(f"{path}:{text.count(chr(10), 0, m.start()) + 1}")
+if bad:
+    print("; ".join(bad[:3]))
+    sys.exit(1)
+ENVPY
+then
+  ok "the 7.1M input envelope is named as cache reads everywhere it is cited"
+else
+  err "the 7.1M envelope is cited as plain input (it was cache reads) — paths printed above"
+fi
+
+# Rates move between model generations, and the same delivery once paired a current
+# Opus rate with the previous generation's Sonnet rate — a precise, checkable, wrong
+# number where a vague one had been. Naming the generation is what makes the figure
+# falsifiable by a reader; the figure alone is not.
+rates_named_ok=1
+for guide in "$unattended_run" "$unattended_run_ptbr" "$unattended_run_es"; do
+  if grep -qF 'MTok' "$guide" && ! { grep -qF 'Opus 5' "$guide" && grep -qF 'Sonnet 5' "$guide"; }; then
+    err "unattended-run page quotes per-token rates without naming the model generation: $guide"
+    rates_named_ok=0
+  fi
+done
+[[ "$rates_named_ok" == "1" ]] && ok "per-token rates on the unattended-run pages name the model generation"
+
+if [[ "$unattended_ok" == "1" ]] &&
+   grep -qF 'unattended-run-ptbr.html' "$landing" &&
+   grep -qF 'unattended-run-es.html' "$landing" &&
+   grep -qF './unattended-run.html' "$landing"; then
+  ok "unattended-run guide is available, routed, and synchronized in EN, PT-BR, and ES"
+else
+  err "landing does not route all three unattended-run languages"
+fi
 if grep -qF 'data-install-tab="upgrade"' "$landing" &&
    grep -qF "tab.addEventListener('click'" "$landing" &&
    grep -qF 'data-install-panel="upgrade"' "$landing"; then
   ok "fresh/upgrade installation tabs have interactive behavior"
 else
   err "installation tabs are present without a working upgrade interaction"
+fi
+concepts_public="docs/concepts.html"
+concepts_copy=".docs/concepts.html"
+if [[ -f "$concepts_public" && -f "$concepts_copy" ]] && cmp -s "$concepts_public" "$concepts_copy"; then
+  ok "concepts page is published and synchronized with its distributed copy"
+else
+  err "$concepts_public is missing or differs from $concepts_copy — the landing nav links it, and Pages publishes docs/ only"
 fi
 if [[ -f "$advanced_usage" && -f "$advanced_usage_copy" ]] &&
    cmp -s "$advanced_usage" "$advanced_usage_copy" &&

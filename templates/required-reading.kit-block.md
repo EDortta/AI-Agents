@@ -17,6 +17,7 @@
 | implementar, revisar ou declarar entrega pronta | `.docs/workflows/delivery-loop.md` |
 | criar branch/issue/PR, commitar, mesclar em `main`, deploy | `.docs/workflows/git-delivery.md` |
 | enviar e-mail | `.docs/workflows/sending-email.md` |
+| armar ou revisar esteira sem supervisão (noturna, cron, autopilot) | `.docs/workflows/unattended-run.md` |
 | **antes do commit de entrega** (e revisão adversarial de trabalho aprovado) | `.docs/agents/council.md` |
 | mudança com impacto em runtime | `.docs/agents/security.md` + `.docs/agents/security-standards.md` |
 | tratar dado pessoal | `.docs/agents/privacy-compliance.md` |

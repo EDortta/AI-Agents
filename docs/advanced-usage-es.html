@@ -109,16 +109,31 @@ install-agents-kit.sh --target /proyecto --upgrade</code></pre><p>Separa el cont
   </section>
 
   <section>
-    <h2>Propiedad de archivos y códigos de salida</h2>
-    <p>El kit posee <code>AGENTS.md</code>, adaptadores, contratos de rol, workflows y plantillas. El proyecto posee overview, limits, <code>docs/</code>, handoff, identidades e issues. Un <code>AGENTS.md</code> modificado se preserva y la nueva versión queda en <code>AGENTS.md.kit-new</code>.</p>
+    <h2>Qué preserva una actualización</h2>
+    <table>
+      <thead><tr><th>Territorio del kit</th><th>Territorio del proyecto / instancia</th></tr></thead>
+      <tbody>
+        <tr><td><code>AGENTS.md</code>, adaptadores de agentes, <code>.docs/agents/</code>, <code>.docs/workflows/</code>, plantillas y páginas de referencia.</td><td><code>docs/software-overview.md</code>, <code>docs/limits.md</code>, <code>docs/</code>, <code>handoff.md</code>, identidades e issues.</td></tr>
+      </tbody>
+    </table>
+    <p>Un <code>AGENTS.md</code> modificado se preserva y la nueva versión queda a su lado como <code>AGENTS.md.kit-new</code> para un merge manual.</p>
+  </section>
+
+  <section>
+    <h2>Códigos de salida</h2>
     <table><tbody>
-      <tr><td><code>0</code></td><td>Operación finalizada.</td></tr><tr><td><code>2</code></td><td>Opciones inválidas o incompatibles.</td></tr>
+      <tr><td><code>0</code></td><td>Operación finalizada.</td></tr>
+      <tr><td><code>2</code></td><td>Opciones inválidas o incompatibles.</td></tr>
+      <tr><td><code>3</code></td><td><code>--migrate</code> ejecutado sin terminal. Usa <code>--migrate --dry-run</code> para previsualizar sin interacción.</td></tr>
+      <tr><td><code>4</code></td><td>El directorio de destino no existe.</td></tr>
+      <tr><td><code>5</code></td><td>El destino ya tiene un archivo del kit y no se pasó ni <code>--force</code> ni <code>--upgrade</code>.</td></tr>
       <tr><td><code>6</code></td><td><code>--strict</code> encontró un archivo protegido que requiere merge.</td></tr>
-      <tr><td><code>7</code></td><td>Checksum de descarga divergente.</td></tr><tr><td><code>8</code></td><td>Identidad obligatoria ausente o inválida.</td></tr>
+      <tr><td><code>7</code></td><td>Checksum de descarga divergente.</td></tr>
+      <tr><td><code>8</code></td><td>Identidad obligatoria ausente o inválida.</td></tr>
       <tr><td><code>30</code></td><td>Archivos instalados, pero contexto o límites aún no están listos.</td></tr>
     </tbody></table>
   </section>
-  <section><h2>Siguiente paso</h2><p>Consulta la <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">guía avanzada de GovernanceKit</a> para todos los comandos del CLI, selección de contexto, diagnóstico y CI.</p></section>
+  <section><h2>Siguiente paso</h2><p>Ejecutar el kit de forma programada y sin nadie mirando tiene su propio contrato y sus propios modos de fallo — consulta <a href="./unattended-run-es.html">ejecución sin supervisión</a>. Para todos los comandos del CLI, selección de contexto, diagnóstico y CI, consulta la <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">guía avanzada de GovernanceKit</a>.</p></section>
 </main>
 <footer><main>AI-Agents · documentación avanzada · <a href="./index.html">volver a la landing page</a></main></footer>
 </body>

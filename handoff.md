@@ -1,5 +1,119 @@
 # Handoff
 
+## [2026-08-14] WK-20260814-unattended-run — contrato de rodada sem supervisão
+
+- branch: `development`. Nada empurrado para `main`, nenhum deploy, nenhuma tag.
+- Origem: o incidente de 13–14/08 — duas esteiras, ~12h, **zero issues fechadas**.
+
+### Entregue
+
+**Novo contrato do kit: `.docs/workflows/unattended-run.md`.** Enuncia *propriedades*
+de uma rodada sem supervisão — quando suspende, quando entra em falta, o protocolo de
+`needs_operator`, os tetos (inclusive no input), a janela contra o calendário de
+manutenção da máquina, o relatório matinal — e **deixa o mecanismo de fora de
+propósito**. Cada cláusula tem, no anexo, o que a ausência dela custou no incidente.
+
+**`.docs/agents/council.md` ganhou três regras** que este trabalho produziu por
+experiência própria: lentes não veem a saída umas das outras; o registro de rodadas
+anteriores é retirado **fisicamente** do prompt da lente, não pedido para não ser lido;
+e a rodada 2 classifica cada achado como antigo ou **introduzido pela correção da
+rodada 1**. Sem essa classificação, uma rodada que corrigiu seis defeitos e criou cinco
+parece progresso porque a contagem caiu.
+
+**Documentação:** nova página em três idiomas (`docs/unattended-run{,-ptbr,-es}.html`),
+roteada da landing e do guia avançado. Ela responde explicitamente à pergunta de custo
+que o operador trouxe: **não existe preço por hora do dia na API da Anthropic.** O que
+existe é Batch API (−50%, assíncrono, e que não serve para o laço do agente), prompt
+caching (leitura ~0,1× do input, e é onde o dinheiro está: 7,1M de input **lidos de
+cache** contra 68k de output numa única chamada medida, faturada em US$ 6,86) e escalonamento de modelo. A maior economia continua
+sendo parar cedo.
+
+**Correções na doc existente:** os códigos de saída 3, 4 e 5 do instalador não estavam
+documentados em nenhum dos três idiomas; EN e ES ganharam a seção "o que o upgrade
+preserva" que só o PT-BR tinha. `docs/required-reading.md` e o template do bloco
+gerado passaram a rotear o novo workflow.
+
+### Verificado
+
+`scripts/run-checks.sh` — todas as checagens passam, incluindo as asserções novas
+sobre as três páginas (sincronia `docs/` ↔ `.docs/`, roteamento na landing, e que cada
+página continua nomeando o contrato que resume e a resposta de custo). O instalador
+passou a copiar as três páginas; sem isso elas existiriam só neste repositório.
+
+`not validated:` nenhuma esteira foi armada nem executada. Este trabalho é contrato e
+documentação; o mecanismo continua não existindo.
+
+### Concílio — duas rodadas, três lentes cada
+
+Gatilhos: `shared-contract`, `not-validated`, `mechanical-sweep`.
+
+**Rodada 1 — 13 achados.** Cinco eram números errados numa página pública (o pior:
+`7.1M input tokens` onde a fonte diz `7.1M **cached** input tokens` — escrito assim
+afirma que o cache não estava funcionando, dentro da célula cuja tese é que o cache é
+onde está o dinheiro, e precifica em ~US$ 35 uma chamada registrada em US$ 6,86). Três
+eram gates que a própria entrega deixou furados. Cinco eram pré-existentes no
+instalador que a entrega tornou alcançáveis.
+
+**Rodada 2 — 13 achados. Oito são regressões introduzidas pelas correções da rodada 1**,
+quatro seguem abertos, um é pré-existente recém-visto. Essa contagem é o achado: pela
+regra que esta entrega acrescentou ao `council.md` §4, proporção alta de regressão
+introduzida diz que as correções não estão compreendidas, e é motivo para parar em vez
+de continuar corrigindo.
+
+O que a rodada 2 pegou e a 1 não tinha como pegar:
+
+- **A tarifa que eu "corrigi" estava errada.** Troquei "algumas vezes" por "1,7×" com
+  Opus a US$ 5/25 contra Sonnet a US$ 3/15. O 3/15 é Sonnet 4.6; **Sonnet 5 é US$ 2/10**,
+  e o aumento marcado para 01/09/2026 foi cancelado. A diferença real é **2,5×**. Troquei
+  um vago por um preciso e falso, misturando gerações sem nomear nenhuma.
+- **A frase "a 1,7× uma rodada extra apaga a economia" não decorria de nada** — exigiria
+  saber quanto custa uma rodada de revisão, número que a entrega inteira não tem.
+- **A correção do "cached" não chegou aos dois arquivos que sobrevivem às páginas**:
+  `docs/napkin-lessons.md` e este handoff — justamente o arquivo que o `council.md` §5
+  nomeia como semente do próximo concílio.
+- **Minha explicação da deriva do manifesto era falsa.** O baseline de 07/08 usava
+  arredondamento por arquivo, não bytes; aplicando o método declarado à árvore daquele
+  dia saem exatamente os números de hoje.
+
+**Decisão: reverti as duas mudanças de comportamento no instalador.** Elas fechavam
+dois defeitos reais e produziram quatro regressões, duas delas com perda de dado —
+incluindo destruir um arquivo em `docs/` através de um symlink e reportá-lo como
+`Backed up`. O instalador nesta entrega volta a ser só registro das três páginas novas.
+
+Fechamento: achados fechados com asserção nova, cada uma verificada vermelha contra o
+defeito exato; quatro com aceitação de risco escrita (abaixo).
+
+### Aberto para o operador — não decidi nenhum
+
+1. **`--upgrade` nunca entrega `.docs/context-manifest.yaml`, `context-optimization.md`
+   nem `schemas/`; instalação nova entrega.** Dois projetos na mesma versão do kit
+   divergem para sempre e `write_manifest` grava o hash velho como canônico. Minha
+   correção foi revertida porque entregar o arquivo **destrói silenciosamente um
+   manifesto customizado** — o hash envenenado faz o `copy_file_replace` acreditar que
+   o arquivo está intocado. A ordem certa é consertar o hash primeiro, depois entregar.
+2. **Arquivo do projeto num caminho que o kit reivindica pela primeira vez é destruído
+   no upgrade**, sem stash e sem linha no relatório. Minha correção (cópia incondicional)
+   tornou `Backed up N replaced file(s)` falso em todo upgrade (85 contra 5), inflou
+   `.gk/pre-upgrade/` de 236K para 1,3M, e num caminho que fosse symlink para `docs/`
+   gravava um link pendurado enquanto afirmava ter feito backup. Revertida. Decisão de
+   projeto: esses arquivos deveriam ir para `.gk/overwritten/`, que é nomeado no
+   relatório e nunca é apagado, e não para `pre-upgrade/`, que o upgrade seguinte limpa.
+3. **`--check` é cego a caminhos reivindicados pela primeira vez** — reporta "0 replaced"
+   imediatamente antes de escrever neles.
+4. **Instalação nova ≠ upgrade** em `new-tag.sh` e `scripts/install-agents-kit.sh`: o
+   upgrade entrega os dois e os registra no manifesto, a instalação nova não entrega
+   nenhum. Mesma classe de defeito do item 1, em outros dois caminhos.
+5. **US$ 6,86 não tem artefato** em lugar nenhum do repositório, e o modelo que produziu
+   a chamada nunca é nomeado — enquanto a mesma entrega agora cita tarifas exatas ao lado.
+6. **As categorias de orçamento do manifesto somam 27.500 contra um `total_input_tokens`
+   de 22.000.** Não dá para saber daqui qual dos dois o carregador aplica.
+
+**Next:** os seis itens acima, em especial 1 e 2 — são os dois que ainda apagam arquivo
+de alguém num `--upgrade`. A esteira em si continua sem mecanismo: se um dia for
+construída, é a partir do contrato, não das design notes.
+
+---
+
 ## [2026-08-10] gh-5 — §Sending Email canônica - released v1.2.0
 
 - branch: `development`, em dia com `origin/development`. `main` empurrada.
