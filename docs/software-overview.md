@@ -37,7 +37,12 @@ If this file is missing or not ready in a target project, agents must stop imple
 
 ## Target Project Checklist
 
-Installed projects should describe:
+[MANDATORY] These six lines are **structure, not a suggestion**: `.docs/agents/council.md`
+§5 reads exactly these six headings to select which lenses a delivery council needs.
+Keep the headings verbatim and each one answered, even briefly — replacing this section
+with free-form project narrative breaks council selection silently (`project_context_ready:
+yes` stays true; `governancekit doctor` checks for that flag, not for this structure).
+
 - product purpose and users
 - technology stack and major modules
 - runtime/deployment model

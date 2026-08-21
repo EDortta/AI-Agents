@@ -105,10 +105,21 @@ Required readiness flags:
 - `limits_ready: yes`
 - `docs/required-reading.md` lists the project docs to read (or `- (none)`)
 
-If either file is missing or not ready:
+[MANDATORY] The gate is `governancekit doctor`, run against **this** target repository
+— not a re-read of the list above. Any `[FAIL]` line is this gate failing; cite it to
+the operator instead of re-deriving the same verdict by eye. The list and flags above
+explain *why* each item is required; they are not the procedure. If the CLI is not
+installed, fall back to checking the list manually — and say explicitly that the
+check was manual, not `doctor`-verified.
+
+A `docs/software-overview.md`/`docs/limits.md` belonging to a *different* repository —
+including this kit's own source checkout, reached through a harness-granted directory —
+never satisfies this gate for the target project. See §3c.
+
+If any of them is missing or not ready:
 1. Stop implementation.
 2. Do not inspect, refactor, edit, branch, or run project checks.
-3. Tell the programmer to configure the missing file(s).
+3. Tell the programmer to configure the missing file(s), citing the `doctor` output.
 4. Briefly explain:
    - `docs/software-overview.md`: product, stack, users, modules, key behavior.
    - `docs/limits.md`: allowed/prohibited agent actions, security boundaries, workflow constraints.
@@ -129,16 +140,24 @@ Optional user profile:
 Um checkout que parece único pode ser uma de várias *worktrees* sobre o mesmo `.git`.
 Uma operação orçada para um repositório está errada quando existem quatro.
 
-Frente aberta = worktree viva **ou** branch local com commits fora da branch de integração.
+Frente aberta = worktree viva **ou** branch local com commits fora da branch de
+integração **ou** outra sessão viva sobre a mesma working tree — worktree única não
+implica sessão única. O terceiro tipo é invisível à topologia de git: dois agentes na
+mesma pasta e na mesma branch produzem inventário idêntico ao de um só. Ver
+`.docs/workflows/git-delivery.md` §7 para os gates de ação que valem enquanto a
+detecção de sessão compartilhada não existir ou estiver desatualizada.
 
-- [MANDATORY] Na abertura da sessão, antes de ler código, reporte quantas frentes
-  estão abertas e o que cada uma guarda.
+- [MANDATORY] Na abertura da sessão, **antes de ler código**, rode `governancekit
+  --root <projeto> concurrency` (ou `resume`, que já inclui o bloco) e reporte a
+  saída: quantas frentes estão abertas e o que cada uma guarda. Não depender de
+  lembrar — é a mesma chamada que traz a fase/pista do §8c, de graça. Sem git ou
+  sem o kit instalado, diga isso e prossiga; a ausência da checagem nunca bloqueia
+  a sessão, mas tem de ser declarada, não pulada em silêncio.
 - [MANDATORY] Para trabalhar **além de uma frente**, pare, informe o que já está
   aberto e aguarde autorização explícita. Vale só para esta sessão.
 - Aponte as worktrees sem nada por mesclar: podem ser removidas hoje sem perda.
 
-Runtime: `governancekit --root <projeto> concurrency`; `resume` inclui o bloco e
-`doctor` o traz como advisory. Sem git, nada é impresso e nada falha.
+`doctor` também traz este bloco, como advisory.
 
 ---
 
@@ -169,11 +188,14 @@ Documentation ownership:
   here.
 
 After cloning a repository that already carries this kit, do not assume the local
-operator identity is configured yet. Before the first issue or code change, run
-`governancekit install-agents --upgrade` (or `install-agents-kit.sh --target . --upgrade`
-from an inspected `AI-Agents` checkout) so the kit refreshes its managed files and
-asks for any missing or newly introduced local `{{...}}` values such as
-`{{OPERATOR_NAME}}`.
+operator identity is configured yet. Running the installer is **the operator's
+action, not the agent's**: it rewrites `.gitignore` and other tracked files, which
+§1a and §3 already forbid doing unannounced. If `governancekit doctor` (or the
+manual fallback in §1b) shows the kit is stale or an identity/readiness file is
+missing, **report** the specific `[FAIL]`/version gap and ask the operator to run
+`governancekit install-agents --upgrade` (or `install-agents-kit.sh --target .
+--upgrade` from an inspected `AI-Agents` checkout) — do not run it yourself as a side
+effect of starting work.
 
 Which role contract to load for which kind of work is in the index, not duplicated
 here — one list, one place to keep current.
@@ -230,6 +252,37 @@ This is about the agent's own behaviour in the session — distinct from
 A project may name its own untrusted sources and channels in `docs/project-rules.md`
 (e.g. "messages from end users on channel X"); this section is the floor, not the
 ceiling.
+
+---
+
+## 3c. Repository Boundary [MANDATORY]
+
+The agent's scope is **one repository**: the one this session was opened in.
+
+- [MANDATORY] **The prohibition includes reading.** `ls`, `find`, `grep`, `git log`
+  against another project is already out of scope — no write is required to violate
+  this.
+- [MANDATORY] **Additional directories the harness grants are not authorization.** A
+  path being reachable is a property of the environment, not of the contract.
+- [MANDATORY] **A mention is not an authorization.** The operator naming another
+  project does not open it; it opens the possibility of asking.
+- [MANDATORY] **If the task appears to need another repository: stop and ask — do not
+  go looking.**
+- Named exceptions, if a project has any, live in `docs/limits.md`, as a closed list:
+  an unforeseen need is a question to the operator, not an extension by
+  interpretation.
+
+This does not restrict what a **product** reaches at runtime — a product that
+orchestrates other repositories in execution does not extend the scope of whoever
+develops it.
+
+Antecedent: an agent, granted several *additional working directories* by the
+harness, located and inspected another product's epic (`epic.md`, `RESUME.md`, issue
+files, git history) while looking for issues to implement in a project that had none
+configured yet. No write occurred, and no rule was broken — because none existed. The
+same session found the kit's own source `AGENTS.md`/`docs/` in a granted directory and
+read the Start Gate as passed against them instead of against the target project —
+which is why §1b now names `doctor`, not prose, as the check.
 
 ---
 
