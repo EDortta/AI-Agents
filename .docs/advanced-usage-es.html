@@ -32,7 +32,7 @@
     <h2>Flujo recomendado</h2>
     <pre><code># 1. Instala el CLI de GovernanceKit — es el que instala y actualiza el kit AI-Agents,
 #    descargando la release fijada (verificada por checksum)
-pip install git+https://github.com/EDortta/AI-GovernanceKit.git
+pip install "git+https://github.com/EDortta/AI-GovernanceKit.git@&lt;tag-de-release&gt;"   # fija: nunca la rama mutable
 
 # 2a. Instalación nueva
 governancekit --root "$PWD" install-agents
@@ -58,7 +58,7 @@ governancekit --version</code></pre>
     <table><thead><tr><th>Archivo</th><th>Responsabilidad</th><th>Creado por</th><th>Git</th></tr></thead><tbody>
       <tr><td><code>.gk/operator.json</code></td><td>Respuestas guardadas para el slot <code>OPERATOR_NAME</code> (y demás valores del operador); reaplicadas en cada upgrade.</td><td><code>governancekit install-agents</code></td><td>Ignorado.</td></tr>
       <tr><td><code>.governancekit-identity.json</code></td><td>Identidad de máquina y checkout: host, ruta, puertos, hermanos y propiedad de branches.</td><td><code>governancekit configure</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
-      <tr><td><code>.credentials/identity.json</code></td><td>Archivo heredado de valores de slot, escrito por el instalador shell retirado; <code>governancekit configure</code> lo lee como fuente heredada del nombre del operador — <code>install-agents</code> no.</td><td>instalaciones heredadas</td><td>Ignorado; modo <code>0600</code>.</td></tr>
+      <tr><td><code>.credentials/identity.json</code></td><td>Para los slots <code>{{…}}</code> este archivo es heredado (<code>install-agents</code> no lo lee; <code>configure</code> lo lee como fuente heredada del nombre del operador) — pero es la configuración <strong>viva</strong> de mailbox: <code>governancekit mail</code> lee <code>values.MAILBOX_ADDRESS</code>/<code>OPERATOR_EMAIL</code> y <code>refs.SMTP_TOKEN</code> de aquí, y <code>mail setup --write</code> graba la dirección aquí. No lo borres en un proyecto que envía correo.</td><td>instalaciones heredadas; <code>governancekit mail setup --write</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
     </tbody></table>
     <p class="note"><code>.gk/project-config.json</code> no es identidad: guarda las respuestas de configuración del proyecto (entrevista de alcance). El <code>doctor</code> puede dar un HINT cuando falta.</p>
   </section>

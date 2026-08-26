@@ -8,7 +8,10 @@
     "the installer collect the values.",
     "This file is per-programmer and NEVER tracked: .credentials/.gitignore keeps it",
     "out of git, so each person on the project establishes their own identity.",
-    "'values' holds literals. 'refs' holds PATHS to credential files — never the secret."
+    "'values' holds literals. 'refs' holds PATHS to credential files — never the secret.",
+    "Mailbox is the LIVE use of this file: `governancekit mail` reads",
+    "values.MAILBOX_ADDRESS/OPERATOR_EMAIL and refs.SMTP_TOKEN from here, and",
+    "`mail setup --write` records the address here. Do not delete on a mailing project."
   ],
   "values": {
     "OPERATOR_NAME": ""

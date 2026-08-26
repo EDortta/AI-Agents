@@ -90,4 +90,6 @@ whose index is thin. The failure that produced this file was a *missing* pointer
 *followed* one, so the fix is aimed at the pointer — but nothing here proves an agent
 reads the index at the moment it needs it rather than at the Start Gate. That is the
 same decay `docs/issues/006-contract-vs-tool-reconciliation-[open]/issues/B1-B3-action-gates-and-enforcement.md`
-describes, and it is open there, not here.
+(source-repo session memory — the path exists only in the AI-Agents `development`
+checkout, not in installed targets nor in tagged releases) describes, and it is
+open there, not here.

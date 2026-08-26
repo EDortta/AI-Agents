@@ -158,9 +158,11 @@ echo "== 6b. The shell installer stays retired (GovernanceKit AC-30) =="
 # tests (over .gk/operator.json, the file the surviving installer writes); the
 # identity preflight (fail-before-copy) and the reading-index back-fill retired WITH
 # the shell installer as deliberate contract changes (the CLI warns and exits 0);
-# README withdrawal and the two-upgrade templates/ scenario have no owner yet —
-# tracked as needs-coordination in the 006 epic RESUME. This is a mapping, not a
-# blanket claim: anything not named above died with the shell installer.
+# the two-upgrade templates/ scenario migrated (GovernanceKit's
+# test_templates_is_never_a_managed_path_at_the_project_root and its behavioral
+# pair); README withdrawal is the one with no owner yet — needs-coordination,
+# 006 epic RESUME item 4. This is a mapping, not a blanket claim: anything not
+# named above died with the shell installer.
 if [[ -e "scripts/install-agents-kit.sh" ]]; then
   err "scripts/install-agents-kit.sh is back — the shell installer was retired; do not reintroduce a second writer"
 else
@@ -200,9 +202,9 @@ else
   ok ".credentials/identity.json is not tracked"
 fi
 if [[ -f .credentials/identity.json.example ]]; then
-  ok ".credentials/identity.json.example ships as the starter"
+  ok ".credentials/identity.json.example ships as the legacy/mailbox example"
 else
-  err ".credentials/identity.json.example is missing — a fresh install has no starter"
+  err ".credentials/identity.json.example is missing — the documented legacy/mailbox contract has no example"
 fi
 
 # The file the CURRENT installer writes gets the same two gates. The docs now point
@@ -320,6 +322,14 @@ if grep -qF '## Fontes locais' "$reading_template"; then
 else
   err "$reading_template has no Fontes locais scaffold — the contract points at nothing"
 fi
+
+echo "== 9. (retired) =="
+# Check 9 asserted, against the shell installer's own source, that the kit README was
+# never shipped into targets. The prevention half lives in GovernanceKit
+# (_FRESH_PATHS/_UPGRADE_PATHS never listed README.md); the cure half — withdrawing a
+# README a past upgrade leaked — has no owner: needs-coordination, 006 epic RESUME
+# item 4 (README.md is not in _WITHDRAWN_PATHS there).
+echo "  [skip] retired with the shell installer — see 006 epic RESUME, Coordenação pendente #4"
 
 echo "== 10. Kit-owned files declare themselves kit-owned =="
 # The read-only contract is what stops the next agent from writing project rules into a

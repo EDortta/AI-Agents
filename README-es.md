@@ -103,7 +103,7 @@ la garantía.
 Aun así `AGENTS.md` está **protegido**: cuando su contenido difiere de lo que el kit
 instaló, `--upgrade` conserva tu versión, escribe la nueva en `AGENTS.md.kit-new` al
 lado y lo informa. Nada se sobrescribe en silencio. Sin manifiesto (instalación
-anterior a `.gk/`, o sin `python3`) el instalador no puede probar que el archivo está
+anterior a `.gk/`) el instalador no puede probar que el archivo está
 intacto, así que falla cerrado y lo preserva.
 
 Cada archivo raíz reemplazado también se copia a `.gk/pre-upgrade/` antes.
@@ -130,8 +130,9 @@ lee `governancekit configure` como fuente heredada del nombre del operador; el p
 En cada install y `--upgrade`, el instalador reaplica los valores guardados, así que
 un slot completado no es deriva: el archivo en disco y la versión nueva del kit
 coinciden, y el upgrade ni quema el valor ni pide una fusión. En una terminal
-interactiva pregunta por el valor ausente de `OPERATOR_NAME`; en una ejecución no
-interactiva, un valor ausente se **reporta como aviso y el slot queda sin rellenar** —
+interactiva pregunta por el valor ausente de `OPERATOR_NAME`; en una ejecución sin
+TTY (stdin cerrado — la decisión es `isatty`, no una flag), un valor ausente se
+**reporta como aviso y el slot queda sin rellenar** —
 lee la salida de la ejecución (y ejecuta `governancekit doctor`) en vez de confiar en
 el código de salida. `.credentials/` es un directorio que ningún camino de upgrade
 reemplaza.
@@ -160,21 +161,13 @@ Importante:
   - `docs/software-overview.md` tenga `project_context_ready: yes`
   - `docs/limits.md` tenga `limits_ready: yes`
 
-1. Copia (o usa symlink) estos artefactos en el proyecto destino:
-- `AGENTS.md`
-- `.docs/agents/`
-- `docs/issues/`
-- `docs/software-overview.md`
-- `docs/limits.md`
-
-2. Adapta solo lo específico del proyecto:
-- Completa `docs/software-overview.md` con contexto del producto, arquitectura y objetivos.
-- Completa `docs/limits.md` con límites estrictos (in/out-of-scope, acciones prohibidas, gates de aprobación).
-- Estos dos archivos son obligatorios y deben ser editados por el programador para que el agents-kit reconozca correctamente qué hacer en el proyecto.
-
-3. Mantén el núcleo genérico:
-- Conserva estructura e intención de `AGENTS.md` y los archivos centrales de `.docs/agents/`.
-- Agrega extensiones específicas solo cuando sea necesario.
+Después de instalar, adapta solo lo específico del proyecto — completa
+`docs/software-overview.md` (contexto del producto, arquitectura, objetivos) y
+`docs/limits.md` (límites estrictos, acciones prohibidas, gates de aprobación);
+ambos son obligatorios. Mantén los contratos del kit genéricos: las extensiones del
+proyecto van en `docs/project-rules.md`, nunca en `AGENTS.md` ni en `.docs/`. No
+copies ni symlinkes archivos del kit a mano hacia un destino — el instalador es el
+único escritor, y `--upgrade` rechaza symlinks dentro de directorios gestionados.
 
 ## Flujo del Programador (Obligatorio)
 

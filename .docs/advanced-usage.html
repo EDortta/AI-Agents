@@ -36,7 +36,7 @@
     <h2>Recommended flow</h2>
     <pre><code># 1. Install the GovernanceKit CLI — it installs and updates the AI-Agents kit,
 #    downloading the pinned release (checksum-verified)
-pip install git+https://github.com/EDortta/AI-GovernanceKit.git
+pip install "git+https://github.com/EDortta/AI-GovernanceKit.git@&lt;release-tag&gt;"   # pin: never the mutable branch
 
 # 2a. Fresh install
 governancekit --root "$PWD" install-agents
@@ -64,7 +64,7 @@ governancekit --version</code></pre>
       <tbody>
         <tr><td><code>.gk/operator.json</code></td><td>Stored answers for the <code>OPERATOR_NAME</code> contract slot (and other operator values); re-applied on every upgrade.</td><td><code>governancekit install-agents</code></td><td>Ignored.</td></tr>
         <tr><td><code>.governancekit-identity.json</code></td><td>Machine and checkout identity: host, path, ports, siblings, and branch ownership.</td><td><code>governancekit configure</code></td><td>Ignored; mode <code>0600</code>.</td></tr>
-        <tr><td><code>.credentials/identity.json</code></td><td>Legacy slot-value file written by the retired shell installer; <code>governancekit configure</code> reads it as a legacy source for the operator name — <code>install-agents</code> does not.</td><td>legacy installs</td><td>Ignored; mode <code>0600</code>.</td></tr>
+        <tr><td><code>.credentials/identity.json</code></td><td>For the <code>{{…}}</code> slots this file is legacy (<code>install-agents</code> does not read it; <code>configure</code> reads it as a legacy source for the operator name) — but it is the <strong>live</strong> mailbox configuration: <code>governancekit mail</code> reads <code>values.MAILBOX_ADDRESS</code>/<code>OPERATOR_EMAIL</code> and <code>refs.SMTP_TOKEN</code> from it, and <code>mail setup --write</code> records the address here. Do not delete it on a project that mails.</td><td>legacy installs; <code>governancekit mail setup --write</code></td><td>Ignored; mode <code>0600</code>.</td></tr>
       </tbody>
     </table>
     <p class="note"><code>.gk/project-config.json</code> is not identity: it holds the project-configuration answers (scope interview). The <code>doctor</code> may HINT about it when absent.</p>

@@ -36,7 +36,7 @@
     <h2>Fluxo recomendado</h2>
     <pre><code># 1. Instale o CLI GovernanceKit — é ele que instala e atualiza o kit AI-Agents,
 #    baixando a release fixada (verificada por checksum)
-pip install git+https://github.com/EDortta/AI-GovernanceKit.git
+pip install "git+https://github.com/EDortta/AI-GovernanceKit.git@&lt;tag-de-release&gt;"   # fixe: nunca a branch mutável
 
 # 2a. Instalação nova
 governancekit --root "$PWD" install-agents
@@ -64,7 +64,7 @@ governancekit --version</code></pre>
       <tbody>
         <tr><td><code>.gk/operator.json</code></td><td>Respostas guardadas para o slot <code>OPERATOR_NAME</code> (e demais valores do operador); reaplicadas a cada upgrade.</td><td><code>governancekit install-agents</code></td><td>Ignorado.</td></tr>
         <tr><td><code>.governancekit-identity.json</code></td><td>Identidade da máquina e do checkout: host, caminho, portas e propriedade de branches.</td><td><code>governancekit configure</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
-        <tr><td><code>.credentials/identity.json</code></td><td>Arquivo legado de valores de slot, escrito pelo instalador shell aposentado; o <code>governancekit configure</code> o lê como fonte legada do nome do operador — o <code>install-agents</code> não.</td><td>instalações legadas</td><td>Ignorado; modo <code>0600</code>.</td></tr>
+        <tr><td><code>.credentials/identity.json</code></td><td>Para os slots <code>{{…}}</code> este arquivo é legado (o <code>install-agents</code> não o lê; o <code>configure</code> o lê como fonte legada do nome do operador) — mas é a configuração <strong>viva</strong> de mailbox: <code>governancekit mail</code> lê <code>values.MAILBOX_ADDRESS</code>/<code>OPERATOR_EMAIL</code> e <code>refs.SMTP_TOKEN</code> daqui, e <code>mail setup --write</code> grava o endereço aqui. Não apague num projeto que envia e-mail.</td><td>instalações legadas; <code>governancekit mail setup --write</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
       </tbody>
     </table>
     <p class="note"><code>.gk/project-config.json</code> não é identidade: guarda as respostas de configuração do projeto (entrevista de escopo). O <code>doctor</code> pode dar HINT quando ausente.</p>

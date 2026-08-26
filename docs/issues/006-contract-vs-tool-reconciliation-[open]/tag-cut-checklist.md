@@ -70,8 +70,9 @@ funciona igual — os passos não mudam; troque o número em todos eles.
        `tests/test_kit_drift.py` falha;
      - `tests/test_advanced_usage_docs.py:96` exige que a landing de lá aponte
        `curl` para `.../{DEFAULT_REF}/scripts/install-agents-kit.sh` — com
-       `v1.3.0` isso é uma URL 404; o teste e as páginas (`docs/index.html` **e**
-       `docs/melhorias.html`) trocam juntos para o fluxo `governancekit`;
+       `v1.3.0` isso é uma URL 404; o teste e a landing (`docs/index.html:1279`;
+       só ela tem o comando — `melhorias.html` só o cita em prosa de roadmap)
+       trocam juntos para o fluxo `governancekit`;
      - `tests/test_advanced_usage_docs.py:115-123` exige que toda ocorrência
        `v1.x.y` nas 4 páginas seja igual ao `DEFAULT_REF` — o bump arrasta as
        páginas.
@@ -84,6 +85,19 @@ funciona igual — os passos não mudam; troque o número em todos eles.
    `v1.3.0`**: um release intermediário (withdraw + `DEFAULT_REF=v1.2.1`) apaga o
    script do alvo e no mesmo `--upgrade` reinstala o `AGENTS.md` de `v1.2.1` —
    que manda rodá-lo (§1a passo 2 daquela versão). Os dois mudam no mesmo release.
+
+8b. **Reinstale o pacote antes de validar**: o `governancekit` no PATH continua
+   sendo o de antes do passo 8 —
+
+   ```bash
+   pip install --upgrade "git+https://github.com/EDortta/AI-GovernanceKit.git@<tag do passo 8>"
+   governancekit --version
+   ```
+
+   Sem isso, o passo 9 **falha em silêncio**: um CLI pré-AC-30 encontra o tarball
+   `v1.3.0` sem o script e simplesmente pula (`if not src_path.exists(): continue`),
+   deixando a cópia obsoleta no alvo sem aviso. O range `>=0.2.2,<0.4.0` do
+   contrato não reprova CLI velho — a reinstalação é passo explícito, não efeito.
 
 ## Verificação de fechamento (elo 4 — parque)
 
@@ -103,10 +117,10 @@ funciona igual — os passos não mudam; troque o número em todos eles.
 - A partir deste batch o tarball **não carrega mais** `scripts/install-agents-kit.sh`
   — cortar a tag é o que faz o script sumir do release publicado. As tags antigas
   (≤ `v1.2.1`) continuam servindo o script para sempre (tags são imutáveis); a
-  instrução `curl | bash` viva nas páginas do GovernanceKit (`docs/index.html` e
-  `docs/melhorias.html`) aponta para elas e precisa sair **do lado de lá**
-  (needs-coordination — lista completa em "Coordenação pendente" no `RESUME.md`
-  desta pasta, que também vai no corpo da PR).
+  instrução `curl | bash` viva na landing do GovernanceKit (`docs/index.html:1279`;
+  `melhorias.html` só cita o script em prosa de roadmap, sem comando) aponta para
+  elas e precisa sair **do lado de lá** (needs-coordination — lista completa em
+  "Coordenação pendente" no `RESUME.md` desta pasta, que também vai no corpo da PR).
 - `new-tag.sh` recusa tag existente (releases são imutáveis) — se `v1.3.0` já
   existir, corte a próxima, nunca mova a tag.
 - O pin de checksum faz o elo 2/3 falhar **fechado**: um tarball adulterado ou uma

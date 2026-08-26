@@ -4,7 +4,8 @@
 - date: 2026-08-04
 - owner: Esteban D.Dortta
 - origem: reavaliação feita no projeto governado `AI/CodexBridge`
-  (documento completo: `../governancekit-contract-reassessment.md`)
+  (o documento completo da reavaliação vive no CodexBridge; não foi versionado
+  neste repo)
 
 ## O que é isto
 

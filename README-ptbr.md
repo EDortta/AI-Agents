@@ -59,16 +59,20 @@ eram a causa raiz de uma família de defeitos de deriva e perda de dados. A
 aposentadoria chega com o próximo release dos dois kits — um GovernanceKit que a
 carregue também remove cópias antigas do script dos projetos governados no
 `--upgrade`; até o seu GovernanceKit instalado carregá-la, um install ainda
-entrega o script da release que ele fixa.
+entrega o script — e o texto de contrato mais antigo que o referencia — da release
+que ele fixa; os dois saem juntos com o release coordenado.
 
 ```bash
-pip install git+https://github.com/EDortta/AI-GovernanceKit.git
+pip install "git+https://github.com/EDortta/AI-GovernanceKit.git@<tag-de-release>"
 
 governancekit --root /caminho/do/seu-projeto install-agents
 ```
 
-O CLI baixa este repositório na tag de release fixada no próprio CLI e verifica o
-tarball contra um SHA-256 conhecido antes de escrever qualquer coisa.
+Fixe o próprio CLI numa tag de release ou num commit inspecionado — nunca na branch
+mutável (regra deste próprio kit, `security-standards.md` §7). Liste as tags com
+`git ls-remote --tags https://github.com/EDortta/AI-GovernanceKit.git`. O CLI então
+baixa este repositório na tag de release fixada dentro do CLI e verifica o tarball
+contra um SHA-256 conhecido antes de escrever qualquer coisa.
 
 Atualize uma instalação existente sem sobrescrever contexto/estado local do projeto:
 
@@ -102,7 +106,7 @@ do manifesto do kit, e é essa ausência que garante isso.
 Ainda assim o `AGENTS.md` é **protegido**: quando seu conteúdo diverge do que o kit
 instalou, o `--upgrade` mantém a sua versão, grava a nova em `AGENTS.md.kit-new` ao
 lado e avisa. Nada é sobrescrito em silêncio. Sem manifesto (instalação anterior ao
-`.gk/`, ou sem `python3`) o instalador não consegue provar que o arquivo está
+`.gk/`) o instalador não consegue provar que o arquivo está
 intocado, então falha fechado e preserva.
 
 Todo arquivo de raiz substituído também é copiado para `.gk/pre-upgrade/` antes.
@@ -128,7 +132,8 @@ fonte legada do nome do operador; o `install-agents` em si não o lê.)
 Em todo install e `--upgrade`, o instalador reaplica os valores guardados, então um
 slot preenchido não é deriva: o arquivo em disco e a versão nova do kit batem, e o
 upgrade não queima o valor nem pede merge. Num terminal interativo ele pergunta pelo
-valor ausente de `OPERATOR_NAME`; numa execução não interativa, um valor ausente é
+valor ausente de `OPERATOR_NAME`; numa execução sem TTY (stdin fechado — a decisão
+é `isatty`, não uma flag), um valor ausente é
 **reportado como aviso e o slot fica sem preencher** — leia a saída da execução (e
 rode `governancekit doctor`) em vez de confiar no código de saída. `.credentials/` é
 um diretório que nenhum caminho de upgrade substitui.
@@ -157,21 +162,13 @@ Importante:
   - `docs/software-overview.md` tenha `project_context_ready: yes`
   - `docs/limits.md` tenha `limits_ready: yes`
 
-1. Copie (ou use symlink) destes artefatos no projeto alvo:
-- `AGENTS.md`
-- `.docs/agents/`
-- `docs/issues/`
-- `docs/software-overview.md`
-- `docs/limits.md`
-
-2. Adapte apenas o que é específico do projeto:
-- Preencha `docs/software-overview.md` com contexto do produto, arquitetura e objetivos.
-- Preencha `docs/limits.md` com limites rígidos (in/out-of-scope, ações proibidas, gates de aprovação).
-- Esses dois arquivos são obrigatórios e precisam ser editados pelo programador para que o agents-kit reconheça corretamente o que fazer no projeto.
-
-3. Mantenha o núcleo genérico:
-- Preserve estrutura e intenção de `AGENTS.md` e dos arquivos centrais em `.docs/agents/`.
-- Adicione extensões específicas somente quando necessário.
+Depois de instalar, adapte apenas o que é específico do projeto — preencha
+`docs/software-overview.md` (contexto do produto, arquitetura, objetivos) e
+`docs/limits.md` (limites rígidos, ações proibidas, gates de aprovação); os dois são
+obrigatórios. Mantenha os contratos do kit genéricos: extensões do projeto vão em
+`docs/project-rules.md`, nunca no `AGENTS.md` nem em `.docs/`. Não copie nem
+symlinke arquivos do kit à mão para um alvo — o instalador é o único escritor, e o
+`--upgrade` recusa symlinks dentro de diretórios geridos do kit.
 
 ## Fluxo do Programador (Obrigatório)
 

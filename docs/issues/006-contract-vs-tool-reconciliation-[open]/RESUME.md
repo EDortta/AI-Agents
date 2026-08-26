@@ -2,7 +2,7 @@
 
 - work_id: WK-20260804-governancekit-contract-reassessment
 - date: 2026-08-26 (reconciliado; original 2026-08-04)
-- status: `[open]` — texto entregue em `development`; **corte de tag pendente do operador**
+- status: `[open]` — texto entregue na branch `feature/006-reconcile-batch` (PR para `development` pendente de revisão); **corte de tag pendente do operador**
 
 Histórico (crítica de 2026-08-06, decisões C1/C2, refutação de B1, sessão de
 2026-08-07): `git log -- "docs/issues/006-contract-vs-tool-reconciliation-[draft]"`.
@@ -35,8 +35,13 @@ tag alguma. O parque só recebe A2/A4–A10/C1 após o `tag-cut-checklist.md` de
 ## Este batch (branch `feature/006-reconcile-batch`)
 
 Épica `[draft]`→`[open]`; A2-retirada (fecha também R2-1 e #9/#10 da épica 008 do
-GovernanceKit); A5; `tag-cut-checklist.md`. Council do batch: contagens em
-`docs/napkin-lessons.md` e no handoff de 2026-08-26.
+GovernanceKit); A5; `tag-cut-checklist.md`. Council do batch: **2 rodadas, 3 lentes
+independentes cada** — r1: 19 levantados / 16 sobreviveram / 2 viraram teste / 4
+perguntas; r2: 18 levantados + 2 perguntas, classificados **6 introduzidos-pela-r1 ·
+3 abertos-da-r1 · 9 pré-existentes** — todos fechados nesta branch ou registrados
+acima como coordenação/aceitação. Detalhe nas entradas de 2026-08-26 de
+`docs/napkin-lessons.md` e `handoff.md`, que entram no commit de session-close
+desta mesma PR.
 
 ## Coordenação pendente (lado GovernanceKit — épica gêmea / Squad D)
 
@@ -46,10 +51,15 @@ GovernanceKit); A5; `tag-cut-checklist.md`. Council do batch: contagens em
    `tests/test_advanced_usage_docs.py:96` exige a URL do script no `DEFAULT_REF`
    (com `v1.3.0`, um 404); `:115-123` amarra as 4 páginas ao mesmo `v1.x.y`. Um
    release intermediário (AC-30 sem o bump) apaga o script do alvo e reinstala o
-   `AGENTS.md` de `v1.2.1` que manda rodá-lo.
-2. Páginas do GovernanceKit (`docs/index.html:1279` **e** `docs/melhorias.html`)
-   ainda instruem `curl | bash` do instalador aposentado (raw URL de `v1.2.1`
-   segue servindo — tags são imutáveis).
+   `AGENTS.md` de `v1.2.1` que manda rodá-lo. O range
+   `>=0.2.2,<0.4.0` do contrato **não força** o upgrade do pacote — a
+   reinstalação (`pip install --upgrade …@<tag>`) é passo explícito do checklist;
+   a decisão de não estreitar o range (2026-08-11) segue de pé e registrada.
+2. A landing do GovernanceKit (`docs/index.html:1279`) ainda instrui `curl | bash`
+   do instalador aposentado (raw URL de `v1.2.1` segue servindo — tags são
+   imutáveis). Só ela: `docs/melhorias.html` menciona o script apenas em prosa
+   histórica de roadmap (`:439`), sem comando — corrigido nesta rodada, a r1
+   listava as duas.
 3. `--allow-unverified` recomendado pela mensagem de erro de `install_agents.py:600`
    não existe no parser do CLI (e está documentado como existente lá).
 4. `README.md` fora de `_WITHDRAWN_PATHS` — README do kit vazado em alvos fica lá
