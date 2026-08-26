@@ -1,5 +1,54 @@
 # Handoff
 
+## [2026-08-26] WK-20260804-governancekit-contract-reassessment - batch-006-reconcile
+
+- Status: ready-for-review
+- Summary: Épica 006 reconciliada e reaberta como `[open]` (o primeiro corte deixou a
+  pasta `[draft]` rastreada junto — as 3 lentes do council pegaram; os commits foram
+  refeitos com a deleção real). A2 fechada na fonte: `scripts/install-agents-kit.sh`
+  removido, toda instrução viva migrou para `governancekit install-agents` (com pin
+  por tag — security-standards §7), `run-checks.sh` perdeu os testes do shell e
+  ganhou o guard 6b + gates sobre `.gk/operator.json`. A5 fechada: §1a/banners citam
+  `.gk/operator.json`; `.credentials/identity.json` documentado como legado para
+  slots e VIVO para mailbox (`governancekit mail`). `tag-cut-checklist.md` pronto
+  para o operador cortar `v1.3.0`. Branch `feature/006-reconcile-batch` — contém
+  também o `40f925b` local de `development` (A4/A6/A8/A9/A10/C1), ainda unpushed.
+- Council (2 rodadas, 3 lentes independentes cada, sem ver o output umas das outras):
+  - r1: **19 levantados / 16 sobreviveram / 2 viraram teste / 4 perguntas.** Central:
+    a deleção da `[draft]` fora do commit (3 lentes, independentes).
+  - r2: **18 levantados + 2 perguntas — 6 introduzidos-pela-r1 · 3 abertos-da-r1 ·
+    9 pré-existentes.** Destaques: `melhorias.html` NÃO tinha `curl|bash` (fix da r1
+    baseado em claim não verificado); o cenário `templates/` TEM teste no
+    GovernanceKit (o "mapping" da r1 errou uma metade); pip sem pin como única rota.
+    Todos fechados nesta branch ou registrados como coordenação/aceitação no RESUME.
+  - Aceitações escritas: prosa neutra de `concepts.html` ("the installer", sem
+    comando); entradas históricas de `handoff.md` citando `[draft]` (append-only);
+    `new-tag.sh:48-52` com echo morto sob `set -e` (fail-closed preservado,
+    pré-existente); um único remote `origin` hoje (F7/r2).
+- Next steps:
+  - Operador: revisar/mesclar a PR; executar
+    `docs/issues/006-contract-vs-tool-reconciliation-[open]/tag-cut-checklist.md`
+    (corte de `v1.3.0`; os passos 7–8b exigem que AC-30, `DEFAULT_REF` e as
+    páginas/testes do GovernanceKit mudem num único release, e que o pacote seja
+    reinstalado antes da validação).
+  - Squad D / GovernanceKit: os 6 itens de "Coordenação pendente" do RESUME.
+- Blockers/Risks:
+  - Janela de release: AC-30 publicado antes do bump de `DEFAULT_REF` apaga o script
+    dos alvos e reinstala o `AGENTS.md` v1.2.1 que manda rodá-lo (RESUME item 1).
+  - `~/Sync/agent-status.json` ainda recebe escrita de sessões `cursor` de outros
+    projetos (16–17/08) — caminho aposentado em 06/08; corrigir a regra local
+    daqueles projetos (fora do escopo deste repo; reportado ao operador).
+- Files changed: ver `git show --stat` dos commits da branch.
+- Checks/Tests executed:
+  - `bash scripts/run-checks.sh` -> all checks passed (84 ok, 0 fail), árvore limpa
+- Related commits:
+  - branch `feature/006-reconcile-batch` (A2+A5; épica+checklist; session-close)
+- Suggested restart prompt:
+  - "Continue work_id WK-20260804-governancekit-contract-reassessment. Leia
+    docs/issues/006-contract-vs-tool-reconciliation-[open]/RESUME.md (placar e
+    Coordenação pendente) e o tag-cut-checklist.md ao lado. O corte de v1.3.0 é do
+    operador; B2/C2/G* seguem abertos."
+
 ## [2026-08-14] WK-20260814-unattended-run — contrato de rodada sem supervisão
 
 - branch: `development`, empurrada para `origin/development` em `95aec8e`.

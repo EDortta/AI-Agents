@@ -213,7 +213,8 @@ see Provenance. The registration rule below is what will eventually correct them
 
 The council is shaped by what the project **is**. That is not a new questionnaire:
 `docs/software-overview.md` already ends in a **Target Project Checklist** of six
-lines. Read each line adversarially and it becomes the question.
+lines — marked `[MANDATORY]` structure in the seed precisely because this table
+depends on it. Read each line adversarially and it becomes the question.
 
 | line of the checklist | the question | what it selects |
 |---|---|---|

@@ -70,6 +70,31 @@ Rules:
   registro o `doctor` reprova, e o `pre-commit` também onde `install-hooks` rodou.
 - Do not commit caches, local runtime data, backups, credentials, `.env*`, or token files.
 
+#### Shared-working-tree action gates (MANDATORY, unconditional)
+
+A worktree that looks single-occupant can hold a second live session — another
+`claude-code`/`codex`/`cursor` process in the same directory and branch, invisible to
+`/AGENTS.md` §1c's git-topology inventory (that inventory sees branches and
+worktrees, not processes). These three gates cost nothing when no one else is there
+and close the whole class of failure when someone is — so they are not conditioned on
+detecting a shared tree; detection can be missing or stale, discipline cannot.
+
+- [MANDATORY] **No `git add -A` / `git commit -a`.** Stage by explicit path only.
+  `git status` may be showing another session's unstaged work; a blanket add sweeps
+  it into your commit.
+- [MANDATORY] **Reread `HEAD` immediately before committing.** If it moved since
+  last observed in this session, stop and re-read before proceeding — someone else
+  wrote here in between.
+- [MANDATORY] **`git fetch` before telling the operator anything is or is not
+  pushed**, or state explicitly that the read is local-only. Absence of a remote
+  ref in a local-only view is not evidence the branch was never pushed — it may
+  mean another session pushed it and this checkout has not fetched.
+
+Antecedent: two `claude-code` sessions in the same folder and branch produced, in one
+incident, a commit attributed to the wrong session, a false "10 commits not pushed"
+report against a branch another session had already pushed in full, and dirty-file
+noise from one session's work bleeding into `git status` for the other.
+
 #### `development` vs `main` (branch consolidation)
 
 - `development` is the **working branch** — feature/fix branches land here and

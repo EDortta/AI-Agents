@@ -30,61 +30,63 @@
 
   <section>
     <h2>Flujo recomendado</h2>
-    <pre><code># 1a. Instalación nueva
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
-  --target "$PWD"
+    <pre><code># 1. Instala el CLI de GovernanceKit — es el que instala y actualiza el kit AI-Agents,
+#    descargando la release fijada (verificada por checksum)
+pip install "git+https://github.com/EDortta/AI-GovernanceKit.git@&lt;tag-de-release&gt;"   # fija: nunca la rama mutable
 
-# 1b. Actualización de una instalación existente
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
-  --target "$PWD" --upgrade
+# 2a. Instalación nueva
+governancekit --root "$PWD" install-agents
 
-# 2. Configura la identidad de esta máquina/checkout
+# 2b. Actualización de una instalación existente
+governancekit --root "$PWD" install-agents --upgrade
+
+# 3. Configura la identidad de esta máquina/checkout
 governancekit configure
 
-# 3. Completa el contexto y los límites; cambia ambas flags a yes
+# 4. Completa el contexto y los límites; cambia ambas flags a yes
 # docs/software-overview.md → project_context_ready: yes
 # docs/limits.md            → limits_ready: yes
 
-# 4. Valida y consulta las versiones
+# 5. Valida y consulta las versiones
 governancekit doctor
 governancekit --version</code></pre>
-    <p class="note"><strong>No necesitas crear <code>WORKSPACE.md</code>.</strong> La identidad de runtime vive en <code>.governancekit-identity.json</code>. Los valores del operador usados en los contratos viven por separado en <code>.credentials/identity.json</code>.</p>
+    <p class="note"><strong>No necesitas crear <code>WORKSPACE.md</code>.</strong> La identidad de runtime vive en <code>.governancekit-identity.json</code>. Los valores del operador usados en los contratos viven por separado en <code>.gk/operator.json</code>.</p>
   </section>
 
   <section>
-    <h2>Los dos archivos de identidad local</h2>
+    <h2>Los archivos de identidad local</h2>
     <table><thead><tr><th>Archivo</th><th>Responsabilidad</th><th>Creado por</th><th>Git</th></tr></thead><tbody>
-      <tr><td><code>.credentials/identity.json</code></td><td>Valores del slot <code>OPERATOR_NAME</code>.</td><td><code>install-agents-kit.sh</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
+      <tr><td><code>.gk/operator.json</code></td><td>Respuestas guardadas para el slot <code>OPERATOR_NAME</code> (y demás valores del operador); reaplicadas en cada upgrade.</td><td><code>governancekit install-agents</code></td><td>Ignorado.</td></tr>
       <tr><td><code>.governancekit-identity.json</code></td><td>Identidad de máquina y checkout: host, ruta, puertos, hermanos y propiedad de branches.</td><td><code>governancekit configure</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
+      <tr><td><code>.credentials/identity.json</code></td><td>Para los slots <code>{{…}}</code> este archivo es heredado (<code>install-agents</code> no lo lee; <code>configure</code> lo lee como fuente heredada del nombre del operador) — pero es la configuración <strong>viva</strong> de mailbox: <code>governancekit mail</code> lee <code>values.MAILBOX_ADDRESS</code>/<code>OPERATOR_EMAIL</code> y <code>refs.SMTP_TOKEN</code> de aquí, y <code>mail setup --write</code> graba la dirección aquí. No lo borres en un proyecto que envía correo.</td><td>instalaciones heredadas; <code>governancekit mail setup --write</code></td><td>Ignorado; modo <code>0600</code>.</td></tr>
     </tbody></table>
+    <p class="note"><code>.gk/project-config.json</code> no es identidad: guarda las respuestas de configuración del proyecto (entrevista de alcance). El <code>doctor</code> puede dar un HINT cuando falta.</p>
   </section>
 
   <section>
-    <h2>Parámetros de <code>install-agents-kit.sh</code></h2>
+    <h2>Parámetros de <code>governancekit install-agents</code></h2>
     <table><thead><tr><th>Parámetro</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead><tbody>
-      <tr><td><code>--target &lt;dir&gt;</code></td><td>Selecciona el proyecto destino; por defecto, el directorio actual.</td><td>Al ejecutar fuera del proyecto.</td></tr>
+      <tr><td><code>--root &lt;dir&gt;</code></td><td>Flag global (antes del comando): selecciona el proyecto destino; por defecto, el directorio actual.</td><td>Al ejecutar fuera del proyecto.</td></tr>
       <tr><td><code>--repo &lt;owner/repo&gt;</code></td><td>Selecciona otro repositorio de origen.</td><td>Forks o distribuciones internas.</td></tr>
-      <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selecciona tag, branch o commit; por defecto <code>v1.2.1</code>.</td><td>Fijar o probar un origen específico.</td></tr>
-      <tr><td><code>--checksum &lt;sha256&gt;</code></td><td>Valida el tarball y aborta si el hash no coincide.</td><td>Instalaciones sensibles y CI.</td></tr>
+      <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selecciona tag, branch o commit. El valor por defecto es la release fijada en el CLI, verificada contra un SHA-256 conocido; una ref sin checksum conocido se rechaza — instala desde una release fijada.</td><td>Fijar o probar un origen específico.</td></tr>
       <tr><td><code>--upgrade</code></td><td>Actualiza archivos del kit preservando contexto, reglas, identidad, handoff e issues.</td><td>Actualización normal.</td></tr>
-      <tr><td><code>--force</code></td><td>Sobrescribe archivos; incompatible con <code>--upgrade</code>.</td><td>Solo después de revisar un reemplazo intencional.</td></tr>
-      <tr><td><code>--strict</code></td><td>Con <code>--upgrade</code>, sale con error si un archivo protegido necesita merge humano.</td><td>Pipelines de CI.</td></tr>
-      <tr><td><code>--check</code></td><td>Informe de solo lectura sobre lo que se reemplazaría o preservaría.</td><td>Antes de migrar instalaciones antiguas.</td></tr>
-      <tr><td><code>--migrate</code></td><td>Extrae identidad y separa contenido del proyecto escrito en archivos del kit. Exige TTY y confirmación.</td><td>Instalaciones heredadas o personalizadas.</td></tr>
-      <tr><td><code>--dry-run</code></td><td>Con <code>--migrate</code>, informa sin escribir.</td><td>Auditoría segura y automatización.</td></tr>
-      <tr><td><code>--help</code></td><td>Muestra la ayuda incluida en la versión ejecutada.</td><td>Confirmar opciones disponibles.</td></tr>
+      <tr><td><code>--force</code></td><td>Sobrescribe archivos del kit existentes.</td><td>Solo después de revisar un reemplazo intencional.</td></tr>
+      <tr><td><code>--docs-only</code></td><td>Actualiza solo la documentación del kit, sin tocar <code>AGENTS.md</code> ni los archivos de reglas por herramienta.</td><td>Refresh solo de documentación.</td></tr>
+      <tr><td><code>--migrate-content</code></td><td>Extrae contratos heredados específicos del proyecto de <code>.docs-migration-bak/</code> hacia <code>docs/project-rules/</code>.</td><td>Layouts heredados.</td></tr>
+      <tr><td><code>--track</code> / <code>--no-track</code></td><td>Rastrea la documentación del kit (<code>.docs/</code>) en git, o la mantiene fuera. La elección queda guardada.</td><td>Primera instalación, o cambio de política.</td></tr>
+      <tr><td><code>--install-awt</code></td><td>Ejecuta el install del <code>agent-worktree.sh</code> descargado (symlink <code>awt</code> en el PATH). Desactivado por defecto.</td><td>Flujos con worktrees paralelos.</td></tr>
+      <tr><td><code>--non-interactive</code></td><td>Nunca pregunta; con <code>--accept-generated</code>, aplica los valores de adopción generados.</td><td>Pipelines de CI.</td></tr>
     </tbody></table>
-    <p><code>--check</code> no se combina con modos de escritura; <code>--dry-run</code> solo se aplica a <code>--migrate</code>; <code>--strict</code> solo se aplica a <code>--upgrade</code>.</p>
+    <p>Ejecuta <code>governancekit install-agents --help</code> para la lista completa, incluidos los modos de adopción (<code>--quick</code>, <code>--review</code>, <code>--advanced</code>).</p>
   </section>
 
   <section>
     <h2>Instalación, actualización y migración</h2>
     <div class="cards">
-      <article class="card"><h3>Nueva</h3><pre><code>install-agents-kit.sh --target /proyecto</code></pre><p>Crea los archivos ausentes, solicita la identidad y deja los gates de contexto en no.</p></article>
-      <article class="card"><h3>Actualización</h3><pre><code>install-agents-kit.sh --target /proyecto --upgrade</code></pre><p>Reemplaza solo contenido del kit y reaplica la identidad local.</p></article>
-      <article class="card"><h3>Heredada</h3><pre><code>install-agents-kit.sh --target /proyecto --check
-install-agents-kit.sh --target /proyecto --migrate
-install-agents-kit.sh --target /proyecto --upgrade</code></pre><p>Separa el contenido mezclado antes de actualizar.</p></article>
+      <article class="card"><h3>Nueva</h3><pre><code>governancekit --root /proyecto install-agents</code></pre><p>Crea los archivos ausentes, solicita la identidad y deja los gates de contexto en no.</p></article>
+      <article class="card"><h3>Actualización</h3><pre><code>governancekit --root /proyecto install-agents --upgrade</code></pre><p>Reemplaza solo contenido del kit y reaplica los valores guardados del operador. Un <code>AGENTS.md</code> editado a mano se preserva; la versión nueva queda al lado como <code>AGENTS.md.kit-new</code>.</p></article>
+      <article class="card"><h3>Heredada</h3><pre><code>governancekit --root /proyecto install-agents \
+  --upgrade --migrate-content</code></pre><p>Extrae los contratos heredados del proyecto antes de actualizar; revisa lo que llega a <code>docs/project-rules/</code>.</p></article>
     </div>
   </section>
 
@@ -123,15 +125,10 @@ install-agents-kit.sh --target /proyecto --upgrade</code></pre><p>Separa el cont
     <h2>Códigos de salida</h2>
     <table><tbody>
       <tr><td><code>0</code></td><td>Operación finalizada.</td></tr>
-      <tr><td><code>2</code></td><td>Opciones inválidas o incompatibles.</td></tr>
-      <tr><td><code>3</code></td><td><code>--migrate</code> ejecutado sin terminal. Usa <code>--migrate --dry-run</code> para previsualizar sin interacción.</td></tr>
-      <tr><td><code>4</code></td><td>El directorio de destino no existe.</td></tr>
-      <tr><td><code>5</code></td><td>El destino ya tiene un archivo del kit y no se pasó ni <code>--force</code> ni <code>--upgrade</code>.</td></tr>
-      <tr><td><code>6</code></td><td><code>--strict</code> encontró un archivo protegido que requiere merge.</td></tr>
-      <tr><td><code>7</code></td><td>Checksum de descarga divergente.</td></tr>
-      <tr><td><code>8</code></td><td>Identidad obligatoria ausente o inválida.</td></tr>
-      <tr><td><code>30</code></td><td>Archivos instalados, pero contexto o límites aún no están listos.</td></tr>
+      <tr><td><code>1</code></td><td>La operación falló — el mensaje nombra el motivo (por ejemplo, un fallo de descarga o de checksum).</td></tr>
+      <tr><td><code>2</code></td><td>Opciones inválidas o incompatibles, o una raíz de destino inutilizable.</td></tr>
     </tbody></table>
+    <p class="note">Una fusión manual pendiente (<code>AGENTS.md.kit-new</code>) o un valor del operador no recolectado se <strong>reporta en la salida pero aun así sale <code>0</code></strong> — lee la salida (y ejecuta <code>governancekit doctor</code>); no confíes solo en el código de salida.</p>
   </section>
   <section><h2>Siguiente paso</h2><p>Ejecutar el kit de forma programada y sin nadie mirando tiene su propio contrato y sus propios modos de fallo — consulta <a href="./unattended-run-es.html">ejecución sin supervisión</a>. Para todos los comandos del CLI, selección de contexto, diagnóstico y CI, consulta la <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">guía avanzada de GovernanceKit</a>.</p></section>
 </main>

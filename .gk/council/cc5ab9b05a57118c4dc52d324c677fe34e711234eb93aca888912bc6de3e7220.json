@@ -1,0 +1,17 @@
+{
+  "fingerprint": "cc5ab9b05a57118c4dc52d324c677fe34e711234eb93aca888912bc6de3e7220",
+  "round": 2,
+  "triggers": [
+    "shared-contract",
+    "mechanical-sweep"
+  ],
+  "lenses": [
+    "sweep skeptic",
+    "claim auditor",
+    "second caller"
+  ],
+  "findings": [],
+  "questions": [],
+  "waiver": null,
+  "recorded_at": "2026-08-26T14:17:30"
+}

@@ -7,9 +7,9 @@ los runtimes compatibles carguen solamente los contratos requeridos por la tarea
 los riesgos declarados. AI-GovernanceKit implementa `governancekit context inspect`
 y `governancekit context build`; consulte `.docs/context-optimization.md`.
 
-<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+<!-- AI-Agents kit-owned file. Do not edit: `governancekit install-agents --upgrade` replaces it.
      Project-specific rules  -> docs/project-rules.md (never overwritten)
-     Operator values ({{…}}) -> .credentials/identity.json (untracked, per-programmer) -->
+     Operator values ({{…}}) -> .gk/operator.json (untracked; written by `governancekit install-agents`) -->
 
 ![Logo AI-Agents](./.docs/icons/logo.png)
 
@@ -52,26 +52,28 @@ Para todos los parámetros del instalador, archivos de identidad, códigos de sa
 migraciones y ejemplos de CI, consulta los
 [Detalles avanzados de uso](https://edortta.github.io/AI-Agents/advanced-usage-es.html).
 
-Preferido: clona e inspecciona antes de ejecutar, sobre todo la primera vez:
+El kit se instala y actualiza con el **CLI de GovernanceKit**. El instalador shell
+heredado que este repositorio distribuía en `scripts/` está retirado: dos
+instaladores escribiendo los mismos archivos, sin fuente de verdad compartida, eran
+la causa raíz de una familia de defectos de deriva y pérdida de datos. El retiro
+llega con el próximo release de ambos kits — un GovernanceKit que lo lleve también
+elimina copias antiguas del script en los proyectos gobernados con `--upgrade`;
+hasta que tu GovernanceKit instalado lo lleve, un install aún entrega el script de
+la release que fija.
 
 ```bash
-git clone --branch v1.2.1 https://github.com/EDortta/AI-Agents.git
-less AI-Agents/scripts/install-agents-kit.sh
-./AI-Agents/scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto
+pip install git+https://github.com/EDortta/AI-GovernanceKit.git
+
+governancekit --root /ruta/de/tu-proyecto install-agents
 ```
 
-Atajo, si aceptas ejecutar un script directo desde GitHub (fijado a una tag
-de release, no a la rama mutable `main`):
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
-  --target /ruta/de/tu-proyecto
-```
+El CLI descarga este repositorio en la tag de release fijada en el propio CLI y
+verifica el tarball contra un SHA-256 conocido antes de escribir nada.
 
 Actualiza una instalación existente sin sobrescribir contexto/estado local del proyecto:
 
 ```bash
-./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto --upgrade
+governancekit --root /ruta/de/tu-proyecto install-agents --upgrade
 ```
 
 Si acabas de clonar un proyecto que ya tiene AI-Agents instalado, ejecuta ese
@@ -101,7 +103,7 @@ la garantía.
 Aun así `AGENTS.md` está **protegido**: cuando su contenido difiere de lo que el kit
 instaló, `--upgrade` conserva tu versión, escribe la nueva en `AGENTS.md.kit-new` al
 lado y lo informa. Nada se sobrescribe en silencio. Sin manifiesto (instalación
-anterior a `.gk/`, o sin `python3`) el instalador no puede probar que el archivo está
+anterior a `.gk/`) el instalador no puede probar que el archivo está
 intacto, así que falla cerrado y lo preserva.
 
 Cada archivo raíz reemplazado también se copia a `.gk/pre-upgrade/` antes.
@@ -111,35 +113,29 @@ que son kit-owned y apunta a `docs/project-rules.md`. El gate de release verific
 el banner esté presente, para que una edición cualquiera no borre justamente la única
 línea que le dice al siguiente agente dónde escribir.
 
-### Valores del operador: slots `{{…}}` y `.credentials/identity.json`
+### Valores del operador: slots `{{…}}` y `.gk/operator.json`
 
 Los archivos del kit nunca contienen el nombre ni la cuenta real del operador — llevan
 slots `{{…}}` (llaves dobles alrededor de un nombre en MAYÚSCULAS), porque un dato
-personal no puede quedar en fuente versionada. Los valores viven en
-**`.credentials/identity.json`**:
+personal no puede quedar en fuente versionada. Las respuestas viven en
+**`.gk/operator.json`**, escrito por `governancekit install-agents` y mantenido fuera
+de git, así que cada programador del proyecto establece su propia identidad en vez de
+heredar el nombre de un colega desde el repositorio. Ese es el punto — el nombre y la
+cuenta del operador son justamente el dato personal que el esquema de slots existe para
+mantener fuera del repo, y compartir un archivo solo movería la fuga de `AGENTS.md` a
+un JSON. (Un `.credentials/identity.json` heredado, del instalador shell retirado, lo
+lee `governancekit configure` como fuente heredada del nombre del operador; el propio
+`install-agents` no lo lee.)
 
-```json
-{
-  "values": { "OPERATOR_NAME": "…" },
-  "refs":   { "EMAIL_CREDENTIALS": "~/.config/email/credentials.conf" }
-}
-```
-
-`values` guarda literales; `refs` guarda **rutas** a archivos de credenciales — nunca
-un secreto inline. El archivo **nunca se versiona**: `.credentials/.gitignore` lo
-mantiene fuera de git, así que cada programador del proyecto establece su propia
-identidad en vez de heredar el nombre de un colega desde el repositorio. Ese es el
-punto — el nombre y la cuenta del operador son justamente el dato personal que el
-esquema de slots existe para mantener fuera del repo, y compartir un archivo solo
-movería la fuga de `AGENTS.md` a un JSON.
-
-En cada install y `--upgrade`, el instalador resuelve primero estos valores obligatorios.
-En una terminal interactiva pregunta por el valor vacío de `OPERATOR_NAME`;
-en una ejecución no interactiva, falla antes de copiar archivos del kit
-e informa qué debe configurarse. Mantiene el archivo con modo `0600` y reaplica los
-valores, así que un slot completado no es deriva: el archivo en disco y la versión nueva
-del kit quedan byte a byte iguales, y el upgrade ni quema el valor ni pide una fusión.
-`.credentials/` es el único directorio que ningún camino de upgrade toca.
+En cada install y `--upgrade`, el instalador reaplica los valores guardados, así que
+un slot completado no es deriva: el archivo en disco y la versión nueva del kit
+coinciden, y el upgrade ni quema el valor ni pide una fusión. En una terminal
+interactiva pregunta por el valor ausente de `OPERATOR_NAME`; en una ejecución sin
+TTY (stdin cerrado — la decisión es `isatty`, no una flag), un valor ausente se
+**reporta como aviso y el slot queda sin rellenar** —
+lee la salida de la ejecución (y ejecuta `governancekit doctor`) en vez de confiar en
+el código de salida. `.credentials/` es un directorio que ningún camino de upgrade
+reemplaza.
 
 Solo se sustituyen los tokens *declarados*, así que una expresión `${{ … }}` de GitHub
 Actions o una plantilla mustache de ejemplo queda intacta. Llaves en vez de corchetes
@@ -147,62 +143,31 @@ porque `[MANDATORY]`, `[PROHIBITED]` y `[DEFAULT]` son vocabulario de contenido 
 estos documentos: un token entre corchetes no se distingue de la prosa sin una
 allowlist mantenida a mano; `{{…}}` siempre se distingue.
 
-`python3` es obligatorio para validar y aplicar la identidad. El instalador falla
-pronto si no está disponible o si no puede obtener los valores obligatorios.
-
-### Migrar un target existente: `--check` → `--migrate` → `--upgrade`
+### Migrar un target existente o heredado
 
 Un proyecto instalado antes de todo esto suele tener los dos problemas a la vez: reglas
 de proyecto escritas dentro de `AGENTS.md`, y valores del operador escritos encima de
-los placeholders. `--migrate` los separa mecánicamente, una vez:
+los placeholders. El camino de upgrade maneja ambos sin adivinar: un `AGENTS.md`
+editado a mano se **preserva** y la versión nueva queda a su lado como
+`AGENTS.md.kit-new` para una fusión manual, y `--migrate-content` extrae contratos
+heredados del proyecto hacia `docs/project-rules/`:
 
 ```bash
-./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto --check     # qué derivó
-./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto --migrate   # separar
-./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto --upgrade   # ya limpio
-```
-
-`--migrate` lee los valores del operador de vuelta desde el target — usando los propios
-slots de la plantilla como sonda, de modo que un valor solo se registra cuando la línea
-que lo rodea aún coincide exactamente — y los escribe en `.credentials/identity.json`. Un archivo
-cuya única diferencia con el kit son líneas *insertadas* es inequívoco: esas líneas pasan
-a `docs/project-rules.md` y el archivo vuelve a la versión del kit. Cualquier otra cosa
-— una línea del kit reescrita o borrada — se reporta y se deja intacta: el kit no
-adivina qué quiso decir una edición. Las grafías heredadas `[TOKEN]` se reescriben a
-`{{…}}`; un slot que nunca se completó se reconoce como vacío, no se confunde con un
-valor. Los scripts shell se reportan, nunca se migran por contenido.
-
-Escribe en el target, así que está gateado: TTY interactivo más una confirmación
-tecleada, sin flag para saltarla, y una copia de todo lo que puede tocar en
-`.gk/pre-migrate/`.
-
-En CI, hacer que un archivo protegido sin fusionar falle la ejecución (el upgrade
-igualmente se completa):
-
-```bash
-./scripts/install-agents-kit.sh --target /ruta/de/tu-proyecto --upgrade --strict
+governancekit --root /ruta/de/tu-proyecto install-agents --upgrade --migrate-content
 ```
 
 Importante:
-- el instalador usa un readiness gate y termina con código distinto de cero hasta que:
+- `governancekit doctor` es el readiness gate: falla hasta que:
   - `docs/software-overview.md` tenga `project_context_ready: yes`
   - `docs/limits.md` tenga `limits_ready: yes`
 
-1. Copia (o usa symlink) estos artefactos en el proyecto destino:
-- `AGENTS.md`
-- `.docs/agents/`
-- `docs/issues/`
-- `docs/software-overview.md`
-- `docs/limits.md`
-
-2. Adapta solo lo específico del proyecto:
-- Completa `docs/software-overview.md` con contexto del producto, arquitectura y objetivos.
-- Completa `docs/limits.md` con límites estrictos (in/out-of-scope, acciones prohibidas, gates de aprobación).
-- Estos dos archivos son obligatorios y deben ser editados por el programador para que el agents-kit reconozca correctamente qué hacer en el proyecto.
-
-3. Mantén el núcleo genérico:
-- Conserva estructura e intención de `AGENTS.md` y los archivos centrales de `.docs/agents/`.
-- Agrega extensiones específicas solo cuando sea necesario.
+Después de instalar, adapta solo lo específico del proyecto — completa
+`docs/software-overview.md` (contexto del producto, arquitectura, objetivos) y
+`docs/limits.md` (límites estrictos, acciones prohibidas, gates de aprobación);
+ambos son obligatorios. Mantén los contratos del kit genéricos: las extensiones del
+proyecto van en `docs/project-rules.md`, nunca en `AGENTS.md` ni en `.docs/`. No
+copies ni symlinkes archivos del kit a mano hacia un destino — el instalador es el
+único escritor, y `--upgrade` rechaza symlinks dentro de directorios gestionados.
 
 ## Flujo del Programador (Obligatorio)
 
@@ -264,7 +229,7 @@ El [AI-GovernanceKit](https://github.com/EDortta/AI-GovernanceKit) es la capa de
 
 Están diseñados para funcionar juntos, pero sin dependencia formal:
 - Instala AI-Agents copiando los archivos en el proyecto destino
-- Instala AI-GovernanceKit como paquete Python (`pip install ai-governancekit`)
+- Instala AI-GovernanceKit como paquete Python (`pip install git+https://github.com/EDortta/AI-GovernanceKit.git`)
 - El comando `doctor` del GovernanceKit valida la estructura de archivos del AI-Agents automáticamente
 
 ---
@@ -282,7 +247,6 @@ Plantillas disponibles:
 ## Estructura
 
 - `AGENTS.md`: contrato universal de ejecución
-- `scripts/install-agents-kit.sh`: instalador (ejecución local o directa vía raw de GitHub)
 - `.docs/agents/`: contratos por rol (programmer, reviewer, issue automation, security, privacy)
 - `docs/issues/`: estructura local de issues y plantillas
 - `handoff.md`: log de handoff para retomar trabajo entre sesiones
