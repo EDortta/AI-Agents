@@ -147,31 +147,45 @@ else
   err "docs/project-rules.md is missing — the installer would seed a bare fallback"
 fi
 
-# The guarantee that no upgrade touches this file is an ABSENCE from KIT_OWNED_PATHS.
-# Absences are easy to undo by accident, so assert it.
-if grep -q 'project-rules' scripts/install-agents-kit.sh &&
-   awk '/^KIT_OWNED_PATHS=\(/,/^\)/' scripts/install-agents-kit.sh | grep -q 'project-rules'; then
-  err "docs/project-rules.md is listed in KIT_OWNED_PATHS — an upgrade would overwrite project rules"
+echo "== 6b. The shell installer stays retired (GovernanceKit AC-30) =="
+# Two installers writing the same manifest and the same managed .gitignore block, with
+# no shared source of truth, produced drift and data-loss defects (manifest keys
+# dropped, gitignore suffixes lost, a project's own templates/ deleted on the second
+# upgrade). The operator's decision was retirement, not reconciliation: the Python
+# installer is the only writer, and GovernanceKit (from AC-30 on) withdraws stale
+# copies from targets. Of the invariants the deleted checks asserted: the neutral
+# reading-index seed and identity-untracked/0600 have equivalents in GovernanceKit's
+# tests (over .gk/operator.json, the file the surviving installer writes); the
+# identity preflight (fail-before-copy) and the reading-index back-fill retired WITH
+# the shell installer as deliberate contract changes (the CLI warns and exits 0);
+# README withdrawal and the two-upgrade templates/ scenario have no owner yet —
+# tracked as needs-coordination in the 006 epic RESUME. This is a mapping, not a
+# blanket claim: anything not named above died with the shell installer.
+if [[ -e "scripts/install-agents-kit.sh" ]]; then
+  err "scripts/install-agents-kit.sh is back — the shell installer was retired; do not reintroduce a second writer"
 else
-  ok "docs/project-rules.md is not kit-owned"
+  ok "scripts/install-agents-kit.sh is absent"
 fi
-
-if grep -q 'PROTECTED_ROOT_FILES=' scripts/install-agents-kit.sh &&
-   grep -A2 'PROTECTED_ROOT_FILES=' scripts/install-agents-kit.sh | grep -q 'AGENTS.md'; then
-  ok "AGENTS.md is in PROTECTED_ROOT_FILES"
+# No live kit file may name it, or an operator following the docs resurrects the split.
+# History keeps its record (docs/issues/, handoff.md, napkin-lessons) and this file has
+# to write the pattern it greps for, so both are excluded — same shape as check 8b's
+# mention-versus-use exclusions.
+resurrect="$(git grep -l 'install-agents-kit' -- . \
+  ':!docs/issues/*' ':!handoff.md' ':!docs/napkin-lessons.md' ':!scripts/run-checks.sh' \
+  ':!.gk/council/*' || true)"
+if [[ -n "$resurrect" ]]; then
+  echo "$resurrect"
+  err "a live kit file still references the retired shell installer"
 else
-  err "AGENTS.md is not protected in install-agents-kit.sh — --upgrade would overwrite it blindly"
+  ok "no live kit file references the retired shell installer"
 fi
 
 echo "== 7. Operator identity stays per-programmer, untracked and reachable =="
-# Same shape as check 6, for the other half of the separation: {{TOKEN}} values live in
-# .credentials/identity.json so an upgrade re-applies them instead of burning them. The
-# guarantee is again an ABSENCE from KIT_OWNED_PATHS, so assert it.
-if awk '/^KIT_OWNED_PATHS=\(/,/^\)/' scripts/install-agents-kit.sh | grep -q 'identity'; then
-  err ".credentials/identity.json is listed in KIT_OWNED_PATHS — an upgrade would overwrite operator values"
-else
-  ok ".credentials/identity.json is not kit-owned"
-fi
+# The other half of the separation guarded by check 6: operator {{TOKEN}} values are
+# per-programmer and never tracked. The current installer stores answers in
+# .gk/operator.json (GovernanceKit's suite asserts that side); this repository still
+# ships the legacy .credentials/identity.json contract, so its invariants are asserted
+# here.
 
 # The file holds the operator's real name and account. A tracked identity.json is the
 # exact leak the {{...}} scheme exists to prevent, only harder to notice.
@@ -191,21 +205,33 @@ else
   err ".credentials/identity.json.example is missing — a fresh install has no starter"
 fi
 
-if grep -q 'apply_identity' scripts/install-agents-kit.sh &&
-   awk '/^upgrade_kit\(\)/,/^}/' scripts/install-agents-kit.sh | grep -q 'apply_identity'; then
-  ok "--upgrade re-applies operator identity before copying"
+# The file the CURRENT installer writes gets the same two gates. The docs now point
+# operators at .gk/operator.json, so an exposure there is the same leak one rename
+# away — guarding only the legacy path would protect the file nobody writes to.
+if git check-ignore -q .gk/operator.json; then
+  ok ".gk/operator.json is gitignored"
 else
-  err "upgrade_kit does not call apply_identity — an upgrade would reinstall empty {{TOKEN}} slots"
+  err ".gk/operator.json is NOT gitignored — operator personal data would be committed"
 fi
+if git ls-files --error-unmatch .gk/operator.json >/dev/null 2>&1; then
+  err ".gk/operator.json is TRACKED — remove it from the index"
+else
+  ok ".gk/operator.json is not tracked"
+fi
+
 
 echo "== 8. Single reading index is intact and in sync =="
 # docs/required-reading.md is the one place an agent looks to know what to read. It is
-# project-owned, but the kit's half lives in a managed block that install/upgrade
-# regenerates from templates/. If the two drift, targets get a stale index and nobody
-# notices — the failure mode is a document silently not being read.
+# project-owned, but the kit's half lives in a managed block kept in lockstep, BY HAND,
+# with templates/required-reading.kit-block.md — since the shell installer retired,
+# nothing regenerates the block in targets (fresh targets are seeded from
+# templates/required-reading.template.md, whose block starts empty; upgrade-time
+# injection is pending coordination with GovernanceKit). If the two drift here, the
+# template ships a stale index and nobody notices — the failure mode is a document
+# silently not being read.
 block="templates/required-reading.kit-block.md"
 index="docs/required-reading.md"
-if [[ -f "$block" ]]; then ok "$block ships"; else err "missing $block — the installer has nothing to inject"; fi
+if [[ -f "$block" ]]; then ok "$block ships"; else err "missing $block — the kit list has no source of truth"; fi
 if grep -q 'AI-AGENTS:BEGIN kit reading list' "$index" && grep -q 'AI-AGENTS:END' "$index"; then
   ok "$index has the managed-block markers"
 else
@@ -284,40 +310,15 @@ if [[ -f "$reading_template" ]] &&
 else
   err "$reading_template is missing or carries this repository's own local sources"
 fi
-if grep -q 'READING_INDEX_TEMPLATE_REL' scripts/install-agents-kit.sh &&
-   ! awk '/^sync_reading_index\(\)/,/^}/' scripts/install-agents-kit.sh |
-       grep -q 'SRC_ROOT/\$READING_INDEX_REL'; then
-  ok "the installer seeds a new index from the template, never from ours"
+# (c) The contract sends the agent to a section the kit has to provision: the template
+#     must ship the scaffold, or docs/required-reading.md in a fresh target points at
+#     nothing. (The shell installer's upgrade-time back-fill retired with it — a
+#     deliberate drop; GovernanceKit's doctor advisory on the reading index is the
+#     delivery mechanism for existing targets now.)
+if grep -qF '## Fontes locais' "$reading_template"; then
+  ok "the template ships the Fontes locais scaffold the contract points at"
 else
-  err "sync_reading_index copies this repository's own index into fresh targets"
-fi
-
-# (c) The contract sends the agent to a section the kit never provisioned: it lives
-#     outside the managed markers, so no upgrade could create it and no already
-#     installed project would ever have one.
-if grep -qF '## Fontes locais' "$reading_template" &&
-   grep -q 'ensure_local_sources_section' scripts/install-agents-kit.sh; then
-  ok "the section the contract points at is seeded and back-filled on upgrade"
-else
-  err "docs/required-reading.md has no Fontes locais scaffold — the contract points at nothing"
-fi
-
-echo "== 9. The kit does not ship its own README into consuming projects =="
-# README.md is the kit's front page, not a file a consumer should receive. Shipping it
-# meant --upgrade replaced the project's README with the kit's — which really happened
-# (a target's README.md now opens with "# IA-Agents Universal Kit").
-if awk '/^KIT_ROOT_FILES=\(/,/^\)/' scripts/install-agents-kit.sh | grep -q '"README'; then
-  err "README*.md is back in KIT_ROOT_FILES — an upgrade would overwrite project READMEs"
-elif grep -qE '^\s*copy_path "README' scripts/install-agents-kit.sh; then
-  err "install still copy_path's README*.md into targets"
-else
-  ok "README*.md is neither installed nor upgraded into targets"
-fi
-if awk '/^upgrade_kit\(\)/,/^}/' scripts/install-agents-kit.sh | grep -q 'retire_root_file' &&
-   awk '/^upgrade_kit\(\)/,/^}/' scripts/install-agents-kit.sh | grep -q '"README.md"'; then
-  ok "--upgrade retires a kit README left in a target"
-else
-  err "no retirement path for READMEs the kit installed before this change"
+  err "$reading_template has no Fontes locais scaffold — the contract points at nothing"
 fi
 
 echo "== 10. Kit-owned files declare themselves kit-owned =="
@@ -334,10 +335,17 @@ while IFS= read -r f; do
     err "no kit-owned banner in the first 12 lines: $f"
     missing=$((missing + 1))
   fi
-done < <(awk '/^KIT_ROOT_FILES=\(/,/^\)/' scripts/install-agents-kit.sh |
-         grep -oE '"[^"]+"' | tr -d '"')
+done < <(printf '%s\n' \
+  "AGENTS.md" ".cursorrules" "CLAUDE.md" ".windsurfrules" "GEMINI.md" \
+  ".github/copilot-instructions.md" ".amazonq/rules/ai-agents.md" \
+  "new-tag.sh" "scripts/agent-worktree.sh" \
+  "scripts/git-bare-remote.sh")
+# The list above is maintained by hand: the first nine mirror what GovernanceKit's
+# installer ships to targets (_FRESH_PATHS/_UPGRADE_PATHS — keep in sync when that
+# set changes); git-bare-remote.sh is not shipped but is kit-owned in this repo and
+# carries the banner for the same reason.
 if [[ "$missing" -eq 0 ]]; then
-  ok "every KIT_ROOT_FILES entry carries the banner"
+  ok "every kit root file carries the banner"
 fi
 
 echo "== 10b. Every agent adapter loads the same mandatory context =="
@@ -371,16 +379,19 @@ for adapter in "${adapters[@]}"; do
   [[ "$adapter_ok" == "1" ]] && ok "$adapter loads all mandatory contracts"
 done
 
-echo "== 10c. Installer release and identity preflight stay coherent =="
-installer="scripts/install-agents-kit.sh"
-installer_ref="$(awk -F'"' '$1 == "REF=" { print $2; exit }' "$installer")"
+echo "== 10c. Declared release stays coherent =="
+# The integration contract carries its own `ref`, is copied into every target on
+# upgrade, and is what `governancekit --version` reports as the project's kit
+# version. It must be the current release or the one being prepared: any version at
+# or ahead of the latest tag answers "is it stale?". This used to accept only the
+# next PATCH, which made a minor or major release impossible to prepare — the gate
+# refused the bump before the tag existed, and the tag could not be cut without the
+# bump. Caught while cutting v1.2.0.
+integration=".docs/governancekit-integration.json"
+integration_ref="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ai_agents"]["ref"])' "$integration" 2>/dev/null || true)"
 latest_tag="$(git tag --sort=-version:refname | head -n1)"
-# The question is "is REF stale?", so any version at or ahead of the latest tag answers
-# it. This used to accept only the next PATCH, which made a minor or major release
-# impossible to prepare: the gate refused the bump before the tag existed, and the tag
-# could not be cut without the bump. Caught while cutting v1.2.0.
 ref_ok="$(
-  python3 - "$installer_ref" "$latest_tag" <<'REFPY'
+  python3 - "$integration_ref" "$latest_tag" <<'REFPY'
 import re
 import sys
 
@@ -395,238 +406,10 @@ print("yes" if ref and latest and ref >= latest else "no")
 REFPY
 )"
 if [[ "$ref_ok" == "yes" ]]; then
-  ok "installer REF is the current release or ahead of it ($installer_ref)"
+  ok "governancekit-integration.json ref is the current release or ahead of it ($integration_ref)"
 else
-  err "installer REF $installer_ref is stale or unparsable; latest tag is $latest_tag"
+  err "governancekit-integration.json ref '${integration_ref:-unreadable}' is stale or unparsable; latest tag is $latest_tag"
 fi
-if grep -qF "/$installer_ref/scripts/install-agents-kit.sh" "$installer" &&
-   grep -qF -- "--branch $installer_ref" "$installer" &&
-   grep -qF "default: $installer_ref" "$installer"; then
-  ok "installer examples and --ref help match REF=$installer_ref"
-else
-  err "installer release references disagree with REF=$installer_ref"
-fi
-
-# The integration contract carries its own `ref`, is copied into every target on
-# upgrade, and is what `governancekit --version` reports as the project's kit
-# version. Nothing compared it to REF, so a release could ship an installer pinned
-# to v1.2.2 while every consuming project kept reporting v1.2.1 — found by the
-# second-caller lens, which could not tell an upgraded project from a stale one.
-integration=".docs/governancekit-integration.json"
-integration_ref="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ai_agents"]["ref"])' "$integration" 2>/dev/null || true)"
-if [[ "$integration_ref" == "$installer_ref" ]]; then
-  ok "governancekit-integration.json ref matches REF=$installer_ref"
-else
-  err "governancekit-integration.json ref is '${integration_ref:-unreadable}', expected $installer_ref"
-fi
-
-identity_test_root="$(mktemp -d)"
-trap 'rm -rf -- "$identity_test_root"' EXIT
-noninteractive_target="$identity_test_root/noninteractive"
-mkdir -p "$noninteractive_target"
-set +e
-bash "$repo_root/$installer" --target "$noninteractive_target" --upgrade \
-  >"$identity_test_root/noninteractive.log" 2>&1
-noninteractive_rc=$?
-set -e
-if [[ "$noninteractive_rc" == "8" ]] &&
-   grep -q 'OPERATOR_NAME' "$identity_test_root/noninteractive.log" &&
-   ! grep -q 'SMTP_ACCOUNT' "$identity_test_root/noninteractive.log" &&
-   [[ ! -e "$noninteractive_target/AGENTS.md" ]]; then
-  ok "non-interactive upgrade fails before copying files when identity is empty"
-else
-  err "non-interactive upgrade did not fail early naming OPERATOR_NAME and only it"
-fi
-
-interactive_target="$identity_test_root/interactive"
-mkdir -p "$interactive_target"
-set +e
-printf 'Test Operator\n' |
-  script -qec "bash '$repo_root/$installer' --target '$interactive_target' --upgrade" /dev/null \
-    >"$identity_test_root/interactive.log" 2>&1
-interactive_rc=$?
-set -e
-if [[ "$interactive_rc" == "30" ]] &&
-   grep -q 'Test Operator' "$interactive_target/AGENTS.md" &&
-   ! grep -q '{{OPERATOR_NAME}}' "$interactive_target/AGENTS.md" &&
-   [[ "$(stat -c '%a' "$interactive_target/.credentials/identity.json")" == "600" ]]; then
-  ok "interactive upgrade collects, protects, and applies required identity first"
-else
-  err "interactive upgrade did not collect and apply the required identity field"
-fi
-rm -rf -- "$identity_test_root"
-trap - EXIT
-
-echo "== 10c-bis. A fresh target's reading index is the target's, not ours =="
-# The assertions in 8b are structural; these two run the installer, because the defect
-# council round 1 reproduced was in what lands on disk, not in what the script says.
-reading_test_root="$(mktemp -d)"
-trap 'rm -rf -- "$reading_test_root"' EXIT
-
-fresh_target="$reading_test_root/fresh"
-mkdir -p "$fresh_target/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$fresh_target/.credentials/identity.json"
-chmod 600 "$fresh_target/.credentials/identity.json"
-bash "$repo_root/$installer" --target "$fresh_target" --upgrade \
-  >"$reading_test_root/fresh.log" 2>&1 || true
-fresh_index="$fresh_target/docs/required-reading.md"
-if [[ -f "$fresh_index" ]] &&
-   grep -qF '## Fontes locais' "$fresh_index" &&
-   grep -q 'AI-AGENTS:BEGIN kit reading list' "$fresh_index" &&
-   ! grep -qE '~/\.config/email|agent-status\.json' "$fresh_index"; then
-  ok "fresh install seeds a neutral index with the Fontes locais section"
-else
-  err "fresh install produced no index, no Fontes locais section, or inherited our local sources"
-fi
-
-# An index written before the section existed — the state of essentially every install.
-legacy_target="$reading_test_root/legacy"
-mkdir -p "$legacy_target/docs" "$legacy_target/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$legacy_target/.credentials/identity.json"
-chmod 600 "$legacy_target/.credentials/identity.json"
-printf '# Required Reading\n\n## Deste projeto\n\n- `docs/arquitetura.md`\n' \
-  > "$legacy_target/docs/required-reading.md"
-bash "$repo_root/$installer" --target "$legacy_target" --upgrade \
-  >"$reading_test_root/legacy.log" 2>&1 || true
-legacy_index="$legacy_target/docs/required-reading.md"
-if grep -qF '## Fontes locais' "$legacy_index" &&
-   grep -qF 'docs/arquitetura.md' "$legacy_index" &&
-   grep -q 'AI-AGENTS:BEGIN kit reading list' "$legacy_index"; then
-  ok "upgrade back-fills Fontes locais without touching the project's own list"
-else
-  err "upgrade left an existing index without the section the email contract points at"
-fi
-
-# The seeded starter must read as a document: its lede explains what the file is and
-# who owns which half, and an exact-marker miss would bury it under the kit's tables.
-if [[ "$(grep -n 'índice único' "$fresh_index" | cut -d: -f1)" -lt \
-      "$(grep -n 'AI-AGENTS:BEGIN' "$fresh_index" | cut -d: -f1)" ]]; then
-  ok "the seeded index keeps its lede above the managed block"
-else
-  err "the seeded index has the kit block above its own lede — the template lost its markers"
-fi
-
-# Council round 2: the back-fill matched ONE spelling of the heading while doctor
-# accepts a family and recommends another, so a project that had already written its
-# own section got a second, empty, contradicting one appended.
-variant_target="$reading_test_root/variant"
-mkdir -p "$variant_target/docs" "$variant_target/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$variant_target/.credentials/identity.json"
-chmod 600 "$variant_target/.credentials/identity.json"
-printf '# Required Reading\n\n## Local sources\n\n| Caminho | Obrigatório | O que é |\n|---|---|---|\n| `~/x/mailer.py` | opcional | transporte deste projeto |\n\n### Lista de destinatários\n\n- ops@example.invalid (sempre em CC)\n' \
-  > "$variant_target/docs/required-reading.md"
-bash "$repo_root/$installer" --target "$variant_target" --upgrade \
-  >"$reading_test_root/variant.log" 2>&1 || true
-variant_index="$variant_target/docs/required-reading.md"
-if [[ "$(grep -ciE '^#{2,4} .*(fontes locais|local sources)' "$variant_index")" == "1" ]] &&
-   [[ "$(grep -cF 'Lista de destinatários' "$variant_index")" == "1" ]] &&
-   grep -qF 'ops@example.invalid' "$variant_index"; then
-  ok "back-fill recognises the heading family and never duplicates the section"
-else
-  err "upgrade duplicated the local-sources section — the project's recipient list now has a contradicting twin"
-fi
-# The cohort installed between 2026-08-07 and 2026-08-10: the section is already there,
-# carrying the row the kit itself wrote and has since retired. Ownership forbids
-# rewriting it, so the upgrade must NAME it — and must leave it exactly as it was.
-stale_target="$reading_test_root/stale"
-mkdir -p "$stale_target/docs" "$stale_target/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$stale_target/.credentials/identity.json"
-chmod 600 "$stale_target/.credentials/identity.json"
-printf '# Required Reading\n\n## Fontes locais — fora do checkout\n\n| Caminho | Obrigatório | O que é |\n|---|---|---|\n| `~/.config/email/send.py` | opcional | transporte da §Sending Email |\n' \
-  > "$stale_target/docs/required-reading.md"
-bash "$repo_root/$installer" --target "$stale_target" --upgrade \
-  >"$reading_test_root/stale.log" 2>&1 || true
-if grep -q 'has since retired' "$reading_test_root/stale.log" &&
-   grep -q 'transporte da §Sending Email' "$reading_test_root/stale.log" &&
-   [[ "$(grep -cF 'transporte da §Sending Email' "$stale_target/docs/required-reading.md")" == "1" ]]; then
-  ok "upgrade names the retired transport row and leaves the project's half untouched"
-else
-  err "upgrade stayed silent about a retired row, or rewrote the project's own index"
-fi
-# The other cohort ownership puts out of reach: a drifted AGENTS.md is preserved, so the
-# project keeps a BINDING contract carrying a WITHDRAWN rule while the corrected one
-# waits, unread, in .kit-new. Same instrument, same decision: name it, never overwrite.
-drift_target="$reading_test_root/drift"
-mkdir -p "$drift_target/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$drift_target/.credentials/identity.json"
-chmod 600 "$drift_target/.credentials/identity.json"
-bash "$repo_root/$installer" --target "$drift_target" --upgrade >/dev/null 2>&1 || true
-printf '# AGENTS.md\n\n[MANDATORY] Credenciais e transporte moram em `~/.config/email/`.\n' \
-  > "$drift_target/AGENTS.md"
-bash "$repo_root/$installer" --target "$drift_target" --upgrade \
-  >"$reading_test_root/drift.log" 2>&1 || true
-if grep -q 'kept: AGENTS.md' "$reading_test_root/drift.log" &&
-   grep -q 'WITHDRAWN' "$reading_test_root/drift.log" &&
-   grep -qF '~/.config/email' "$drift_target/AGENTS.md"; then
-  ok "upgrade names a kept contract that still carries the withdrawn rule"
-else
-  err "a preserved AGENTS.md kept the withdrawn transport rule with no warning"
-fi
-# A source tree without templates/ must say what it failed to do. The silent `return 0`
-# left the target with a refreshed AGENTS.md pointing at an index that was never made,
-# and the run's only line about that file claimed it had been preserved.
-partial_src="$reading_test_root/partial-src"
-mkdir -p "$partial_src"
-cp -a "$repo_root/AGENTS.md" "$repo_root/scripts" "$partial_src/"
-rm -rf "$partial_src/templates"
-partial_target="$reading_test_root/partial-target"
-mkdir -p "$partial_target/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$partial_target/.credentials/identity.json"
-chmod 600 "$partial_target/.credentials/identity.json"
-bash "$partial_src/scripts/$(basename "$installer")" --target "$partial_target" --upgrade \
-  >"$reading_test_root/partial.log" 2>&1 || true
-if grep -q 'was NOT created' "$reading_test_root/partial.log" &&
-   [[ ! -f "$partial_target/docs/required-reading.md" ]] &&
-   ! grep -q 'preserved project-local: docs/required-reading.md' \
-       "$reading_test_root/partial.log"; then
-  ok "a source tree without templates/ says the index was not created, and nothing else"
-else
-  err "the installer stayed silent, or claimed it preserved a file it never created"
-fi
-# The council's severest finding: `templates` was a kit-owned path at the PROJECT ROOT,
-# so a web project's own templates were recorded as kit-owned on the first upgrade and
-# DELETED, silently and without backup, on the second. Two upgrades is the fixture,
-# because one is not enough to reproduce it.
-web_target="$reading_test_root/web"
-mkdir -p "$web_target/templates" "$web_target/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$web_target/.credentials/identity.json"
-chmod 600 "$web_target/.credentials/identity.json"
-printf '<html>project layout</html>\n' > "$web_target/templates/base.html"
-bash "$repo_root/$installer" --target "$web_target" --upgrade >/dev/null 2>&1 || true
-bash "$repo_root/$installer" --target "$web_target" --upgrade >/dev/null 2>&1 || true
-if [[ -f "$web_target/templates/base.html" ]] &&
-   [[ -f "$web_target/.docs/templates/required-reading.template.md" ]] &&
-   ! grep -q '"templates/base.html"' "$web_target/.gk/manifest.json" 2>/dev/null; then
-  ok "two upgrades leave a project's own templates/ untouched and unclaimed"
-else
-  err "the installer claimed or deleted the project's own templates/ — data loss"
-fi
-
-# A target installed while templates/ was a kit path keeps the kit's starters in its own
-# directory. Ownership forbids removing them, so the run must name them.
-legacy_tpl="$reading_test_root/legacy-tpl"
-mkdir -p "$legacy_tpl/templates" "$legacy_tpl/.credentials"
-printf '{"state_version":1,"values":{"OPERATOR_NAME":"Test Operator"},"refs":{}}\n' \
-  > "$legacy_tpl/.credentials/identity.json"
-chmod 600 "$legacy_tpl/.credentials/identity.json"
-cp "$repo_root/templates/required-reading.template.md" "$legacy_tpl/templates/"
-bash "$repo_root/$installer" --target "$legacy_tpl" --upgrade \
-  >"$reading_test_root/legacy-tpl.log" 2>&1 || true
-if grep -q 'templates/required-reading.template.md' "$reading_test_root/legacy-tpl.log" &&
-   [[ -f "$legacy_tpl/templates/required-reading.template.md" ]]; then
-  ok "an older install's kit templates are named, not deleted"
-else
-  err "kit templates left at the project root were silently removed or never reported"
-fi
-rm -rf -- "$reading_test_root"
-trap - EXIT
 
 echo "== 10d. Landing page is publishable and release-safe =="
 landing="docs/index.html"
@@ -659,9 +442,8 @@ for guide in "$advanced_usage" "$advanced_usage_ptbr" "$advanced_usage_es"; do
     err "advanced usage language copy is missing or unsynchronized: $guide"
     multilingual_guides_ok=0
   fi
-  if [[ "$(grep -c 'install-agents-kit.sh)' "$guide")" -lt 2 ]] ||
-     ! grep -qF -- '--target "$PWD"' "$guide" ||
-     ! grep -qF -- '--target "$PWD" --upgrade' "$guide"; then
+  if ! grep -qF -- 'governancekit --root "$PWD" install-agents' "$guide" ||
+     ! grep -qF -- 'governancekit --root "$PWD" install-agents --upgrade' "$guide"; then
     err "advanced usage does not show separate fresh-install and upgrade commands: $guide"
     multilingual_guides_ok=0
   fi
@@ -782,16 +564,17 @@ else
   err "advanced usage guide is missing, unlinked, or differs from its distributed copy"
 fi
 if grep -qF '.governancekit-identity.json' "$advanced_usage" &&
+   grep -qF '.gk/operator.json' "$advanced_usage" &&
    grep -qF '.credentials/identity.json' "$advanced_usage" &&
    grep -qF 'WORKSPACE.md' "$advanced_usage" &&
    ! grep -q 'e.g.[[:space:]]*`WORKSPACE.md`' AGENTS.md; then
-  ok "identity documentation names both canonical files and rejects WORKSPACE.md ambiguity"
+  ok "identity documentation names the canonical and legacy files and rejects WORKSPACE.md ambiguity"
 else
   err "identity documentation is incomplete or still makes WORKSPACE.md look mandatory"
 fi
 installer_options=(
-  --target --repo --ref --checksum --force --upgrade --strict --check
-  --migrate --dry-run --help
+  --root --repo --ref --upgrade --force --docs-only --migrate-content
+  --track --install-awt --non-interactive --help
 )
 advanced_options_ok=1
 for option in "${installer_options[@]}"; do
@@ -815,12 +598,13 @@ if grep -qF 'ko-fi.com/edortta' "$landing" &&
 else
   err "landing lost PIX, ETH, or Ko-fi support information"
 fi
-landing_refs="$(grep -oE 'AI-Agents/v[0-9]+\.[0-9]+\.[0-9]+/scripts/install-agents-kit\.sh' "$landing" |
-  sed -E 's#AI-Agents/(v[0-9]+\.[0-9]+\.[0-9]+)/.*#\1#' | sort -u)"
-if [[ "$landing_refs" == "$installer_ref" ]]; then
-  ok "every landing installer URL matches REF=$installer_ref"
+# Version-pinned installer URLs left the landing with the shell installer's
+# retirement: the CLI pins the release (and its checksum) itself, and 10c asserts
+# the declared ref. What the landing must still show is the CLI path.
+if grep -qF 'governancekit --root /path/to/your-project install-agents' "$landing"; then
+  ok "landing shows the governancekit install command"
 else
-  err "landing installer URLs use '${landing_refs:-none}', expected $installer_ref"
+  err "landing does not show the governancekit install command"
 fi
 if [[ -f "$pages_workflow" ]] &&
    grep -qF 'path: docs' "$pages_workflow" &&

@@ -567,22 +567,19 @@
       <span class="dot-green"></span>
     </div>
     <div>
-      <span class="term-comment" data-i18n="term.c1"># Install AI-Agents governance kit into your project</span>
-    </div>
-    <div>
-      <span class="term-prompt">$</span>
-      <span class="term-cmd"> bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \</span>
-    </div>
-    <div style="padding-left:16px">
-      <span class="term-cmd">--target /path/to/your-project</span>
-    </div>
-    <br />
-    <div>
       <span class="term-comment" data-i18n="term.c2"># Install GovernanceKit CLI</span>
     </div>
     <div>
       <span class="term-prompt">$</span>
       <span class="term-cmd"> pip install git+https://github.com/EDortta/AI-GovernanceKit.git</span>
+    </div>
+    <br />
+    <div>
+      <span class="term-comment" data-i18n="term.c1"># Install AI-Agents governance kit into your project</span>
+    </div>
+    <div>
+      <span class="term-prompt">$</span>
+      <span class="term-cmd"> governancekit --root /path/to/your-project install-agents</span>
     </div>
     <br />
     <div>
@@ -646,7 +643,7 @@
     <div class="section-label" data-i18n="feat.label">Core capabilities</div>
     <div class="section-title" data-i18n="feat.title">Everything agents need to behave.</div>
     <p class="section-sub" data-i18n="feat.sub">
-      From a one-line install to enterprise-grade boundaries — built for real teams, real projects.
+      From a two-command install to enterprise-grade boundaries — built for real teams, real projects.
     </p>
 
     <div class="features-grid">
@@ -725,7 +722,7 @@
     <div class="steps">
       <div class="step">
         <h4 data-i18n="s1.h">Install the kit</h4>
-        <p data-i18n="s1.p">Run the one-liner installer. It copies all contracts and templates into your project directory.</p>
+        <p data-i18n="s1.p">Install the GovernanceKit CLI and run <code>install-agents</code>. It copies all contracts and templates into your project directory.</p>
       </div>
       <div class="step">
         <h4 data-i18n="s2.h">Fill two files</h4>
@@ -776,12 +773,11 @@
       <button type="button" class="code-tab" data-install-tab="upgrade" aria-selected="false" aria-controls="install-upgrade" data-i18n="inst.tab2">Upgrade existing</button>
     </div>
     <div class="code-block install-panel" id="install-fresh" data-install-panel="fresh">
-<span class="cm" data-i18n="inst.c1"># 1 — Install AI-Agents; the terminal asks for operator identity first</span>
-<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
-  --target /path/to/your-project
-
-<span class="cm" data-i18n="inst.c2"># 2 — Install GovernanceKit CLI</span>
+<span class="cm" data-i18n="inst.c1"># 1 — Install GovernanceKit CLI</span>
 <span class="kw">pip</span> install git+https://github.com/EDortta/AI-GovernanceKit.git
+
+<span class="cm" data-i18n="inst.c2"># 2 — Install AI-Agents; the terminal asks for operator identity first</span>
+<span class="kw">governancekit</span> --root /path/to/your-project install-agents
 
 <span class="cm" data-i18n="inst.c3"># 3 — Fill the two required context files, then validate</span>
 <span class="cm" data-i18n="inst.c4">#     docs/software-overview.md  →  set project_context_ready: yes</span>
@@ -791,8 +787,7 @@
 
     <div class="code-block install-panel" id="install-upgrade" data-install-panel="upgrade" hidden>
 <span class="cm" data-i18n="inst.upgrade"># Upgrade without overwriting project context</span>
-<span class="kw">bash</span> &lt;(<span class="hl">curl</span> -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
-  --target /path/to/your-project <span class="st">--upgrade</span>
+<span class="kw">governancekit</span> --root /path/to/your-project install-agents <span class="st">--upgrade</span>
 
 <span class="cm" data-i18n="inst.upgrade_check"># Confirm the installed and available versions</span>
 <span class="kw">governancekit</span> --version
@@ -930,7 +925,7 @@
       'gk.p2':        'Provides a <code>doctor</code> command that validates the AI-Agents file structure, session automation hooks, and CI integration points — so governance violations are caught before they reach review.',
       'feat.label':   'Core capabilities',
       'feat.title':   'Everything agents need to behave.',
-      'feat.sub':     'From a one-line install to enterprise-grade boundaries — built for real teams, real projects.',
+      'feat.sub':     'From a two-command install to enterprise-grade boundaries — built for real teams, real projects.',
       'f1.h':         'Universal Contract',
       'f1.p':         '<code>AGENTS.md</code> is the single source of truth for every AI agent in your repo — precedence rules, hard limits, execution loop, and quality gates in one file.',
       'f2.h':         'Role-Based Contracts',
@@ -955,7 +950,7 @@
       'how.title':    'Up and running in minutes.',
       'how.sub':      'Four steps from zero to governed.',
       's1.h':         'Install the kit',
-      's1.p':         'Run the one-liner installer. It copies all contracts and templates into your project directory.',
+      's1.p':         'Install the GovernanceKit CLI and run install-agents. It copies all contracts and templates into your project directory.',
       's2.h':         'Fill two files',
       's2.p':         'Describe your product in <code>docs/software-overview.md</code> and set hard boundaries in <code>docs/limits.md</code>. Mark both as ready.',
       's3.h':         'Validate with doctor',
@@ -970,8 +965,8 @@
       'inst.sub':     'No configuration manager needed — plain files you can read and edit.',
       'inst.tab1':    'Fresh install',
       'inst.tab2':    'Upgrade existing',
-      'inst.c1':      '# 1 — Install AI-Agents; the terminal asks for operator identity first',
-      'inst.c2':      '# 2 — Install GovernanceKit CLI',
+      'inst.c1':      '# 1 — Install GovernanceKit CLI',
+      'inst.c2':      '# 2 — Install AI-Agents; the terminal asks for operator identity first',
       'inst.c3':      '# 3 — Fill the two required context files, then validate',
       'inst.c4':      '#     docs/software-overview.md  →  set project_context_ready: yes',
       'inst.c5':      '#     docs/limits.md             →  set limits_ready: yes',
@@ -1026,7 +1021,7 @@
       'gk.p2':        'Fornece um comando <code>doctor</code> que valida a estrutura de arquivos do AI-Agents, hooks de automação de sessão e pontos de integração com CI — para que violações de governança sejam detectadas antes da revisão.',
       'feat.label':   'Capacidades principais',
       'feat.title':   'Tudo que agentes precisam para se comportar.',
-      'feat.sub':     'De uma instalação com um único comando a limites corporativos — feito para times e projetos reais.',
+      'feat.sub':     'De uma instalação em dois comandos a limites corporativos — feito para times e projetos reais.',
       'f1.h':         'Contrato Universal',
       'f1.p':         '<code>AGENTS.md</code> é a fonte única de verdade para cada agente de IA no repositório — regras de precedência, limites rígidos, loop de execução e quality gates em um único arquivo.',
       'f2.h':         'Contratos por Papel',
@@ -1051,7 +1046,7 @@
       'how.title':    'Em funcionamento em minutos.',
       'how.sub':      'Quatro etapas do zero ao governado.',
       's1.h':         'Instale o kit',
-      's1.p':         'Execute o instalador em uma linha. Ele copia todos os contratos e templates para o diretório do seu projeto.',
+      's1.p':         'Instale o CLI GovernanceKit e rode install-agents. Ele copia todos os contratos e templates para o diretório do seu projeto.',
       's2.h':         'Preencha dois arquivos',
       's2.p':         'Descreva seu produto em <code>docs/software-overview.md</code> e defina limites rígidos em <code>docs/limits.md</code>. Marque ambos como prontos.',
       's3.h':         'Valide com doctor',
@@ -1066,8 +1061,8 @@
       'inst.sub':     'Sem gerenciador de configuração necessário — arquivos simples que você pode ler e editar.',
       'inst.tab1':    'Instalação limpa',
       'inst.tab2':    'Atualizar existente',
-      'inst.c1':      '# 1 — Instale o AI-Agents; o terminal pergunta primeiro a identidade do operador',
-      'inst.c2':      '# 2 — Instale o CLI GovernanceKit',
+      'inst.c1':      '# 1 — Instale o CLI GovernanceKit',
+      'inst.c2':      '# 2 — Instale o AI-Agents; o terminal pergunta primeiro a identidade do operador',
       'inst.c3':      '# 3 — Preencha os dois arquivos de contexto obrigatórios e valide',
       'inst.c4':      '#     docs/software-overview.md  →  defina project_context_ready: yes',
       'inst.c5':      '#     docs/limits.md             →  defina limits_ready: yes',
@@ -1122,7 +1117,7 @@
       'gk.p2':        'Proporciona un comando <code>doctor</code> que valida la estructura de archivos de AI-Agents, hooks de automatización de sesión y puntos de integración con CI — para que las violaciones de gobernanza se detecten antes de la revisión.',
       'feat.label':   'Capacidades principales',
       'feat.title':   'Todo lo que los agentes necesitan para comportarse.',
-      'feat.sub':     'De una instalación con un solo comando a límites de nivel corporativo — construido para equipos y proyectos reales.',
+      'feat.sub':     'De una instalación en dos comandos a límites de nivel corporativo — construido para equipos y proyectos reales.',
       'f1.h':         'Contrato Universal',
       'f1.p':         '<code>AGENTS.md</code> es la fuente única de verdad para cada agente de IA en tu repositorio — reglas de precedencia, límites estrictos, bucle de ejecución y quality gates en un solo archivo.',
       'f2.h':         'Contratos por Rol',
@@ -1147,7 +1142,7 @@
       'how.title':    'En marcha en minutos.',
       'how.sub':      'Cuatro pasos del cero al gobernado.',
       's1.h':         'Instala el kit',
-      's1.p':         'Ejecuta el instalador en una línea. Copia todos los contratos y plantillas en el directorio de tu proyecto.',
+      's1.p':         'Instala el CLI de GovernanceKit y ejecuta install-agents. Copia todos los contratos y plantillas en el directorio de tu proyecto.',
       's2.h':         'Rellena dos archivos',
       's2.p':         'Describe tu producto en <code>docs/software-overview.md</code> y define límites estrictos en <code>docs/limits.md</code>. Márcalos como listos.',
       's3.h':         'Valida con doctor',
@@ -1162,8 +1157,8 @@
       'inst.sub':     'Sin gestor de configuración necesario — archivos simples que puedes leer y editar.',
       'inst.tab1':    'Instalación limpia',
       'inst.tab2':    'Actualizar existente',
-      'inst.c1':      '# 1 — Instala AI-Agents; la terminal pregunta primero la identidad del operador',
-      'inst.c2':      '# 2 — Instala el CLI de GovernanceKit',
+      'inst.c1':      '# 1 — Instala el CLI de GovernanceKit',
+      'inst.c2':      '# 2 — Instala AI-Agents; la terminal pregunta primero la identidad del operador',
       'inst.c3':      '# 3 — Rellena los dos archivos de contexto requeridos y valida',
       'inst.c4':      '#     docs/software-overview.md  →  establece project_context_ready: yes',
       'inst.c5':      '#     docs/limits.md             →  establece limits_ready: yes',

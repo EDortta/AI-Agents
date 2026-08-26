@@ -4,7 +4,7 @@
 moram fora do checkout. A coluna "Dono" (`.docs/` é do kit e some no `--upgrade`;
 `docs/` é do projeto) só importa na hora de **escrever**, não de ler.
 
-<!-- AI-AGENTS:BEGIN kit reading list — gerado por install-agents-kit.sh; edições aqui dentro são substituídas no --upgrade. Escreva fora do bloco. -->
+<!-- AI-AGENTS:BEGIN kit reading list — mantido junto com templates/required-reading.kit-block.md (check 8 do run-checks.sh); edições aqui dentro se perdem. Escreva fora do bloco. -->
 ## Sempre, antes de qualquer issue
 
 | Documento | Dono | O que é |

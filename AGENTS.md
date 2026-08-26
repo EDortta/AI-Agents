@@ -1,8 +1,8 @@
 # AGENTS.md
 
-<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+<!-- AI-Agents kit-owned file. Do not edit: `governancekit install-agents --upgrade` replaces it.
      Project-specific rules  -> docs/project-rules.md (never overwritten)
-     Operator values ({{…}}) -> .credentials/identity.json (untracked, per-programmer) -->
+     Operator values ({{…}}) -> .gk/operator.json (untracked; written by `governancekit install-agents`) -->
 
 
 ## Prefixo obrigatório nas mensagens ao operador
@@ -26,7 +26,7 @@ Instruction precedence:
 ### Este arquivo é do kit — trate-o como read-only
 
 `AGENTS.md` e os demais arquivos listados no banner acima pertencem ao kit AI-Agents:
-`install-agents-kit.sh --upgrade` os substitui pela versão nova. Qualquer coisa escrita
+`governancekit install-agents --upgrade` os substitui pela versão nova. Qualquer coisa escrita
 aqui é conteúdo de projeto dentro de arquivo alheio e vira, no melhor caso, um merge
 manual a cada upgrade.
 
@@ -36,7 +36,7 @@ está deliberadamente fora do manifesto do kit, e nenhum caminho de upgrade o al
 | Você quer registrar… | Escreva em |
 |---|---|
 | regra que vale só neste projeto | `docs/project-rules.md` |
-| nome/conta do operador (slot `{{…}}`) | `.credentials/identity.json` |
+| nome/conta do operador (slot `{{…}}`) | `.gk/operator.json` (via `governancekit install-agents`) |
 | contexto e limites do projeto | `docs/software-overview.md`, `docs/limits.md` |
 | estado da sessão, lições, issues | `handoff.md`, `docs/napkin-lessons.md`, `docs/issues/` |
 
@@ -50,8 +50,10 @@ ser enviada para o repositório do kit. Nunca para acomodar este projeto.
 ### 1a. Placeholders do operador preenchidos (pré-condição absoluta)
 
 Os arquivos do kit trazem slots no formato `{{…}}` — chaves duplas em volta de um nome
-em MAIÚSCULAS. Os valores ficam em `.credentials/identity.json` e são reaplicados pelo instalador
-a cada `--upgrade`. `{{…}}` é **sempre** um slot; colchetes (`[MANDATORY]`,
+em MAIÚSCULAS. Os valores ficam em `.gk/operator.json` (não rastreado, escrito pelo
+`governancekit install-agents`) e são reaplicados pelo instalador a cada `--upgrade`;
+um `.credentials/identity.json` legado é lido pelo `governancekit configure` como
+fonte do nome do operador. `{{…}}` é **sempre** um slot; colchetes (`[MANDATORY]`,
 `[PROHIBITED]`, `[DEFAULT]`) são vocabulário de conteúdo e nunca devem ser tratados
 como placeholder.
 
@@ -71,8 +73,8 @@ Se o grep retornar qualquer linha:
 1. **Pare imediatamente.** Não execute nenhuma ação — nem leitura de código,
    nem inspeção, nem branch, nem commit.
 2. Informe ao operador quais slots ficaram sem valor (cite o nome do token, sem
-   as chaves) e peça: preencher `.credentials/identity.json` e rodar
-   `install-agents-kit.sh --target . --upgrade` (ou substituir manualmente).
+   as chaves) e peça: preencher a identidade do operador e rodar
+   `governancekit install-agents --upgrade` (ou substituir manualmente).
 3. Não prossiga até que o operador confirme que os slots foram substituídos.
 
 Este gate existe por conformidade com a LGPD (Art. 46) e para garantir que
@@ -168,8 +170,8 @@ lists everything you must read — kit documents and project documents together,
 column saying who owns each. You do not need to know which of the two documentation
 roots a file lives in to start working; ownership only matters when you **write**.
 
-The kit keeps its half of that index current inside a managed block; the rest of the
-file belongs to the project and no upgrade touches it. If the index is missing or
+The kit's half of that index lives inside a managed block; the rest of the file
+belongs to the project and no upgrade touches it. If the index is missing or
 still says nothing, treat that as the Start Gate failing (§1b) and say so — do not
 reconstruct the list from memory.
 
@@ -193,8 +195,7 @@ action, not the agent's**: it rewrites `.gitignore` and other tracked files, whi
 §1a and §3 already forbid doing unannounced. If `governancekit doctor` (or the
 manual fallback in §1b) shows the kit is stale or an identity/readiness file is
 missing, **report** the specific `[FAIL]`/version gap and ask the operator to run
-`governancekit install-agents --upgrade` (or `install-agents-kit.sh --target .
---upgrade` from an inspected `AI-Agents` checkout) — do not run it yourself as a side
+`governancekit install-agents --upgrade` — do not run it yourself as a side
 effect of starting work.
 
 Which role contract to load for which kind of work is in the index, not duplicated

@@ -34,67 +34,69 @@
 
   <section>
     <h2>Recommended flow</h2>
-    <pre><code># 1a. Fresh install
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
-  --target "$PWD"
+    <pre><code># 1. Install the GovernanceKit CLI — it installs and updates the AI-Agents kit,
+#    downloading the pinned release (checksum-verified)
+pip install git+https://github.com/EDortta/AI-GovernanceKit.git
 
-# 1b. Update an existing installation
-bash &lt;(curl -fsSL https://raw.githubusercontent.com/EDortta/AI-Agents/v1.2.1/scripts/install-agents-kit.sh) \
-  --target "$PWD" --upgrade
+# 2a. Fresh install
+governancekit --root "$PWD" install-agents
 
-# 2. Configure this machine/checkout identity
+# 2b. Update an existing installation
+governancekit --root "$PWD" install-agents --upgrade
+
+# 3. Configure this machine/checkout identity
 governancekit configure
 
-# 3. Fill project context and limits, then set both readiness flags to yes
+# 4. Fill project context and limits, then set both readiness flags to yes
 # docs/software-overview.md → project_context_ready: yes
 # docs/limits.md            → limits_ready: yes
 
-# 4. Validate and inspect versions
+# 5. Validate and inspect versions
 governancekit doctor
 governancekit --version</code></pre>
-    <p class="note"><strong>You do not need to create <code>WORKSPACE.md</code>.</strong> Runtime instance identity lives in <code>.governancekit-identity.json</code>. Operator contract values live separately in <code>.credentials/identity.json</code>.</p>
+    <p class="note"><strong>You do not need to create <code>WORKSPACE.md</code>.</strong> Runtime instance identity lives in <code>.governancekit-identity.json</code>. Operator contract values live separately in <code>.gk/operator.json</code>.</p>
   </section>
 
   <section>
-    <h2>The two local identity files</h2>
+    <h2>The local identity files</h2>
     <table>
       <thead><tr><th>File</th><th>Purpose</th><th>Created by</th><th>Git</th></tr></thead>
       <tbody>
-        <tr><td><code>.credentials/identity.json</code></td><td>Value for the <code>OPERATOR_NAME</code> contract slot.</td><td><code>install-agents-kit.sh</code></td><td>Ignored; mode <code>0600</code>.</td></tr>
+        <tr><td><code>.gk/operator.json</code></td><td>Stored answers for the <code>OPERATOR_NAME</code> contract slot (and other operator values); re-applied on every upgrade.</td><td><code>governancekit install-agents</code></td><td>Ignored.</td></tr>
         <tr><td><code>.governancekit-identity.json</code></td><td>Machine and checkout identity: host, path, ports, siblings, and branch ownership.</td><td><code>governancekit configure</code></td><td>Ignored; mode <code>0600</code>.</td></tr>
+        <tr><td><code>.credentials/identity.json</code></td><td>Legacy slot-value file written by the retired shell installer; <code>governancekit configure</code> reads it as a legacy source for the operator name — <code>install-agents</code> does not.</td><td>legacy installs</td><td>Ignored; mode <code>0600</code>.</td></tr>
       </tbody>
     </table>
+    <p class="note"><code>.gk/project-config.json</code> is not identity: it holds the project-configuration answers (scope interview). The <code>doctor</code> may HINT about it when absent.</p>
   </section>
 
   <section>
-    <h2><code>install-agents-kit.sh</code> parameters</h2>
+    <h2><code>governancekit install-agents</code> parameters</h2>
     <table>
       <thead><tr><th>Parameter</th><th>What it does</th><th>When to use it</th></tr></thead>
       <tbody>
-        <tr><td><code>--target &lt;dir&gt;</code></td><td>Selects the target project; defaults to the current directory.</td><td>When running outside the project.</td></tr>
+        <tr><td><code>--root &lt;dir&gt;</code></td><td>Global flag (before the command): selects the target project; defaults to the current directory.</td><td>When running outside the project.</td></tr>
         <tr><td><code>--repo &lt;owner/repo&gt;</code></td><td>Selects another source repository.</td><td>Forks or internal distributions.</td></tr>
-        <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selects a tag, branch, or commit; default is <code>v1.2.1</code>.</td><td>Pinning or testing a specific source.</td></tr>
-        <tr><td><code>--checksum &lt;sha256&gt;</code></td><td>Validates the downloaded tarball and aborts on mismatch.</td><td>Integrity-sensitive installs and CI.</td></tr>
+        <tr><td><code>--ref &lt;ref&gt;</code></td><td>Selects a tag, branch, or commit. The default is the release pinned in the CLI, verified against a known SHA-256; a ref without a known checksum is refused — install from a pinned release.</td><td>Pinning or testing a specific source.</td></tr>
         <tr><td><code>--upgrade</code></td><td>Updates kit-owned files while preserving project context, rules, identity, handoff, and issues.</td><td>Normal updates.</td></tr>
-        <tr><td><code>--force</code></td><td>Overwrites existing files; incompatible with <code>--upgrade</code>.</td><td>Only after reviewing an intentional full replacement.</td></tr>
-        <tr><td><code>--strict</code></td><td>With <code>--upgrade</code>, exits non-zero if a protected file needs a human merge.</td><td>CI pipelines.</td></tr>
-        <tr><td><code>--check</code></td><td>Read-only report of what an upgrade would replace, preserve, or stash.</td><td>Before migrating an older install.</td></tr>
-        <tr><td><code>--migrate</code></td><td>Extracts identity and separates project content written into kit files. Requires a TTY and confirmation.</td><td>Legacy or customized installations.</td></tr>
-        <tr><td><code>--dry-run</code></td><td>With <code>--migrate</code>, reports without writing.</td><td>Safe audits and automation.</td></tr>
-        <tr><td><code>--help</code></td><td>Shows the help embedded in the running release.</td><td>Confirming available options.</td></tr>
+        <tr><td><code>--force</code></td><td>Overwrites existing kit files.</td><td>Only after reviewing an intentional full replacement.</td></tr>
+        <tr><td><code>--docs-only</code></td><td>Refreshes only kit documentation, without touching <code>AGENTS.md</code> or per-tool rule files.</td><td>Doc-only refreshes.</td></tr>
+        <tr><td><code>--migrate-content</code></td><td>Extracts project-specific legacy agent contracts from <code>.docs-migration-bak/</code> into <code>docs/project-rules/</code>.</td><td>Legacy layouts.</td></tr>
+        <tr><td><code>--track</code> / <code>--no-track</code></td><td>Track the kit documentation (<code>.docs/</code>) in git, or keep it out. The choice is saved.</td><td>First install, or changing the policy.</td></tr>
+        <tr><td><code>--install-awt</code></td><td>Runs the downloaded <code>agent-worktree.sh</code> install (symlinks <code>awt</code> onto PATH). Off by default.</td><td>Parallel-worktree workflows.</td></tr>
+        <tr><td><code>--non-interactive</code></td><td>Never prompts; with <code>--accept-generated</code>, applies generated adoption defaults.</td><td>CI pipelines.</td></tr>
       </tbody>
     </table>
-    <p><code>--check</code> cannot be combined with write modes; <code>--dry-run</code> only applies to <code>--migrate</code>; <code>--strict</code> only applies to <code>--upgrade</code>.</p>
+    <p>Run <code>governancekit install-agents --help</code> for the full list, including the adoption-mode flags (<code>--quick</code>, <code>--review</code>, <code>--advanced</code>).</p>
   </section>
 
   <section>
     <h2>Fresh install, update, and legacy migration</h2>
     <div class="cards">
-      <article class="card"><h3>Fresh</h3><pre><code>install-agents-kit.sh --target /project</code></pre><p>Creates missing files, collects operator identity, and leaves project readiness gates set to no.</p></article>
-      <article class="card"><h3>Update</h3><pre><code>install-agents-kit.sh --target /project --upgrade</code></pre><p>Replaces only kit-owned content and reapplies local identity.</p></article>
-      <article class="card"><h3>Legacy</h3><pre><code>install-agents-kit.sh --target /project --check
-install-agents-kit.sh --target /project --migrate
-install-agents-kit.sh --target /project --upgrade</code></pre><p>Separates mixed content before upgrading.</p></article>
+      <article class="card"><h3>Fresh</h3><pre><code>governancekit --root /project install-agents</code></pre><p>Creates missing files, collects operator identity, and leaves project readiness gates set to no.</p></article>
+      <article class="card"><h3>Update</h3><pre><code>governancekit --root /project install-agents --upgrade</code></pre><p>Replaces only kit-owned content and reapplies stored operator values. A hand-edited <code>AGENTS.md</code> is preserved; the new version lands beside it as <code>AGENTS.md.kit-new</code>.</p></article>
+      <article class="card"><h3>Legacy</h3><pre><code>governancekit --root /project install-agents \
+  --upgrade --migrate-content</code></pre><p>Extracts legacy project contracts before upgrading; review what lands in <code>docs/project-rules/</code>.</p></article>
     </div>
   </section>
 
@@ -136,15 +138,10 @@ install-agents-kit.sh --target /project --upgrade</code></pre><p>Separates mixed
     <h2>Exit codes</h2>
     <table><tbody>
       <tr><td><code>0</code></td><td>Operation completed.</td></tr>
-      <tr><td><code>2</code></td><td>Invalid or incompatible options.</td></tr>
-      <tr><td><code>3</code></td><td><code>--migrate</code> was run without a TTY. Use <code>--migrate --dry-run</code> to preview non-interactively.</td></tr>
-      <tr><td><code>4</code></td><td>The target directory does not exist.</td></tr>
-      <tr><td><code>5</code></td><td>The target already has a kit file and neither <code>--force</code> nor <code>--upgrade</code> was given.</td></tr>
-      <tr><td><code>6</code></td><td><code>--strict</code> found a protected file requiring merge.</td></tr>
-      <tr><td><code>7</code></td><td>Downloaded checksum mismatch.</td></tr>
-      <tr><td><code>8</code></td><td>Required identity is absent, invalid, or cannot be collected.</td></tr>
-      <tr><td><code>30</code></td><td>Files were installed, but project context or limits are not ready.</td></tr>
+      <tr><td><code>1</code></td><td>The operation failed — the message names what went wrong (for example a download or checksum failure).</td></tr>
+      <tr><td><code>2</code></td><td>Invalid or incompatible options, or an unusable target root.</td></tr>
     </tbody></table>
+    <p class="note">A pending manual merge (<code>AGENTS.md.kit-new</code>) or an operator value that could not be collected is <strong>reported in the run's output but still exits <code>0</code></strong> — read the output (and run <code>governancekit doctor</code>), do not rely on the exit code alone.</p>
   </section>
 
   <section><h2>Next</h2><p>Running the kit on a schedule with nobody watching has its own contract and its own failure modes — see <a href="./unattended-run.html">running unattended</a>. For every CLI command, deterministic context selection, diagnostics, and CI automation, see the <a href="https://edortta.github.io/AI-GovernanceKit/advanced-usage.html">GovernanceKit advanced guide</a>.</p></section>

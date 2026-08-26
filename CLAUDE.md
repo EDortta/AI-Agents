@@ -1,8 +1,8 @@
 # Claude Project Instructions
 
-<!-- AI-Agents kit-owned file. Do not edit: `install-agents-kit.sh --upgrade` replaces it.
+<!-- AI-Agents kit-owned file. Do not edit: `governancekit install-agents --upgrade` replaces it.
      Project-specific rules  -> docs/project-rules.md (never overwritten)
-     Operator values ({{…}}) -> .credentials/identity.json (untracked, per-programmer) -->
+     Operator values ({{…}}) -> .gk/operator.json (untracked; written by `governancekit install-agents`) -->
 
 ## Mandatory Context
 Read and follow:

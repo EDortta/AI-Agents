@@ -1,12 +1,14 @@
 {
   "state_version": 1,
   "_readme": [
-    "Operator values for the {{...}} slots in kit-owned files. Copy to identity.json.",
-    "This file is per-programmer and NEVER tracked: .credentials/.gitignore keeps it out",
-    "of git, so each person on the project establishes their own identity.",
-    "'values' holds literals. 'refs' holds PATHS to credential files — never the secret.",
-    "install-agents-kit.sh re-applies these on every install/--upgrade, and no upgrade",
-    "path touches this file."
+    "LEGACY operator-values file for the {{...}} slots in kit-owned files.",
+    "The current installer, `governancekit install-agents`, stores these answers in",
+    ".gk/operator.json (untracked) and does not read this file; `governancekit",
+    "configure` reads it as a legacy source for the operator name. Prefer letting",
+    "the installer collect the values.",
+    "This file is per-programmer and NEVER tracked: .credentials/.gitignore keeps it",
+    "out of git, so each person on the project establishes their own identity.",
+    "'values' holds literals. 'refs' holds PATHS to credential files — never the secret."
   ],
   "values": {
     "OPERATOR_NAME": ""
