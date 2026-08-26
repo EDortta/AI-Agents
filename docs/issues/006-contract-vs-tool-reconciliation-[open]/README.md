@@ -18,8 +18,11 @@ transporte. Se preferir a estrutura de pasta do kit (um arquivo por task), é s�
 | Arquivo | Destino | Issues |
 |---|---|---|
 | `epic.md` | — | contexto comum às duas frentes |
-| `issues-ai-agents.md` | `EDortta/AI-Agents` | 10 (A1–A10) |
-| `issues-ai-governancekit.md` | `AI-GovernanceKit` | 5 (G1–G5) |
+| `issues/A1-A10-ai-agents.md` | `EDortta/AI-Agents` | 10 (A1–A10) |
+| `issues/G1-G5-ai-governancekit-[twin].md` | `AI-GovernanceKit` | 5 (G1–G5) |
+
+**Estado atual (2026-08-26):** este arquivo descreve a origem (2026-08-04); o
+estado vivo de cada issue está no `RESUME.md` ao lado — a maioria fechou.
 
 ## Versões em que os defeitos foram observados
 
