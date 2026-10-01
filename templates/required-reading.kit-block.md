@@ -11,8 +11,8 @@
 
 | Vai fazer | Leia também (tudo do kit) |
 |---|---|
-| codar / resolver issue | `.docs/agents/programmer.md` + `.docs/agents/design-standards.md` |
-| revisar código ou PR | `.docs/agents/reviewer.md` + `.docs/agents/design-standards.md` |
+| codar / resolver issue | `.docs/agents/programmer.md` + `.docs/agents/design-standards.md` + `.docs/agents/change-governance.md` |
+| revisar código ou PR | `.docs/agents/reviewer.md` + `.docs/agents/design-standards.md` + `.docs/agents/change-governance.md` |
 | automatizar issue/PR | `.docs/agents/issue-automation.md` |
 | implementar, revisar ou declarar entrega pronta | `.docs/workflows/delivery-loop.md` |
 | criar branch/issue/PR, commitar, mesclar em `main`, deploy | `.docs/workflows/git-delivery.md` |
@@ -25,3 +25,4 @@
 | implementar seleção/orçamento de contexto | `.docs/context-optimization.md` |
 | adotar, inicializar ou definir o escopo do projeto | `.docs/agents/domains-and-capabilities.md` + `.docs/agents/credentials-operations.md` |
 | classificar mudança estrutural | `.docs/agents/architecture-classification.md` |
+| registrar/promover aprendizado entre projetos | `.docs/agents/learning-governance.md` |
