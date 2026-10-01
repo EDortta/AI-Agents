@@ -190,6 +190,7 @@ Do not load historical issue docs, handoff notes, or lessons unless resuming act
 - Prefer simple, explicit implementations.
 - Solve root cause, not only symptoms.
 - Keep scope tight to the issue/request.
+- **For every material code/behavior change, obey `.docs/agents/change-governance.md`: declare the project-owned change contract before editing, and never write outside its declared domains/paths.**
 - Preserve existing contracts unless the issue explicitly changes them.
 - Do not introduce hidden behavior or undocumented side effects.
 - Do not expose secrets, tokens, credentials, or sensitive raw payloads.
