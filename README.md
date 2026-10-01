@@ -21,6 +21,18 @@ If you want to understand how an AI agent can help in your development journey, 
 ## Purpose
 
 This repository is a reusable starter kit for agent governance in software projects.
+
+### AI-Agents v2
+
+v2 adds repository-enforced change governance on top of the v1 role/workflow model:
+- project-owned domain boundaries;
+- a mandatory change contract with read/write scope, invariants, acceptance and baseline;
+- explicit cross-domain approval instead of incidental edits;
+- deterministic scope/regression gates implemented by AI-GovernanceKit;
+- governed learning: LOCAL -> PATTERN -> CORE-CANDIDATE -> human review -> CORE.
+
+The framework stores only generic engineering policy. Concrete business domains, customer/product names, infrastructure and workflows remain inside each project under `docs/ai-governance/`. See `.docs/v2.md`.
+
 It provides:
 - a global contract: `AGENTS.md`
 - role contracts: `.docs/agents/`
