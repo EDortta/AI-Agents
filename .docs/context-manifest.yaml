@@ -27,12 +27,23 @@ tasks:
       - path: .docs/agents/design-standards.md
         mode: full
         required: true
+      - path: .docs/agents/change-governance.md
+        mode: full
+        required: true
   review:
     include:
       - path: .docs/agents/reviewer.md
         mode: full
         required: true
       - path: .docs/agents/design-standards.md
+        mode: full
+        required: true
+      - path: .docs/agents/change-governance.md
+        mode: full
+        required: true
+  learning:
+    include:
+      - path: .docs/agents/learning-governance.md
         mode: full
         required: true
   council:
