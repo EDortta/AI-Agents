@@ -1,6 +1,6 @@
 # Change Governance — AI-Agents v2
 
-This contract limits what an agent may change. It complements design standards; it does not replace tests, review, or project limits.
+This contract limits what an agent may change. It complements design standards.
 
 ## 1. Change contract
 
@@ -10,33 +10,31 @@ This contract limits what an agent may change. It complements design standards; 
 
 Docs-only changes may declare `change_contract: n/a`.
 
-Before editing code, the contract declares:
-- `domains_read`: domains that may be inspected;
-- `domains_write`: domains that may be modified;
-- `write_scope`: allowed paths;
-- `forbidden_scope`: paths that must not change;
-- `must_preserve`: existing behavior/invariants that must remain true;
-- `acceptance`: observable behavior that proves the change;
-- `baseline`: checks/scenarios known before the change.
+Before editing, declare:
+- `domains_read` and `domains_write`;
+- `write_scope` and `forbidden_scope`;
+- `must_preserve`: behavior/invariants that cannot regress;
+- `acceptance`: observable proof of the change;
+- `baseline`: pre-change checks/scenarios.
 
 ## 2. Write boundary
 
-[MANDATORY] Read access is not write permission. An agent may inspect a dependency to understand its contract and still be forbidden to edit it.
+[MANDATORY] Read access is not write permission.
 
-[MANDATORY] If implementation requires a path or domain outside `domains_write` / `write_scope`, STOP. Amend the change contract with explicit human approval or split the work.
+[MANDATORY] If implementation needs a path/domain outside the declared write scope, STOP. Amend the contract with explicit human approval or split the work.
 
-[MANDATORY] Writing more than one domain is a cross-domain change and every written domain must be declared before implementation.
+[MANDATORY] Writing more than one domain is cross-domain work; every written domain must be declared before implementation.
 
-[PROHIBITED] Incidental refactors, opportunistic cleanup, dependency upgrades, renames, formatting sweeps, or architecture changes outside the declared change.
+[PROHIBITED] Incidental refactors, cleanup, dependency upgrades, renames, formatting sweeps, or architecture changes outside the contract.
 
 ## 3. Preservation and proof
 
-[MANDATORY] A change is not complete because code exists. It is complete when the declared acceptance behavior is demonstrated and `must_preserve` remains true.
+[MANDATORY] Code existence is not completion. Acceptance behavior must be demonstrated and `must_preserve` must remain true.
 
 [MANDATORY] A bug fix adds a regression test that fails without the fix.
 
-[MANDATORY] Compare the final diff to `write_scope` and `forbidden_scope`. Any undeclared write rejects the change until resolved.
+[MANDATORY] Compare the final diff with `write_scope` and `forbidden_scope`. Any undeclared write rejects the change until resolved.
 
-[MANDATORY] If a baseline check passed before the work and fails after it, the delivery is blocked unless the change contract explicitly intended and approved that behavioral change.
+[MANDATORY] A baseline check that passed before and fails after blocks delivery unless the contract explicitly intended and approved that behavior change.
 
-Runtime enforcement belongs to AI-GovernanceKit. This file defines the policy.
+Runtime enforcement belongs to AI-GovernanceKit; this file defines policy.
