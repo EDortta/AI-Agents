@@ -1,0 +1,56 @@
+version: 2
+work_id: WK-20261001-ai-agents-v2
+intent: "Introduce AI-Agents v2 change governance and governed cross-project learning."
+change_type: architecture
+
+domains_read:
+  - policy-pack
+  - installer
+domains_write:
+  - policy-pack
+  - installer
+
+write_scope:
+  - AGENTS.md
+  - README.md
+  - .docs/**
+  - templates/**
+  - docs/required-reading.md
+  - docs/ai-governance/**
+  - scripts/install-agents-kit.sh
+
+forbidden_scope:
+  - .credentials/**
+  - handoff.md
+  - docs/issues/**
+
+must_preserve:
+  - "AI-Agents remains the policy pack; runtime enforcement remains AI-GovernanceKit responsibility."
+  - "Project-owned docs are never overwritten on upgrade."
+  - "Existing projects keep their local rules, lessons, credentials, and context."
+  - "Implementation context budget remains <= 8500 tokens."
+
+acceptance:
+  - "Fresh install seeds docs/ai-governance/{domains,changes,lessons} without claiming project ownership."
+  - "Upgrade adds only missing v2 project scaffold and does not overwrite project content."
+  - "Implementation and review contexts load change-governance.md."
+  - "Cross-project learning requires sanitization and explicit human promotion."
+  - "Change contract forbids undeclared writes and incidental refactors."
+
+baseline:
+  commands:
+    - "context budget baseline: implementation=7992/8500 before v2 contract"
+  scenarios:
+    - "v1 upgrade preserves docs/ project territory"
+
+cross_domain:
+  required: true
+  approved_by: operator
+  reason: "v2 intentionally changes both policy contracts and installer behavior"
+
+validation:
+  commands:
+    - "context manifest deterministic character/4 measurement"
+    - "branch diff scope review"
+  evidence:
+    - "implementation profile measured at 8424/8500"

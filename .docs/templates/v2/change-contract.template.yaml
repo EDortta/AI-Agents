@@ -1,0 +1,26 @@
+version: 2
+work_id: WK-YYYYMMDD-short-slug
+intent: ""
+change_type: behavior
+
+domains_read: []
+domains_write: []
+
+write_scope: []
+forbidden_scope: []
+
+must_preserve: []
+acceptance: []
+
+baseline:
+  commands: []
+  scenarios: []
+
+cross_domain:
+  required: false
+  approved_by: null
+  reason: null
+
+validation:
+  commands: []
+  evidence: []

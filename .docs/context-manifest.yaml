@@ -27,12 +27,23 @@ tasks:
       - path: .docs/agents/design-standards.md
         mode: full
         required: true
+      - path: .docs/agents/change-governance.md
+        mode: full
+        required: true
   review:
     include:
       - path: .docs/agents/reviewer.md
         mode: full
         required: true
       - path: .docs/agents/design-standards.md
+        mode: full
+        required: true
+      - path: .docs/agents/change-governance.md
+        mode: full
+        required: true
+  learning:
+    include:
+      - path: .docs/agents/learning-governance.md
         mode: full
         required: true
   council:
@@ -77,7 +88,9 @@ risks:
         mode: full
         required: true
 
-# Baseline with the deterministic fallback, re-measured 2026-08-14 after
+# Baseline with the deterministic fallback. AI-Agents v2 measurement on 2026-10-01:
+# implementation=8,424/8,500; review=6,963/8,500 after adding change-governance.md.
+# Previous baseline, re-measured 2026-08-14 after
 # `council.md` gained the isolation and round-2 classification rules:
 # base_contracts=6,221; implementation=7,992; review=6,531; council=4,828;
 # delivery=6,654. Largest normal combination (base + implementation + runtime,
@@ -103,8 +116,8 @@ risks:
 # (required-reading.md gained a row), `council` and `delivery` actually moved in
 # this delivery.
 #
-# `implementation` sits at 7,992/8,500 — 508 tokens of headroom. Nothing else can
-# be folded into it; a new task contract needs its own profile or a slice.
+# `implementation` now sits at 8,424/8,500 — 76 tokens of headroom. Nothing else
+# may be folded into it; any new implementation contract requires a slice or its own profile.
 #
 # base_contracts had reached 7,999/8,000 — one token — before the slice. The cap was
 # not raised: a budget lifted to make its own test pass is decoration, and this cap is

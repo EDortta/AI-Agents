@@ -1693,6 +1693,23 @@ seed_project_rules() {
   echo "created project-owned file: docs/project-rules.md"
 }
 
+
+seed_v2_governance_scaffold() {
+  local root="$TARGET_DIR/docs/ai-governance"
+  mkdir -p "$root/domains" "$root/changes" "$root/lessons"
+
+  if [[ ! -e "$root/README.md" ]]; then
+    local tpl
+    tpl="$(kit_template v2/project-governance-readme.template.md || true)"
+    if [[ -n "$tpl" ]]; then
+      cp -a "$tpl" "$root/README.md"
+    else
+      printf '# AI Governance — Project State\n\nProject-owned domain, change-contract and lesson state.\n' > "$root/README.md"
+    fi
+    echo "created project-owned file: docs/ai-governance/README.md"
+  fi
+}
+
 # Retire a root file the kit used to install and no longer claims.
 #
 # Never a blind rm: the whole reason README.md is being retired is that it collides
@@ -2191,6 +2208,7 @@ upgrade_kit() {
   copy_file_replace ".docs/unattended-run-ptbr.html"
   copy_file_replace ".docs/unattended-run-es.html"
   copy_file_replace ".docs/governancekit-integration.json"
+  copy_file_replace ".docs/v2.md"
 
   # Keep the issues index current without touching project issue folders.
   copy_file_replace ".docs/issues/README.md"
@@ -2198,6 +2216,7 @@ upgrade_kit() {
   # An existing target predates docs/project-rules.md and would otherwise never get
   # the destination the AGENTS.md protection points people at.
   seed_project_rules
+  seed_v2_governance_scaffold
 
   # The single reading index: the kit's half is regenerated, the project's half is not.
   sync_reading_index
@@ -2332,6 +2351,7 @@ else
     fi
   done
   seed_project_rules
+  seed_v2_governance_scaffold
   if [[ ! -e "$TARGET_DIR/docs/README.md" ]]; then
     printf '# Project Documentation\n\nThis folder (docs/) is 100%%%% project territory; the installer never overwrites it.\nKit-owned docs live under .docs/ and are replaced on --upgrade; docs/software-overview.md\nand docs/limits.md are seeded once and are yours from then on.\nList mandatory pre-issue reading in docs/required-reading.md.\n' \
       > "$TARGET_DIR/docs/README.md"
